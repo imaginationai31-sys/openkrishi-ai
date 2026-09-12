@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openkrishi.ai/schemas/advisory.schema.json",
+  "title": "OpenKrishi Advisory Response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["answer", "language", "confidence", "safety"],
+  "properties": {
+    "answer": { "type": "string", "minLength": 1 },
+    "language": { "type": "string", "enum": ["bn", "hi", "ta", "pa", "te"] },
+    "confidence": { "type": "string", "enum": ["high", "medium", "low", "unable_to_determine"] },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "type": "string", "enum": ["safe", "caution", "escalate"] },
+        "reason": { "type": ["string", "null"] }
+      }
+    },
+    "observations": { "type": "array", "items": { "type": "string" } },
+    "recommendations": { "type": "array", "items": { "type": "string" } },
+    "uncertainties": { "type": "array", "items": { "type": "string" } },
+    "source_references": { "type": "array", "items": { "type": "string" } }
+  }
+}
