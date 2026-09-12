@@ -1,0 +1,1 @@
+"""OpenKrishi AI services package."""
