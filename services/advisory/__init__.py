@@ -1,0 +1,1 @@
+"""OpenKrishi AI advisory engine."""
