@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openkrishi.ai/schemas/farmer-query.schema.json",
+  "title": "OpenKrishi Farmer Query",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["query", "language"],
+  "properties": {
+    "query": { "type": "string", "minLength": 1 },
+    "language": {
+      "type": "string",
+      "enum": ["bn", "hi", "ta", "pa", "te"]
+    },
+    "crop": { "type": ["object", "null"] },
+    "input_mode": {
+      "type": "string",
+      "enum": ["text", "voice", "unknown"],
+      "default": "text"
+    },
+    "image_id": { "type": ["string", "null"] }
+  }
+}
