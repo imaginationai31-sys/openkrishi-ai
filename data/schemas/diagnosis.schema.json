@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openkrishi.ai/schemas/diagnosis.schema.json",
+  "title": "OpenKrishi Vision Diagnosis",
+  "description": "Structured image-analysis output. A diagnosis may be unavailable when evidence is insufficient.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "confidence"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["identified", "possible", "healthy_or_no_issue_detected", "unable_to_determine"]
+    },
+    "crop_category": { "type": ["string", "null"], "enum": ["rice", "peanut", "vegetables", "flowers", null] },
+    "condition": { "type": ["string", "null"] },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "observations": { "type": "array", "items": { "type": "string" } },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  }
+}
