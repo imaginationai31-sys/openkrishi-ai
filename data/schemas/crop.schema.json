@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openkrishi.ai/schemas/crop.schema.json",
+  "title": "OpenKrishi Crop",
+  "description": "Canonical crop context used by OpenKrishi AI advisory services.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["crop_category"],
+  "properties": {
+    "crop_category": {
+      "type": "string",
+      "enum": ["rice", "peanut", "vegetables", "flowers"]
+    },
+    "crop_name": {
+      "type": ["string", "null"],
+      "description": "Specific crop name when known; expandable for vegetable and flower categories."
+    },
+    "growth_stage": {
+      "type": ["string", "null"],
+      "description": "Farmer-provided or system-inferred crop growth stage."
+    },
+    "location": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "latitude": { "type": ["number", "null"], "minimum": -90, "maximum": 90 },
+        "longitude": { "type": ["number", "null"], "minimum": -180, "maximum": 180 },
+        "state": { "type": ["string", "null"] },
+        "district": { "type": ["string", "null"] }
+      }
+    },
+    "source": {
+      "type": "string",
+      "enum": ["farmer", "vision", "advisory", "unknown"],
+      "default": "unknown"
+    }
+  }
+}
