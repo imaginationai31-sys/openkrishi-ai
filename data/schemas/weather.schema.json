@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openkrishi.ai/schemas/weather.schema.json",
+  "title": "OpenKrishi Weather Context",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "observed_at": { "type": ["string", "null"], "format": "date-time" },
+    "temperature_c": { "type": ["number", "null"] },
+    "humidity_percent": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+    "rainfall_mm": { "type": ["number", "null"], "minimum": 0 },
+    "wind_speed_kmh": { "type": ["number", "null"], "minimum": 0 },
+    "forecast_summary": { "type": ["string", "null"] },
+    "source": { "type": ["string", "null"] }
+  }
+}
