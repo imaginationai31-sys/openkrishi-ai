@@ -8,7 +8,7 @@ from typing import Any
 
 from .safety import low_confidence_safety
 
-SUPPORTED_LANGUAGES = {"bn", "hi", "ta", "pa", "te"}
+SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
 CROP_LABELS = {
     "rice": "Rice",
     "peanut": "Peanut",
@@ -23,10 +23,9 @@ def generate_advisory(query: str, language: str, crop_category: str | None = Non
     if language not in SUPPORTED_LANGUAGES:
         language = "en"
 
-    # Keep the first MVP conservative: no fabricated diagnosis, pesticide dose,
-    # or crop-specific claim that requires expert/validated evidence.
     if crop_label:
         answer = {
+            "en": f"I understand your question about {crop_label}. For safe advice in this MVP, I need the question, the crop's current growth stage, and, when useful, photo or weather information.",
             "bn": f"{crop_label} নিয়ে আপনার প্রশ্নটি বুঝেছি। এই MVP-তে নিরাপদ পরামর্শের জন্য প্রশ্নটি, ফসলের বর্তমান বৃদ্ধি-পর্যায় এবং প্রয়োজন হলে ছবি/আবহাওয়ার তথ্য আরও দরকার।",
             "hi": f"मैंने {crop_label} से जुड़ा आपका सवाल समझ लिया है। इस MVP में सुरक्षित सलाह के लिए सवाल के साथ फसल की वर्तमान अवस्था और जरूरत होने पर फोटो/मौसम की जानकारी चाहिए।",
             "ta": f"{crop_label} பற்றிய உங்கள் கேள்வியை புரிந்துகொண்டேன். இந்த MVP-யில் பாதுகாப்பான ஆலோசனைக்கு கேள்வியுடன் பயிரின் தற்போதைய வளர்ச்சி நிலையும், தேவையானால் படம்/வானிலை தகவலும் தேவை.",
@@ -35,6 +34,7 @@ def generate_advisory(query: str, language: str, crop_category: str | None = Non
         }[language]
     else:
         answer = {
+            "en": "I understand your agricultural question. For safe advice, I need the crop type, current growth stage, and, when useful, location or weather information.",
             "bn": "আপনার কৃষি প্রশ্নটি বুঝেছি। নিরাপদ পরামর্শের জন্য ফসলের ধরন, বর্তমান বৃদ্ধি-পর্যায় এবং প্রয়োজন হলে স্থান/আবহাওয়ার তথ্য জানা দরকার।",
             "hi": "मैंने आपका कृषि सवाल समझ लिया है। सुरक्षित सलाह के लिए फसल का प्रकार, वर्तमान अवस्था और जरूरत होने पर स्थान/मौसम की जानकारी चाहिए।",
             "ta": "உங்கள் விவசாயக் கேள்வியை புரிந்துகொண்டேன். பாதுகாப்பான ஆலோசனைக்கு பயிர் வகை, தற்போதைய வளர்ச்சி நிலை மற்றும் தேவையானால் இடம்/வானிலை தகவல் தேவை.",
