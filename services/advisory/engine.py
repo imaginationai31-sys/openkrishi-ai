@@ -14,13 +14,18 @@ CROP_LABELS = {
 }
 
 
-def generate_advisory(query: str, language: str, crop_category: str | None = None) -> dict[str, Any]:
+def generate_advisory(
+    query: str,
+    language: str,
+    crop_category: str | None = None,
+    growth_stage: str | None = None,
+) -> dict[str, Any]:
     crop_label = CROP_LABELS.get(crop_category or "")
 
     if language not in SUPPORTED_LANGUAGES:
         language = "en"
 
-    knowledge = get_knowledge(query, crop_category)
+    knowledge = get_knowledge(query, crop_category, growth_stage)
 
     if crop_label:
         answer = {
