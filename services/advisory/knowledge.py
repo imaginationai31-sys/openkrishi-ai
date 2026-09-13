@@ -1,8 +1,4 @@
-"""Small, conservative agricultural knowledge layer for the MVP.
-
-The rules are intentionally symptom-based and avoid chemical dose or disease
-claims when the available evidence is insufficient.
-"""
+"""Small, conservative agricultural knowledge layer for the MVP."""
 
 from typing import Any
 
@@ -47,16 +43,34 @@ RULES: list[dict[str, Any]] = [
 ]
 
 
-def get_knowledge(query: str, crop_category: str | None = None) -> dict[str, Any]:
+def get_knowledge(
+    query: str,
+    crop_category: str | None = None,
+    growth_stage: str | None = None,
+) -> dict[str, Any]:
     text = query.lower()
     crop = crop_category or ""
+    stage = (growth_stage or "").strip()
 
     for rule in RULES:
         if crop in rule["crops"] and any(keyword in text for keyword in rule["keywords"]):
+            recommendations = list(rule["recommendations"])
+            uncertainties = [rule["uncertainty"]]
+
+            if stage:
+                recommendations.insert(
+                    0,
+                    f"Use the crop's current growth stage ({stage}) when comparing the symptom with local agronomy guidance.",
+                )
+            else:
+                uncertainties.append(
+                    "Growth stage was not provided; this limits how specifically the symptom can be interpreted."
+                )
+
             return {
                 "observations": [rule["observation"]],
-                "recommendations": list(rule["recommendations"]),
-                "uncertainties": [rule["uncertainty"]],
+                "recommendations": recommendations,
+                "uncertainties": uncertainties,
             }
 
     return {
