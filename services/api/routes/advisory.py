@@ -10,7 +10,7 @@ router = APIRouter()
 
 class AdvisoryRequest(BaseModel):
     query: str = Field(min_length=1, max_length=2000)
-    language: str = Field(pattern="^(bn|hi|ta|pa|te)$")
+    language: str = Field(pattern="^(en|bn|hi|ta|pa|te)$")
     crop_category: str | None = Field(default=None, pattern="^(rice|peanut|vegetables|flowers)$")
     crop_name: str | None = Field(default=None, max_length=100)
     growth_stage: str | None = Field(default=None, max_length=100)
