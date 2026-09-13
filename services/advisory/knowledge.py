@@ -50,7 +50,7 @@ def get_knowledge(
 ) -> dict[str, Any]:
     text = query.lower()
     crop = crop_category or ""
-    stage = (growth_stage or "").strip()
+    stage = (growth_stage or "").strip().lower()
 
     for rule in RULES:
         if crop in rule["crops"] and any(keyword in text for keyword in rule["keywords"]):
@@ -60,8 +60,16 @@ def get_knowledge(
             if stage:
                 recommendations.insert(
                     0,
-                    f"Use the crop's current growth stage ({stage}) when comparing the symptom with local agronomy guidance.",
+                    f"Use the crop's current growth stage ({growth_stage}) when comparing the symptom with local agronomy guidance.",
                 )
+
+                if crop == "rice" and "tillering" in stage and any(
+                    keyword in text for keyword in rule["keywords"]
+                ):
+                    recommendations.insert(
+                        1,
+                        "At the tillering stage, compare affected plants with healthy plants and check whether yellowing is concentrated on older leaves or across the canopy.",
+                    )
             else:
                 uncertainties.append(
                     "Growth stage was not provided; this limits how specifically the symptom can be interpreted."
