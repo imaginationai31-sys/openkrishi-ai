@@ -1,11 +1,8 @@
-"""Deterministic MVP advisory engine.
-
-This is intentionally conservative. It provides basic crop-aware guidance
-without pretending to diagnose diseases or prescribe chemical treatments.
-"""
+"""Conservative MVP advisory engine with a small crop-knowledge layer."""
 
 from typing import Any
 
+from .knowledge import get_knowledge
 from .safety import low_confidence_safety
 
 SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
@@ -23,23 +20,25 @@ def generate_advisory(query: str, language: str, crop_category: str | None = Non
     if language not in SUPPORTED_LANGUAGES:
         language = "en"
 
+    knowledge = get_knowledge(query, crop_category)
+
     if crop_label:
         answer = {
-            "en": f"I understand your question about {crop_label}. For safe advice in this MVP, I need the question, the crop's current growth stage, and, when useful, photo or weather information.",
-            "bn": f"{crop_label} নিয়ে আপনার প্রশ্নটি বুঝেছি। এই MVP-তে নিরাপদ পরামর্শের জন্য প্রশ্নটি, ফসলের বর্তমান বৃদ্ধি-পর্যায় এবং প্রয়োজন হলে ছবি/আবহাওয়ার তথ্য আরও দরকার।",
-            "hi": f"मैंने {crop_label} से जुड़ा आपका सवाल समझ लिया है। इस MVP में सुरक्षित सलाह के लिए सवाल के साथ फसल की वर्तमान अवस्था और जरूरत होने पर फोटो/मौसम की जानकारी चाहिए।",
-            "ta": f"{crop_label} பற்றிய உங்கள் கேள்வியை புரிந்துகொண்டேன். இந்த MVP-யில் பாதுகாப்பான ஆலோசனைக்கு கேள்வியுடன் பயிரின் தற்போதைய வளர்ச்சி நிலையும், தேவையானால் படம்/வானிலை தகவலும் தேவை.",
-            "pa": f"ਮੈਂ {crop_label} ਬਾਰੇ ਤੁਹਾਡਾ ਸਵਾਲ ਸਮਝ ਲਿਆ ਹੈ। ਇਸ MVP ਵਿੱਚ ਸੁਰੱਖਿਅਤ ਸਲਾਹ ਲਈ ਸਵਾਲ ਦੇ ਨਾਲ ਫਸਲ ਦੀ ਮੌਜੂਦਾ ਅਵਸਥਾ ਅਤੇ ਲੋੜ ਪੈਣ ਤੇ ਤਸਵੀਰ/ਮੌਸਮ ਦੀ ਜਾਣਕਾਰੀ ਚਾਹੀਦੀ ਹੈ।",
-            "te": f"{crop_label} గురించి మీ ప్రశ్నను అర్థం చేసుకున్నాను. ఈ MVPలో సురక్షితమైన సలహా కోసం ప్రశ్నతో పాటు పంట ప్రస్తుత దశ, అవసరమైతే ఫోటో/వాతావరణ సమాచారం అవసరం.",
+            "en": f"I understand your question about {crop_label}. I found a possible symptom match and can provide conservative checks based on the information supplied.",
+            "bn": f"{crop_label} নিয়ে আপনার প্রশ্নটি বুঝেছি। দেওয়া তথ্যের ভিত্তিতে একটি সম্ভাব্য উপসর্গের মিল পেয়েছি এবং নিরাপদ কিছু পরীক্ষা করার পরামর্শ দিতে পারি।",
+            "hi": f"मैंने {crop_label} से जुड़ा आपका सवाल समझ लिया है। दी गई जानकारी के आधार पर एक संभावित लक्षण मिला है और मैं कुछ सुरक्षित जांच सुझा सकता हूँ।",
+            "ta": f"{crop_label} பற்றிய உங்கள் கேள்வியை புரிந்துகொண்டேன். கொடுக்கப்பட்ட தகவலின் அடிப்படையில் ஒரு சாத்தியமான அறிகுறி பொருத்தம் உள்ளது; சில பாதுகாப்பான சோதனைகளை பரிந்துரைக்கலாம்.",
+            "pa": f"ਮੈਂ {crop_label} ਬਾਰੇ ਤੁਹਾਡਾ ਸਵਾਲ ਸਮਝ ਲਿਆ ਹੈ। ਦਿੱਤੀ ਜਾਣਕਾਰੀ ਦੇ ਆਧਾਰ ਤੇ ਇੱਕ ਸੰਭਾਵੀ ਲੱਛਣ ਮਿਲਦਾ ਹੈ ਅਤੇ ਮੈਂ ਕੁਝ ਸੁਰੱਖਿਅਤ ਜਾਂਚਾਂ ਸੁਝਾ ਸਕਦਾ ਹਾਂ।",
+            "te": f"{crop_label} గురించి మీ ప్రశ్నను అర్థం చేసుకున్నాను. ఇచ్చిన సమాచారంలో ఒక సంభావ్య లక్షణం కనిపిస్తోంది; కొన్ని సురక్షితమైన తనిఖీలను సూచించగలను.",
         }[language]
     else:
         answer = {
-            "en": "I understand your agricultural question. For safe advice, I need the crop type, current growth stage, and, when useful, location or weather information.",
-            "bn": "আপনার কৃষি প্রশ্নটি বুঝেছি। নিরাপদ পরামর্শের জন্য ফসলের ধরন, বর্তমান বৃদ্ধি-পর্যায় এবং প্রয়োজন হলে স্থান/আবহাওয়ার তথ্য জানা দরকার।",
-            "hi": "मैंने आपका कृषि सवाल समझ लिया है। सुरक्षित सलाह के लिए फसल का प्रकार, वर्तमान अवस्था और जरूरत होने पर स्थान/मौसम की जानकारी चाहिए।",
-            "ta": "உங்கள் விவசாயக் கேள்வியை புரிந்துகொண்டேன். பாதுகாப்பான ஆலோசனைக்கு பயிர் வகை, தற்போதைய வளர்ச்சி நிலை மற்றும் தேவையானால் இடம்/வானிலை தகவல் தேவை.",
-            "pa": "ਮੈਂ ਤੁਹਾਡਾ ਖੇਤੀਬਾੜੀ ਸਵਾਲ ਸਮਝ ਲਿਆ ਹੈ। ਸੁਰੱਖਿਅਤ ਸਲਾਹ ਲਈ ਫਸਲ ਦੀ ਕਿਸਮ, ਮੌਜੂਦਾ ਅਵਸਥਾ ਅਤੇ ਲੋੜ ਪੈਣ ਤੇ ਸਥਾਨ/ਮੌਸਮ ਦੀ ਜਾਣਕਾਰੀ ਚਾਹੀਦੀ ਹੈ।",
-            "te": "మీ వ్యవసాయ ప్రశ్నను అర్థం చేసుకున్నాను. సురక్షితమైన సలహా కోసం పంట రకం, ప్రస్తుత దశ, అవసరమైతే ప్రాంతం/వాతావరణ సమాచారం అవసరం.",
+            "en": "I understand your agricultural question. Please provide the crop type and growth stage for more specific guidance.",
+            "bn": "আপনার কৃষি প্রশ্নটি বুঝেছি। আরও নির্দিষ্ট পরামর্শের জন্য ফসলের ধরন ও বৃদ্ধি-পর্যায় জানান।",
+            "hi": "मैंने आपका कृषि सवाल समझ लिया है। अधिक विशिष्ट सलाह के लिए फसल का प्रकार और वर्तमान अवस्था बताएं।",
+            "ta": "உங்கள் விவசாயக் கேள்வியை புரிந்துகொண்டேன். மேலும் குறிப்பிட்ட ஆலோசனைக்கு பயிர் வகை மற்றும் தற்போதைய வளர்ச்சி நிலையை தெரிவிக்கவும்.",
+            "pa": "ਮੈਂ ਤੁਹਾਡਾ ਖੇਤੀਬਾੜੀ ਸਵਾਲ ਸਮਝ ਲਿਆ ਹੈ। ਹੋਰ ਖਾਸ ਸਲਾਹ ਲਈ ਫਸਲ ਦੀ ਕਿਸਮ ਅਤੇ ਮੌਜੂਦਾ ਅਵਸਥਾ ਦੱਸੋ।",
+            "te": "మీ వ్యవసాయ ప్రశ్నను అర్థం చేసుకున్నాను. మరింత నిర్దిష్టమైన సలహా కోసం పంట రకం మరియు ప్రస్తుత దశను ఇవ్వండి.",
         }[language]
 
     return {
@@ -47,10 +46,8 @@ def generate_advisory(query: str, language: str, crop_category: str | None = Non
         "language": language,
         "confidence": "low",
         "safety": low_confidence_safety(),
-        "observations": [],
-        "recommendations": [],
-        "uncertainties": [
-            "The MVP does not yet use validated agronomy knowledge, live weather, or image evidence."
-        ],
+        "observations": knowledge["observations"],
+        "recommendations": knowledge["recommendations"],
+        "uncertainties": knowledge["uncertainties"],
         "source_references": [],
     }
