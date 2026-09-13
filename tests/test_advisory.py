@@ -66,3 +66,28 @@ def test_missing_growth_stage():
     assert result["uncertainties"]
     assert any("growth stage" in item.lower() for item in result["uncertainties"])
     assert not any("tillering" in item.lower() for item in result["recommendations"])
+
+
+def test_location_is_returned_and_used():
+    result = generate_advisory(
+        query="My rice plants have yellow leaves. What should I do?",
+        language="en",
+        crop_category="rice",
+        location="Kanchipuram, Tamil Nadu, India",
+    )
+
+    assert result["location"] == "Kanchipuram, Tamil Nadu, India"
+    assert any("kanchipuram" in item.lower() for item in result["recommendations"])
+    assert any("live local weather" in item.lower() for item in result["uncertainties"])
+
+
+def test_blank_location_is_treated_as_missing():
+    result = generate_advisory(
+        query="My rice plants have yellow leaves. What should I do?",
+        language="en",
+        crop_category="rice",
+        location="   ",
+    )
+
+    assert result["location"] is None
+    assert any("location was not provided" in item.lower() for item in result["uncertainties"])
