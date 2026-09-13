@@ -19,13 +19,30 @@ def generate_advisory(
     language: str,
     crop_category: str | None = None,
     growth_stage: str | None = None,
+    location: str | None = None,
 ) -> dict[str, Any]:
     crop_label = CROP_LABELS.get(crop_category or "")
+    location_value = location.strip() if location else None
 
     if language not in SUPPORTED_LANGUAGES:
         language = "en"
 
     knowledge = get_knowledge(query, crop_category, growth_stage)
+    recommendations = list(knowledge["recommendations"])
+    uncertainties = list(knowledge["uncertainties"])
+
+    if location_value:
+        recommendations.insert(
+            0,
+            f"Use the supplied location ({location_value}) when checking local agricultural extension or agronomy guidance; no local conditions are assumed by this MVP.",
+        )
+        uncertainties.append(
+            "Location was provided, but this MVP does not yet retrieve live local weather, soil, pest alerts, or region-specific agronomy data."
+        )
+    else:
+        uncertainties.append(
+            "Location was not provided; local weather, soil, pest pressure, and regional agronomy guidance cannot be considered."
+        )
 
     if crop_label:
         answer = {
@@ -52,7 +69,8 @@ def generate_advisory(
         "confidence": "low",
         "safety": low_confidence_safety(),
         "observations": knowledge["observations"],
-        "recommendations": knowledge["recommendations"],
-        "uncertainties": knowledge["uncertainties"],
+        "recommendations": recommendations,
+        "uncertainties": uncertainties,
         "source_references": [],
+        "location": location_value,
     }
