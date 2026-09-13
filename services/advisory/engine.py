@@ -23,6 +23,7 @@ def generate_advisory(
 ) -> dict[str, Any]:
     crop_label = CROP_LABELS.get(crop_category or "")
     location_value = location.strip() if location else None
+    location_value = location_value or None
 
     if language not in SUPPORTED_LANGUAGES:
         language = "en"
