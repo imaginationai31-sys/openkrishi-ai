@@ -11,16 +11,6 @@ router = APIRouter()
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
 
 
-def _transcribe_audio(file: UploadFile, audio: bytes):
-    """Transcribe audio while preserving the uploaded filename/MIME type."""
-    return GroqSpeechToText().transcribe(
-        audio,
-        file.filename,
-        file.filename,
-        file.content_type,
-    )
-
-
 @router.post("/voice/transcribe")
 async def transcribe_voice(
     file: UploadFile = File(...),
