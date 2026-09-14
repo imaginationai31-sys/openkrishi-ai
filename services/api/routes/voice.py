@@ -4,7 +4,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from services.advisory.engine import generate_advisory
 from services.voice.languages import is_supported_language
-from services.voice.speech_to_text import OpenAISpeechToText
+from services.voice.speech_to_text import GroqSpeechToText
 
 router = APIRouter()
 
@@ -16,7 +16,7 @@ async def transcribe_voice(
     file: UploadFile = File(...),
     language: str = Form(...),
 ) -> dict[str, Any]:
-    """Transcribe a farmer voice recording with the configured OpenAI STT provider."""
+    """Transcribe a farmer voice recording with Groq Whisper."""
     if not is_supported_language(language):
         raise HTTPException(
             status_code=422,
@@ -33,7 +33,7 @@ async def transcribe_voice(
         )
 
     try:
-        transcription = OpenAISpeechToText().transcribe(audio, language)
+        transcription = GroqSpeechToText().transcribe(audio, language)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
@@ -63,8 +63,16 @@ async def voice_advisory(
             detail=f"Unsupported voice language: {language}",
         )
 
-    if crop_category is not None and crop_category not in {"rice", "peanut", "vegetables", "flowers"}:
-        raise HTTPException(status_code=422, detail=f"Unsupported crop category: {crop_category}")
+    if crop_category is not None and crop_category not in {
+        "rice",
+        "peanut",
+        "vegetables",
+        "flowers",
+    }:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unsupported crop category: {crop_category}",
+        )
 
     audio = await file.read()
     if not audio:
@@ -76,7 +84,7 @@ async def voice_advisory(
         )
 
     try:
-        transcription = OpenAISpeechToText().transcribe(audio, language)
+        transcription = GroqSpeechToText().transcribe(audio, language)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
