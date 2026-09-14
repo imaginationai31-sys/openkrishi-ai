@@ -1,7 +1,8 @@
 """Speech-to-text providers for OpenKrishi AI.
 
-The default concrete provider uses the OpenAI transcription API. The provider
-interface remains separate so OpenKrishi can add or replace providers later.
+The default concrete provider uses Groq's Whisper-compatible transcription API.
+The provider interface remains separate so OpenKrishi can add or replace
+providers later.
 """
 
 from dataclasses import dataclass
@@ -25,12 +26,7 @@ class SpeechToTextProvider(Protocol):
 
 
 def _audio_filename(audio: bytes) -> str:
-    """Return a useful filename extension for the OpenAI audio upload.
-
-    WhatsApp voice notes commonly arrive as OGG/Opus. The upload filename must
-    match the actual container instead of incorrectly labelling OGG bytes as
-    WAV, otherwise the transcription API may reject or misinterpret the file.
-    """
+    """Return a useful filename extension for the transcription upload."""
     if audio.startswith(b"OggS"):
         return "farmer_audio.ogg"
     if audio.startswith(b"RIFF") and audio[8:12] == b"WAVE":
@@ -42,12 +38,53 @@ def _audio_filename(audio: bytes) -> str:
     return "farmer_audio.bin"
 
 
-class OpenAISpeechToText:
-    """Speech-to-text provider backed by the OpenAI transcription API.
+class GroqSpeechToText:
+    """Speech-to-text provider backed by Groq's Whisper API.
 
-    The API key is read from the OPENAI_API_KEY environment variable and is
-    never stored in the repository. The model can be overridden with the
-    OPENAI_STT_MODEL environment variable for deployment configuration.
+    The API key is read from GROQ_API_KEY and is never stored in the repository.
+    The model can be overridden with GROQ_STT_MODEL.
+    """
+
+    def __init__(self, model: str | None = None) -> None:
+        self.model = model or os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo")
+
+    def transcribe(self, audio: bytes, language: str) -> Transcription:
+        if not audio:
+            raise ValueError("Audio input cannot be empty.")
+
+        if not is_supported_language(language):
+            raise ValueError(f"Unsupported voice language: {language}")
+
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise RuntimeError(
+                "GROQ_API_KEY is not configured. Set it before processing audio."
+            )
+
+        from groq import Groq
+
+        client = Groq(api_key=api_key)
+        audio_file = io.BytesIO(audio)
+        audio_file.name = _audio_filename(audio)
+
+        result = client.audio.transcriptions.create(
+            model=self.model,
+            file=audio_file,
+            language=language,
+        )
+
+        text = (result.text or "").strip()
+        if not text:
+            raise RuntimeError("Speech-to-text returned an empty transcription.")
+
+        return Transcription(text=text, language=language, confidence=None)
+
+
+class OpenAISpeechToText:
+    """Backward-compatible OpenAI STT provider.
+
+    Kept available for callers that still explicitly instantiate this class.
+    The OpenKrishi voice API uses GroqSpeechToText by default.
     """
 
     def __init__(self, model: str | None = None) -> None:
@@ -56,7 +93,6 @@ class OpenAISpeechToText:
     def transcribe(self, audio: bytes, language: str) -> Transcription:
         if not audio:
             raise ValueError("Audio input cannot be empty.")
-
         if not is_supported_language(language):
             raise ValueError(f"Unsupported voice language: {language}")
 
@@ -71,17 +107,14 @@ class OpenAISpeechToText:
         client = OpenAI(api_key=api_key)
         audio_file = io.BytesIO(audio)
         audio_file.name = _audio_filename(audio)
-
         result = client.audio.transcriptions.create(
             model=self.model,
             file=audio_file,
             language=language,
         )
-
         text = (result.text or "").strip()
         if not text:
             raise RuntimeError("Speech-to-text returned an empty transcription.")
-
         return Transcription(text=text, language=language, confidence=None)
 
 
