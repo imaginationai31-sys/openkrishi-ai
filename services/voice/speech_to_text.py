@@ -51,12 +51,7 @@ def _audio_filename(
     filename: str | None = None,
     content_type: str | None = None,
 ) -> str:
-    """Return a Groq-supported filename extension for the upload.
-
-    Prefer the extension supplied by the multipart upload, then use file
-    signatures. This handles WhatsApp recordings whose bytes do not expose a
-    recognizable container signature at the start of the payload.
-    """
+    """Return a Groq-supported filename extension for the upload."""
     if filename:
         extension = Path(filename).suffix.lower().lstrip(".")
         if extension in SUPPORTED_AUDIO_EXTENSIONS:
@@ -65,6 +60,7 @@ def _audio_filename(
     if content_type:
         mime_to_extension = {
             "audio/ogg": "ogg",
+            "application/ogg": "ogg",
             "audio/opus": "opus",
             "audio/wav": "wav",
             "audio/x-wav": "wav",
@@ -88,15 +84,13 @@ def _audio_filename(
         return "farmer_audio.mp3"
     if audio.startswith(b"\x1a\x45\xdf\xa3"):
         return "farmer_audio.webm"
+
+    # WhatsApp/Opus uploads can lack a recognizable signature in the first bytes.
     return "farmer_audio.ogg"
 
 
 class GroqSpeechToText:
-    """Speech-to-text provider backed by Groq's Whisper API.
-
-    The API key is read from GROQ_API_KEY and is never stored in the repository.
-    The model can be overridden with GROQ_STT_MODEL.
-    """
+    """Speech-to-text provider backed by Groq's Whisper API."""
 
     def __init__(self, model: str | None = None) -> None:
         self.model = model or os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo")
@@ -110,7 +104,6 @@ class GroqSpeechToText:
     ) -> Transcription:
         if not audio:
             raise ValueError("Audio input cannot be empty.")
-
         if not is_supported_language(language):
             raise ValueError(f"Unsupported voice language: {language}")
 
@@ -123,13 +116,16 @@ class GroqSpeechToText:
         from groq import Groq
 
         client = Groq(api_key=api_key)
-        audio_file = io.BytesIO(audio)
-        audio_file.name = _audio_filename(audio, filename, content_type)
+        upload_name = _audio_filename(audio, filename, content_type)
 
+        # Use Groq's documented `(filename, bytes)` multipart form explicitly.
+        # This is more reliable than relying on BytesIO.name to determine the
+        # uploaded media type, especially for WhatsApp OGG/Opus recordings.
         result = client.audio.transcriptions.create(
             model=self.model,
-            file=audio_file,
+            file=(upload_name, audio),
             language=language,
+            response_format="json",
         )
 
         text = (result.text or "").strip()
@@ -140,11 +136,7 @@ class GroqSpeechToText:
 
 
 class OpenAISpeechToText:
-    """Backward-compatible OpenAI STT provider.
-
-    Kept available for callers that still explicitly instantiate this class.
-    The OpenKrishi voice API uses GroqSpeechToText by default.
-    """
+    """Backward-compatible OpenAI STT provider."""
 
     def __init__(self, model: str | None = None) -> None:
         self.model = model or os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe")
@@ -170,11 +162,10 @@ class OpenAISpeechToText:
         from openai import OpenAI
 
         client = OpenAI(api_key=api_key)
-        audio_file = io.BytesIO(audio)
-        audio_file.name = _audio_filename(audio, filename, content_type)
+        upload_name = _audio_filename(audio, filename, content_type)
         result = client.audio.transcriptions.create(
             model=self.model,
-            file=audio_file,
+            file=(upload_name, audio),
             language=language,
         )
         text = (result.text or "").strip()
