@@ -8,6 +8,7 @@ providers later.
 from dataclasses import dataclass
 import io
 import os
+from pathlib import Path
 from typing import Protocol
 
 from .languages import is_supported_language
@@ -21,12 +22,64 @@ class Transcription:
 
 
 class SpeechToTextProvider(Protocol):
-    def transcribe(self, audio: bytes, language: str) -> Transcription:
+    def transcribe(
+        self,
+        audio: bytes,
+        language: str,
+        filename: str | None = None,
+        content_type: str | None = None,
+    ) -> Transcription:
         """Convert audio bytes into normalized farmer text."""
 
 
-def _audio_filename(audio: bytes) -> str:
-    """Return a useful filename extension for the transcription upload."""
+SUPPORTED_AUDIO_EXTENSIONS = {
+    "flac",
+    "mp3",
+    "mp4",
+    "mpeg",
+    "mpga",
+    "m4a",
+    "ogg",
+    "opus",
+    "wav",
+    "webm",
+}
+
+
+def _audio_filename(
+    audio: bytes,
+    filename: str | None = None,
+    content_type: str | None = None,
+) -> str:
+    """Return a Groq-supported filename extension for the upload.
+
+    Prefer the extension supplied by the multipart upload, then use file
+    signatures. This handles WhatsApp recordings whose bytes do not expose a
+    recognizable container signature at the start of the payload.
+    """
+    if filename:
+        extension = Path(filename).suffix.lower().lstrip(".")
+        if extension in SUPPORTED_AUDIO_EXTENSIONS:
+            return f"farmer_audio.{extension}"
+
+    if content_type:
+        mime_to_extension = {
+            "audio/ogg": "ogg",
+            "audio/opus": "opus",
+            "audio/wav": "wav",
+            "audio/x-wav": "wav",
+            "audio/mpeg": "mp3",
+            "audio/mp3": "mp3",
+            "audio/mp4": "mp4",
+            "audio/x-m4a": "m4a",
+            "audio/webm": "webm",
+            "audio/flac": "flac",
+        }
+        mime = content_type.split(";", 1)[0].strip().lower()
+        extension = mime_to_extension.get(mime)
+        if extension:
+            return f"farmer_audio.{extension}"
+
     if audio.startswith(b"OggS"):
         return "farmer_audio.ogg"
     if audio.startswith(b"RIFF") and audio[8:12] == b"WAVE":
@@ -35,7 +88,7 @@ def _audio_filename(audio: bytes) -> str:
         return "farmer_audio.mp3"
     if audio.startswith(b"\x1a\x45\xdf\xa3"):
         return "farmer_audio.webm"
-    return "farmer_audio.bin"
+    return "farmer_audio.ogg"
 
 
 class GroqSpeechToText:
@@ -48,7 +101,13 @@ class GroqSpeechToText:
     def __init__(self, model: str | None = None) -> None:
         self.model = model or os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo")
 
-    def transcribe(self, audio: bytes, language: str) -> Transcription:
+    def transcribe(
+        self,
+        audio: bytes,
+        language: str,
+        filename: str | None = None,
+        content_type: str | None = None,
+    ) -> Transcription:
         if not audio:
             raise ValueError("Audio input cannot be empty.")
 
@@ -65,7 +124,7 @@ class GroqSpeechToText:
 
         client = Groq(api_key=api_key)
         audio_file = io.BytesIO(audio)
-        audio_file.name = _audio_filename(audio)
+        audio_file.name = _audio_filename(audio, filename, content_type)
 
         result = client.audio.transcriptions.create(
             model=self.model,
@@ -90,7 +149,13 @@ class OpenAISpeechToText:
     def __init__(self, model: str | None = None) -> None:
         self.model = model or os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe")
 
-    def transcribe(self, audio: bytes, language: str) -> Transcription:
+    def transcribe(
+        self,
+        audio: bytes,
+        language: str,
+        filename: str | None = None,
+        content_type: str | None = None,
+    ) -> Transcription:
         if not audio:
             raise ValueError("Audio input cannot be empty.")
         if not is_supported_language(language):
@@ -106,7 +171,7 @@ class OpenAISpeechToText:
 
         client = OpenAI(api_key=api_key)
         audio_file = io.BytesIO(audio)
-        audio_file.name = _audio_filename(audio)
+        audio_file.name = _audio_filename(audio, filename, content_type)
         result = client.audio.transcriptions.create(
             model=self.model,
             file=audio_file,
