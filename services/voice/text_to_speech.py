@@ -19,21 +19,8 @@ class TextToSpeechProvider(Protocol):
         """Convert an advisory response into spoken audio."""
 
 
-TTSFREE_LANGUAGE_CODES = {
-    "bn": "Bengali",
-    "hi": "Hindi",
-    "ta": "Tamil",
-    "pa": "Punjabi",
-    "te": "Telugu",
-}
-
-TTSFREE_SPEAKERS = {
-    "bn": "Ananya",
-    "hi": "Divya",
-    "ta": "Kavitha",
-    "pa": "Divjot",
-    "te": "Priya_tel",
-}
+TTSFREE_LANGUAGE_CODES = {"bn": "Bengali", "hi": "Hindi", "ta": "Tamil", "pa": "Punjabi", "te": "Telugu"}
+TTSFREE_SPEAKERS = {"bn": "Ananya", "hi": "Divya", "ta": "Kavitha", "pa": "Divjot", "te": "Priya_tel"}
 
 
 class TTSFreeTextToSpeech:
@@ -53,31 +40,23 @@ class TTSFreeTextToSpeech:
 
         api_key = os.getenv("TTSFREE_API_KEY")
         if not api_key:
-            raise RuntimeError(
-                "TTSFREE_API_KEY is not configured. Set it before generating audio."
-            )
+            raise RuntimeError("TTSFREE_API_KEY is not configured. Set it before generating audio.")
 
         speaker = self.speaker or TTSFREE_SPEAKERS[language]
-        response = httpx.post(
-            f"{self.base_url.rstrip('/')}/api/tts",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "text": text,
-                "language": language_name,
-                "speaker": speaker,
-                "emotion": "Neutral",
-            },
-            timeout=60.0,
-        )
-        response.raise_for_status()
+        try:
+            response = httpx.post(
+                f"{self.base_url.rstrip('/')}/api/tts",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={"text": text, "language": language_name, "speaker": speaker, "emotion": "Neutral"},
+                timeout=60.0,
+            )
+            response.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise RuntimeError("Text-to-speech provider is temporarily unavailable.") from exc
 
         audio = response.content
         if not audio:
             raise RuntimeError("TTSFree returned empty audio.")
-
         return SpeechAudio(audio=audio, language=language, mime_type="audio/wav")
 
 
@@ -85,7 +64,4 @@ class NotConfiguredTextToSpeech:
     """Safe placeholder until a concrete TTS provider is configured."""
 
     def synthesize(self, text: str, language: str) -> SpeechAudio:
-        raise RuntimeError(
-            "Text-to-speech provider is not configured. "
-            "Configure a TTS provider before generating audio."
-        )
+        raise RuntimeError("Text-to-speech provider is not configured. Configure a TTS provider before generating audio.")
