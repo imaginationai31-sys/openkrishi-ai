@@ -7,6 +7,13 @@ def test_bengali_yellow_leaf_term_is_normalized():
     assert "yellow leaf" in matched
 
 
+def test_bengali_voice_yellow_leaf_phrase_is_normalized():
+    text, matched = normalize_agricultural_terms("আমার ধান গাছে হলুদ রঙের পাতা দেখা যাচ্ছে।", "bn")
+    assert "yellow leaf" in text
+    assert "yellow leaf" in matched
+    assert "yellow leaves" in matched
+
+
 def test_hindi_wilting_term_is_normalized():
     text, matched = normalize_agricultural_terms("पौधे मुरझाए हैं", "hi")
     assert "wilting" in text
