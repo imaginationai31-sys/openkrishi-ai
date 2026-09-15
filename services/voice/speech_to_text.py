@@ -44,9 +44,10 @@ def _audio_filename(audio: bytes, filename: str | None = None, content_type: str
 
 
 class GeminiSpeechToText:
-    """Gemini 3.5 Transcribe provider."""
+    """Gemini 3.5 Transcribe provider with a general-audio fallback."""
     def __init__(self, model: str | None = None) -> None:
         self.model = model or os.getenv("GEMINI_TRANSCRIBE_MODEL", "gemini-3.5-transcribe")
+        self.fallback_model = os.getenv("GEMINI_STT_FALLBACK_MODEL", "gemini-3.8-flash")
 
     def _upload_audio(self, client, genai, audio: bytes, upload_name: str, mime_type: str):
         suffix = Path(upload_name).suffix or ".ogg"
@@ -55,12 +56,19 @@ class GeminiSpeechToText:
             with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_file:
                 temp_file.write(audio)
                 temp_path = temp_file.name
-            audio_file = client.files.upload(file=temp_path, config=genai.types.UploadFileConfig(display_name=upload_name, mime_type=mime_type))
+            audio_file = client.files.upload(
+                file=temp_path,
+                config=genai.types.UploadFileConfig(
+                    display_name=upload_name,
+                    mime_type=mime_type,
+                ),
+            )
             file_name = getattr(audio_file, "name", None)
             if file_name:
-                for _ in range(20):
+                for _ in range(30):
                     state = str(getattr(audio_file, "state", "") or "").upper()
-                    if state not in {"PROCESSING", "FILE_STATE_PROCESSING"}: break
+                    if state not in {"PROCESSING", "FILE_STATE_PROCESSING"}:
+                        break
                     time.sleep(0.5)
                     audio_file = client.files.get(name=file_name)
                 state = str(getattr(audio_file, "state", "") or "").upper()
@@ -69,35 +77,85 @@ class GeminiSpeechToText:
             return audio_file
         finally:
             if temp_path:
-                try: os.unlink(temp_path)
-                except OSError: logger.warning("Could not remove temporary audio file: %s", temp_path)
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    logger.warning("Could not remove temporary audio file: %s", temp_path)
+
+    def _dedicated_transcribe(self, client, audio_file, language: str) -> str:
+        # Gemini's current dedicated transcription documentation uses the
+        # Interactions API for gemini-3.5-transcribe. Keep the request minimal
+        # and use the documented BCP-47 language hint.
+        interaction = client.interactions.create(
+            model=self.model,
+            input=[
+                {
+                    "type": "audio",
+                    "uri": audio_file.uri,
+                    "mime_type": audio_file.mime_type,
+                }
+            ],
+            generation_config={
+                "transcription_config": {
+                    "language_codes": [LANGUAGE_CODES[language]],
+                }
+            },
+        )
+        text = getattr(interaction, "output_text", None)
+        if text is None:
+            text = getattr(interaction, "outputText", None)
+        return str(text or "").strip()
+
+    def _fallback_transcribe(self, client, audio_file, language: str) -> str:
+        prompt = (
+            f"Transcribe this farmer's speech exactly in {LANGUAGE_NAMES[language]}. "
+            "Return ONLY the spoken words. Do not translate, summarize, explain, or answer. "
+            "Preserve agricultural words, crop names, symptoms, and numbers."
+        )
+        response = client.models.generate_content(
+            model=self.fallback_model,
+            contents=[prompt, audio_file],
+        )
+        return str(getattr(response, "text", None) or "").strip()
 
     def transcribe(self, audio: bytes, language: str, filename: str | None = None, content_type: str | None = None) -> Transcription:
-        if not audio: raise ValueError("Audio input cannot be empty.")
-        if not is_supported_language(language): raise ValueError(f"Unsupported voice language: {language}")
-        if language not in LANGUAGE_CODES: raise ValueError(f"Unsupported Gemini voice language: {language}")
+        if not audio:
+            raise ValueError("Audio input cannot be empty.")
+        if not is_supported_language(language):
+            raise ValueError(f"Unsupported voice language: {language}")
+        if language not in LANGUAGE_CODES:
+            raise ValueError(f"Unsupported Gemini voice language: {language}")
+
         from google import genai
         from services.gemini.client import get_gemini_client
+
         client = get_gemini_client()
         upload_name = _audio_filename(audio, filename, content_type)
         mime_type = (content_type or "audio/ogg").split(";", 1)[0].strip().lower()
-        if mime_type == "audio/x-wav": mime_type = "audio/wav"
+        if mime_type == "audio/x-wav":
+            mime_type = "audio/wav"
+
         try:
             audio_file = self._upload_audio(client, genai, audio, upload_name, mime_type)
-            # Use Google's documented Gemini 3.5 Transcribe generateContent path.
-            # Language is supplied in the prompt to avoid SDK-version-specific config errors.
-            prompt = (
-                f"Transcribe this farmer's speech exactly in {LANGUAGE_NAMES[language]}. "
-                "Return ONLY the spoken words. Do not translate, summarize, explain, or answer. "
-                "Preserve agricultural words, crop names, symptoms, and numbers. "
-                f"The expected language is {LANGUAGE_CODES[language]}."
-            )
-            response = client.models.generate_content(model=self.model, contents=[prompt, audio_file])
-            text = (getattr(response, "text", None) or "").strip()
-            if not text: raise RuntimeError("Speech-to-text returned an empty transcription.")
+
+            try:
+                text = self._dedicated_transcribe(client, audio_file, language)
+            except Exception as exc:
+                logger.warning(
+                    "Gemini dedicated transcription failed for %s; using audio-understanding fallback: %s",
+                    language,
+                    exc,
+                )
+                text = self._fallback_transcribe(client, audio_file, language)
+
+            if not text:
+                raise RuntimeError("Speech-to-text returned an empty transcription.")
+
             return Transcription(text=text, language=language, confidence=None)
-        except ValueError: raise
-        except RuntimeError: raise
+        except ValueError:
+            raise
+        except RuntimeError:
+            raise
         except Exception as exc:
             logger.exception("Gemini STT request failed for language %s: %s", language, exc)
             raise RuntimeError("Speech-to-text provider is temporarily unavailable.") from exc
