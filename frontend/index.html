@@ -55,13 +55,13 @@
         <option value="flowers">Flowers</option>
       </select>
 
-      <label for="image">Crop photo (optional)</label>
-      <input id="image" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" />
+      <label for="image">Crop photo</label>
+      <input id="image" type="file" accept="image/*,.jpg,.jpeg,.png,.webp" />
       <img id="photoPreview" class="photo-preview" hidden alt="Selected crop photo preview" />
 
       <button id="record" class="record" type="button" aria-label="Hold to speak">🎙️<br>Hold to Speak</button>
       <div id="status" class="status">Press and hold the microphone while speaking.</div>
-      <p class="hint">Add a clear leaf or plant photo for visual assessment.</p>
+      <p class="hint">Choose a photo from Gallery/Photos or take a new camera photo.</p>
     </section>
 
     <section id="resultCard" class="card" hidden>
