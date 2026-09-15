@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#166534" />
+  <title>OpenKrishi AI — Voice Advisory</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #17251b; background: #f4f8f2; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    .app { width: min(680px, 100%); margin: 0 auto; padding: 20px 16px 40px; }
+    header { text-align: center; padding: 20px 8px 16px; }
+    .logo { width: 58px; height: 58px; margin: 0 auto 10px; border-radius: 18px; display: grid; place-items: center; background: #166534; color: white; font-size: 28px; }
+    h1 { margin: 0; font-size: 28px; }
+    .tagline { margin: 7px 0 0; color: #647067; }
+    .card { background: white; border: 1px solid #dce7d9; border-radius: 20px; padding: 18px; box-shadow: 0 5px 20px rgba(20, 55, 25, .06); margin-top: 14px; }
+    label { display: block; font-weight: 700; margin-bottom: 7px; }
+    select { width: 100%; padding: 13px; border: 1px solid #cbd8c8; border-radius: 12px; background: white; font-size: 16px; margin-bottom: 14px; }
+    .record { width: 150px; height: 150px; border-radius: 50%; border: 0; background: #166534; color: white; display: grid; place-items: center; margin: 14px auto; font-size: 18px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 25px rgba(22,101,52,.22); }
+    .record.recording { background: #b91c1c; }
+    .hint { text-align: center; color: #6b756d; font-size: 14px; }
+    .status { text-align: center; min-height: 24px; font-weight: 700; }
+    .result { white-space: pre-wrap; line-height: 1.6; font-size: 17px; }
+    .safety { display: inline-block; margin-top: 12px; padding: 6px 10px; border-radius: 999px; background: #fff7d6; color: #795b00; font-size: 13px; font-weight: 800; }
+    audio { width: 100%; margin-top: 14px; }
+    .small { color: #6b756d; font-size: 12px; margin-top: 12px; }
+    .error { color: #991b1b; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="logo">🌾</div>
+      <h1>OpenKrishi AI</h1>
+      <p class="tagline">Ask about your crop in your own language</p>
+    </header>
+
+    <section class="card">
+      <label for="language">Language</label>
+      <select id="language">
+        <option value="bn">বাংলা</option>
+        <option value="hi">हिन्दी</option>
+        <option value="ta">தமிழ்</option>
+        <option value="pa">ਪੰਜਾਬੀ</option>
+        <option value="te">తెలుగు</option>
+      </select>
+
+      <label for="crop">Crop</label>
+      <select id="crop">
+        <option value="rice">Rice</option>
+        <option value="peanut">Peanut</option>
+        <option value="vegetables">Vegetables</option>
+        <option value="flowers">Flowers</option>
+      </select>
+
+      <button id="record" class="record" type="button">🎙️<br>Hold to Speak</button>
+      <div id="status" class="status">Tap and hold the microphone to ask your question.</div>
+      <p class="hint">Example: “আমার ধান গাছে হলুদ রঙের পাতা দেখা যাচ্ছে।”</p>
+    </section>
+
+    <section id="resultCard" class="card" hidden>
+      <strong>OpenKrishi advice</strong>
+      <div id="result" class="result"></div>
+      <span id="safety" class="safety">Safety: Caution</span>
+      <audio id="audio" controls></audio>
+      <div id="details" class="small"></div>
+    </section>
+  </main>
+
+<script>
+const API_BASE = window.OPENKRISHI_API_BASE || 'https://openkrishi-ai-api.onrender.com';
+const recordButton = document.getElementById('record');
+const statusEl = document.getElementById('status');
+const resultCard = document.getElementById('resultCard');
+const resultEl = document.getElementById('result');
+const safetyEl = document.getElementById('safety');
+const audioEl = document.getElementById('audio');
+const detailsEl = document.getElementById('details');
+let recorder;
+let chunks = [];
+let stream;
+
+function setStatus(text, error = false) {
+  statusEl.textContent = text;
+  statusEl.classList.toggle('error', error);
+}
+
+async function startRecording() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    chunks = [];
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    recorder.onstop = sendRecording;
+    recorder.start();
+    recordButton.classList.add('recording');
+    recordButton.innerHTML = '⏹️<br>Release to Send';
+    setStatus('Listening…');
+  } catch (err) {
+    setStatus('Microphone permission is required.', true);
+  }
+}
+
+function stopRecording() {
+  if (!recorder || recorder.state === 'inactive') return;
+  recorder.stop();
+  stream?.getTracks().forEach(t => t.stop());
+  recordButton.classList.remove('recording');
+  recordButton.innerHTML = '🎙️<br>Hold to Speak';
+  setStatus('Processing your question…');
+}
+
+async function sendRecording() {
+  try {
+    const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+    const extension = blob.type.includes('ogg') ? 'ogg' : blob.type.includes('mp4') ? 'm4a' : 'webm';
+    const form = new FormData();
+    form.append('file', blob, `farmer-question.${extension}`);
+    form.append('language', document.getElementById('language').value);
+    form.append('crop_category', document.getElementById('crop').value);
+
+    const response = await fetch(`${API_BASE}/api/v1/voice/advisory`, { method: 'POST', body: form });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || 'Unable to process your question.');
+
+    resultCard.hidden = false;
+    resultEl.textContent = data.advisory?.answer || 'No advisory was returned.';
+    safetyEl.textContent = `Safety: ${data.advisory?.safety?.status || 'caution'}`;
+    detailsEl.textContent = `Detected crop: ${data.understanding?.detected_crop || 'not specified'} · Confidence: ${data.advisory?.confidence || 'low'}`;
+
+    if (data.audio?.base64) {
+      audioEl.src = `data:${data.audio.mime_type};base64,${data.audio.base64}`;
+      audioEl.play().catch(() => {});
+    }
+    setStatus('Advice ready.');
+  } catch (err) {
+    setStatus(err.message || 'Something went wrong.', true);
+  }
+}
+
+recordButton.addEventListener('pointerdown', e => { e.preventDefault(); startRecording(); });
+recordButton.addEventListener('pointerup', e => { e.preventDefault(); stopRecording(); });
+recordButton.addEventListener('pointercancel', stopRecording);
+recordButton.addEventListener('pointerleave', e => { if (recorder?.state === 'recording') stopRecording(); });
+</script>
+</body>
+</html>
