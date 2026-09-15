@@ -32,3 +32,11 @@ def test_empty_image_is_rejected():
 def test_large_image_is_rejected():
     with pytest.raises(ValueError, match="10 MB"):
         assess_crop_image(b"x" * (10 * 1024 * 1024 + 1), "image/jpeg", "rice")
+
+
+def test_vision_route_exposes_advisory_layer():
+    from services.api.routes.vision import vision_assess
+
+    assert vision_assess.__name__ == "vision_assess"
+    assert "language" in vision_assess.__annotations__
+    assert "location" in vision_assess.__annotations__
