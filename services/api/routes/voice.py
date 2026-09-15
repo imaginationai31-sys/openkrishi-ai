@@ -5,6 +5,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from services.advisory.engine import generate_advisory
 from services.advisory.normalizer import normalize_agricultural_terms
+from services.advisory.voice_understanding import build_voice_understanding
 from services.voice.languages import is_supported_language
 from services.voice.speech_to_text import GroqSpeechToText
 from services.voice.text_to_speech import TTSFreeTextToSpeech
@@ -31,10 +32,7 @@ async def transcribe_voice(
 
     try:
         transcription = GroqSpeechToText().transcribe(
-            audio,
-            language,
-            filename=file.filename,
-            content_type=file.content_type,
+            audio, language, filename=file.filename, content_type=file.content_type
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -58,7 +56,7 @@ async def voice_advisory(
     growth_stage: str | None = Form(default=None),
     location: str | None = Form(default=None),
 ) -> dict[str, Any]:
-    """Run voice -> STT -> normalization -> advisory -> TTS."""
+    """Run raw farmer voice -> STT -> understanding -> advisory -> TTS."""
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
 
@@ -73,10 +71,7 @@ async def voice_advisory(
 
     try:
         transcription = GroqSpeechToText().transcribe(
-            audio,
-            language,
-            filename=file.filename,
-            content_type=file.content_type,
+            audio, language, filename=file.filename, content_type=file.content_type
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -84,8 +79,15 @@ async def voice_advisory(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     normalized_text, matched_terms = normalize_agricultural_terms(
+        transcription.text, transcription.language
+    )
+
+    understanding = build_voice_understanding(
         transcription.text,
+        normalized_text,
+        matched_terms,
         transcription.language,
+        crop_category,
     )
 
     advisory = generate_advisory(
@@ -96,10 +98,17 @@ async def voice_advisory(
         location=location,
     )
 
+    if understanding["needs_clarification"]:
+        advisory["confidence"] = "low"
+        advisory["uncertainties"].insert(
+            0,
+            "The farmer's wording could not be mapped confidently to a known agricultural symptom.",
+        )
+        advisory["recommendations"].extend(understanding["follow_up_questions"])
+
     try:
         spoken = TTSFreeTextToSpeech().synthesize(
-            advisory["answer"],
-            transcription.language,
+            advisory["answer"], transcription.language
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -114,6 +123,7 @@ async def voice_advisory(
             "language": transcription.language,
             "confidence": transcription.confidence,
         },
+        "understanding": understanding,
         "advisory": advisory,
         "audio": {
             "mime_type": spoken.mime_type,
