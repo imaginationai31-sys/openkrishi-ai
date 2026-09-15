@@ -4,6 +4,7 @@ from typing import Any
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from services.advisory.engine import generate_advisory
+from services.advisory.normalizer import normalize_agricultural_terms
 from services.voice.languages import is_supported_language
 from services.voice.speech_to_text import GroqSpeechToText
 from services.voice.text_to_speech import TTSFreeTextToSpeech
@@ -57,7 +58,7 @@ async def voice_advisory(
     growth_stage: str | None = Form(default=None),
     location: str | None = Form(default=None),
 ) -> dict[str, Any]:
-    """Run voice -> STT -> advisory -> TTS and return spoken audio as base64."""
+    """Run voice -> STT -> normalization -> advisory -> TTS."""
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
 
@@ -82,8 +83,13 @@ async def voice_advisory(
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
+    normalized_text, matched_terms = normalize_agricultural_terms(
+        transcription.text,
+        transcription.language,
+    )
+
     advisory = generate_advisory(
-        query=transcription.text,
+        query=normalized_text,
         language=transcription.language,
         crop_category=crop_category,
         growth_stage=growth_stage,
@@ -103,6 +109,8 @@ async def voice_advisory(
     return {
         "transcription": {
             "text": transcription.text,
+            "normalized_text": normalized_text,
+            "matched_terms": matched_terms,
             "language": transcription.language,
             "confidence": transcription.confidence,
         },
