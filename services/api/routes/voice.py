@@ -7,8 +7,8 @@ from services.advisory.engine import generate_advisory
 from services.advisory.normalizer import normalize_agricultural_terms
 from services.advisory.voice_understanding import build_voice_understanding
 from services.voice.languages import is_supported_language
-from services.voice.speech_to_text import GroqSpeechToText
-from services.voice.text_to_speech import TTSFreeTextToSpeech
+from services.voice.speech_to_text import GeminiSpeechToText
+from services.voice.text_to_speech import GeminiTextToSpeech
 from services.vision.engine import assess_crop_image
 
 router = APIRouter()
@@ -17,12 +17,22 @@ MAX_AUDIO_BYTES = 10 * 1024 * 1024
 SUPPORTED_CROPS = {"rice", "peanut", "vegetables", "flowers"}
 
 
+def _transcribe(audio: bytes, language: str, filename: str | None, content_type: str | None):
+    return GeminiSpeechToText().transcribe(
+        audio, language, filename=filename, content_type=content_type
+    )
+
+
+def _synthesize(text: str, language: str):
+    return GeminiTextToSpeech().synthesize(text, language)
+
+
 @router.post("/voice/transcribe")
 async def transcribe_voice(
     file: UploadFile = File(...),
     language: str = Form(...),
 ) -> dict[str, Any]:
-    """Transcribe a farmer voice recording with Groq Whisper."""
+    """Transcribe a farmer voice recording with Gemini 3.5 Transcribe."""
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
 
@@ -33,9 +43,7 @@ async def transcribe_voice(
         raise HTTPException(status_code=413, detail="Audio file is too large. Maximum size is 10 MB.")
 
     try:
-        transcription = GroqSpeechToText().transcribe(
-            audio, language, filename=file.filename, content_type=file.content_type
-        )
+        transcription = _transcribe(audio, language, file.filename, file.content_type)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
@@ -58,10 +66,9 @@ async def voice_advisory(
     growth_stage: str | None = Form(default=None),
     location: str | None = Form(default=None),
 ) -> dict[str, Any]:
-    """Run raw farmer voice -> STT -> understanding -> advisory -> TTS."""
+    """Run raw farmer voice -> Gemini STT -> understanding -> advisory -> Gemini TTS."""
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
-
     if crop_category is not None and crop_category not in SUPPORTED_CROPS:
         raise HTTPException(status_code=422, detail=f"Unsupported crop category: {crop_category}")
 
@@ -72,9 +79,7 @@ async def voice_advisory(
         raise HTTPException(status_code=413, detail="Audio file is too large. Maximum size is 10 MB.")
 
     try:
-        transcription = GroqSpeechToText().transcribe(
-            audio, language, filename=file.filename, content_type=file.content_type
-        )
+        transcription = _transcribe(audio, language, file.filename, file.content_type)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
@@ -83,15 +88,10 @@ async def voice_advisory(
     normalized_text, matched_terms = normalize_agricultural_terms(
         transcription.text, transcription.language
     )
-
     understanding = build_voice_understanding(
-        transcription.text,
-        normalized_text,
-        matched_terms,
-        transcription.language,
-        crop_category,
+        transcription.text, normalized_text, matched_terms,
+        transcription.language, crop_category,
     )
-
     advisory = generate_advisory(
         query=normalized_text,
         language=transcription.language,
@@ -103,15 +103,12 @@ async def voice_advisory(
     if understanding["needs_clarification"]:
         advisory["confidence"] = "low"
         advisory["uncertainties"].insert(
-            0,
-            "The farmer's wording could not be mapped confidently to a known agricultural symptom.",
+            0, "The farmer's wording could not be mapped confidently to a known agricultural symptom."
         )
         advisory["recommendations"].extend(understanding["follow_up_questions"])
 
     try:
-        spoken = TTSFreeTextToSpeech().synthesize(
-            advisory["answer"], transcription.language
-        )
+        spoken = _synthesize(advisory["answer"], transcription.language)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
@@ -144,7 +141,7 @@ async def voice_vision_advisory(
     growth_stage: str | None = Form(default=None),
     location: str | None = Form(default=None),
 ) -> dict[str, Any]:
-    """Run farmer voice + crop photo -> STT -> vision -> advisory -> TTS."""
+    """Run farmer voice + crop photo -> Gemini STT -> Gemini Vision -> advisory -> Gemini TTS."""
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
     if crop_category is not None and crop_category not in SUPPORTED_CROPS:
@@ -161,18 +158,13 @@ async def voice_vision_advisory(
         raise HTTPException(status_code=400, detail="Image input cannot be empty.")
 
     try:
-        transcription = GroqSpeechToText().transcribe(
-            audio, language, filename=file.filename, content_type=file.content_type
-        )
+        transcription = _transcribe(audio, language, file.filename, file.content_type)
         normalized_text, matched_terms = normalize_agricultural_terms(
             transcription.text, transcription.language
         )
         understanding = build_voice_understanding(
-            transcription.text,
-            normalized_text,
-            matched_terms,
-            transcription.language,
-            crop_category,
+            transcription.text, normalized_text, matched_terms,
+            transcription.language, crop_category,
         )
         visual = assess_crop_image(
             image_bytes=image_bytes,
@@ -184,7 +176,9 @@ async def voice_vision_advisory(
         visual_query = "; ".join(
             [*visual.get("observations", []), *visual.get("possible_causes", [])]
         ).strip()
-        combined_query = "; ".join(part for part in (normalized_text, visual_query) if part).strip()
+        combined_query = "; ".join(
+            part for part in (normalized_text, visual_query) if part
+        ).strip()
         if not combined_query:
             combined_query = "farmer crop concern is unclear; crop photo assessment is unclear"
 
@@ -199,21 +193,17 @@ async def voice_vision_advisory(
         if understanding["needs_clarification"]:
             advisory["confidence"] = "low"
             advisory["uncertainties"].insert(
-                0,
-                "The farmer's wording could not be mapped confidently to a known agricultural symptom.",
+                0, "The farmer's wording could not be mapped confidently to a known agricultural symptom."
             )
             advisory["recommendations"].extend(understanding["follow_up_questions"])
 
         if visual.get("confidence") == "low":
             advisory["confidence"] = "low"
             advisory["uncertainties"].insert(
-                0,
-                "The crop photo did not provide enough reliable visual evidence for a confident conclusion.",
+                0, "The crop photo did not provide enough reliable visual evidence for a confident conclusion."
             )
 
-        spoken = TTSFreeTextToSpeech().synthesize(
-            advisory["answer"], transcription.language
-        )
+        spoken = _synthesize(advisory["answer"], transcription.language)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
