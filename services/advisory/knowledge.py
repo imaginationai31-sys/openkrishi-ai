@@ -1,6 +1,8 @@
-"""Small, conservative agricultural knowledge layer for the MVP."""
+"""Conservative symptom rules enriched with structured crop-stage context."""
 
 from typing import Any
+
+from .crop_intelligence import get_crop_profile, get_stage_guidance
 
 
 RULES: list[dict[str, Any]] = [
@@ -63,11 +65,15 @@ def get_knowledge(
                     f"Use the crop's current growth stage ({growth_stage}) when comparing the symptom with local agronomy guidance.",
                 )
 
+                stage_guidance = get_stage_guidance(crop, growth_stage)
+                if stage_guidance:
+                    recommendations.insert(1, stage_guidance)
+
                 if crop == "rice" and "tillering" in stage and any(
                     keyword in text for keyword in rule["keywords"]
                 ):
                     recommendations.insert(
-                        1,
+                        2,
                         "At the tillering stage, compare affected plants with healthy plants and check whether yellowing is concentrated on older leaves or across the canopy.",
                     )
             else:
@@ -80,6 +86,17 @@ def get_knowledge(
                 "recommendations": recommendations,
                 "uncertainties": uncertainties,
             }
+
+    profile = get_crop_profile(crop)
+    if profile and not stage:
+        return {
+            "observations": [],
+            "recommendations": [],
+            "uncertainties": [
+                "No specific symptom rule matched this question. More crop, growth-stage, and field information is needed.",
+                f"Supported {profile['label']} stages include: {', '.join(profile['stages'])}.",
+            ],
+        }
 
     return {
         "observations": [],
