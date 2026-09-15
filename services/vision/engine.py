@@ -12,49 +12,25 @@ SUPPORTED_CROPS = {"rice", "peanut", "vegetables", "flowers"}
 SUPPORTED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
 
-
-VISION_SYSTEM_PROMPT = """You are a conservative agricultural image-assessment assistant.
-Assess only what is visibly supported by the crop photo.
-Do not claim a definitive disease, pest, nutrient deficiency, or treatment.
-Do not recommend pesticide products, rates, or large fertilizer doses.
-Return only a JSON object matching the supplied response schema.
-If the image is unclear, say so and use low confidence.
-"""
+LANGUAGE_NAMES = {
+    "en": "English",
+    "bn": "Bengali",
+    "hi": "Hindi",
+    "ta": "Tamil",
+    "pa": "Punjabi",
+    "te": "Telugu",
+}
 
 VISION_RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
-        "observations": {
-            "type": "array",
-            "items": {"type": "string"},
-            "description": "Short observations directly supported by the image.",
-        },
-        "possible_causes": {
-            "type": "array",
-            "items": {"type": "string"},
-            "description": "Cautious possible causes; never definitive diagnoses.",
-        },
-        "confidence": {
-            "type": "string",
-            "enum": ["low", "medium", "high"],
-        },
-        "uncertainties": {
-            "type": "array",
-            "items": {"type": "string"},
-        },
-        "recommendations": {
-            "type": "array",
-            "items": {"type": "string"},
-            "description": "Safe next-step checks only.",
-        },
+        "observations": {"type": "array", "items": {"type": "string"}, "description": "Short observations directly supported by the image."},
+        "possible_causes": {"type": "array", "items": {"type": "string"}, "description": "Cautious possible causes; never definitive diagnoses."},
+        "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
+        "uncertainties": {"type": "array", "items": {"type": "string"}},
+        "recommendations": {"type": "array", "items": {"type": "string"}, "description": "Safe next-step checks only."},
     },
-    "required": [
-        "observations",
-        "possible_causes",
-        "confidence",
-        "uncertainties",
-        "recommendations",
-    ],
+    "required": ["observations", "possible_causes", "confidence", "uncertainties", "recommendations"],
     "additionalProperties": False,
 }
 
@@ -87,7 +63,6 @@ def _safe_result(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def _parse_assessment(raw: str) -> dict[str, Any]:
-    """Parse Gemini JSON while tolerating harmless markdown fences."""
     text = (raw or "").strip()
     if text.startswith("```"):
         lines = text.splitlines()
@@ -96,12 +71,10 @@ def _parse_assessment(raw: str) -> dict[str, Any]:
         if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
         text = "\n".join(lines).strip()
-
     try:
         payload = json.loads(text)
     except json.JSONDecodeError as exc:
         raise RuntimeError("Vision provider returned an invalid assessment format.") from exc
-
     if not isinstance(payload, dict):
         raise RuntimeError("Vision provider returned an invalid assessment format.")
     return payload
@@ -112,18 +85,24 @@ def assess_crop_image(
     content_type: str,
     crop_category: str | None = None,
     growth_stage: str | None = None,
+    language: str = "en",
 ) -> dict[str, Any]:
-    """Assess a crop image using Gemini's native multimodal vision."""
+    """Assess a crop image and generate all natural-language findings in the requested language."""
     normalized_type = _validate_image(image_bytes, content_type, crop_category)
+    if language not in LANGUAGE_NAMES:
+        raise ValueError("Unsupported language.")
 
     client = get_gemini_client()
-    context = (
-        f"Crop category: {crop_category or 'unknown'}; "
-        f"growth stage: {growth_stage or 'unknown'}."
-    )
+    language_name = LANGUAGE_NAMES[language]
+    context = f"Crop category: {crop_category or 'unknown'}; growth stage: {growth_stage or 'unknown'}."
     image_data = base64.b64encode(image_bytes).decode("ascii")
-
-    prompt = f"""{VISION_SYSTEM_PROMPT}
+    prompt = f"""You are a conservative agricultural image-assessment assistant.
+Assess only what is visibly supported by the crop photo.
+Do not claim a definitive disease, pest, nutrient deficiency, or treatment.
+Do not recommend pesticide products, rates, or large fertilizer doses.
+Return only a JSON object matching the supplied response schema.
+IMPORTANT LANGUAGE RULE: Every natural-language value in observations, possible_causes, uncertainties, and recommendations MUST be written fully and naturally in {language_name}. Do not use English in those fields unless it is an unavoidable proper name or technical term. The confidence value must remain exactly one of low, medium, high.
+If the image is unclear, explain that clearly in {language_name} and use low confidence.
 
 Context:
 {context}
@@ -137,11 +116,7 @@ Analyze the attached crop image. Return only the JSON object matching the respon
                 {"type": "text", "text": prompt},
                 {"type": "image", "data": image_data, "mime_type": normalized_type},
             ],
-            response_format={
-                "type": "text",
-                "mime_type": "application/json",
-                "schema": VISION_RESPONSE_SCHEMA,
-            },
+            response_format={"type": "text", "mime_type": "application/json", "schema": VISION_RESPONSE_SCHEMA},
         )
     except Exception as exc:
         raise RuntimeError("Vision provider is temporarily unavailable.") from exc
@@ -151,5 +126,6 @@ Analyze the attached crop image. Return only the JSON object matching the respon
     result["image"] = {"content_type": normalized_type, "size_bytes": len(image_bytes)}
     result["crop_category"] = crop_category
     result["growth_stage"] = growth_stage
+    result["language"] = language
     result["status"] = "assessed"
     return result
