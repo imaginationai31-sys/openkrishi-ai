@@ -79,8 +79,8 @@ def test_voice_transcribe_provider_failure_returns_503():
 
 
 def test_voice_advisory_end_to_end_with_provider_mocks():
-    transcription = Transcription(text="My rice leaves have yellow spots", language="en", confidence=None)
-    spoken = SpeechAudio(audio=b"RIFF-fake-wav", mime_type="audio/wav", language="en")
+    transcription = Transcription(text="ধানের পাতায় হলুদ দাগ আছে", language="bn", confidence=None)
+    spoken = SpeechAudio(audio=b"RIFF-fake-wav", mime_type="audio/wav", language="bn")
 
     with (
         patch("services.api.routes.voice.GroqSpeechToText.transcribe", return_value=transcription),
@@ -89,12 +89,13 @@ def test_voice_advisory_end_to_end_with_provider_mocks():
         response = client.post(
             "/api/v1/voice/advisory",
             files={"file": make_audio_upload()},
-            data={"language": "en", "crop_category": "rice"},
+            data={"language": "bn", "crop_category": "rice"},
         )
 
     assert response.status_code == 200
     body = response.json()
     assert body["transcription"]["text"] == transcription.text
+    assert body["transcription"]["language"] == "bn"
     assert body["advisory"]["confidence"] == "low"
     assert body["audio"]["mime_type"] == "audio/wav"
     assert body["audio"]["base64"]
@@ -129,8 +130,8 @@ def test_vision_assess_provider_failure_returns_502():
 
 
 def test_voice_vision_advisory_end_to_end_with_provider_mocks():
-    transcription = Transcription(text="My rice leaves are yellow", language="en", confidence=None)
-    spoken = SpeechAudio(audio=b"RIFF-fake-wav", mime_type="audio/wav", language="en")
+    transcription = Transcription(text="ধানের পাতা হলুদ হয়ে যাচ্ছে", language="bn", confidence=None)
+    spoken = SpeechAudio(audio=b"RIFF-fake-wav", mime_type="audio/wav", language="bn")
     visual = {
         "status": "assessed",
         "image": {"content_type": "image/jpeg", "size_bytes": 10},
@@ -149,12 +150,13 @@ def test_voice_vision_advisory_end_to_end_with_provider_mocks():
         response = client.post(
             "/api/v1/voice/vision-advisory",
             files={"file": make_audio_upload(), "image": make_image_upload()},
-            data={"language": "en", "crop_category": "rice"},
+            data={"language": "bn", "crop_category": "rice"},
         )
 
     assert response.status_code == 200
     body = response.json()
     assert body["transcription"]["text"] == transcription.text
+    assert body["transcription"]["language"] == "bn"
     assert body["vision"]["status"] == "assessed"
     assert body["vision"]["observations"] == ["yellowing leaves"]
     assert body["advisory"]["confidence"] == "low"
