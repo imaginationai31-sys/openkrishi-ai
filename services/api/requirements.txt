@@ -6,4 +6,3 @@ httpx
 openai
 python-multipart
 groq
-sarvamai
