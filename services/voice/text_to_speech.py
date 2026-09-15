@@ -1,14 +1,10 @@
-"""Text-to-speech providers for OpenKrishi AI.
-
-The default concrete provider uses TTSFree's free REST API backed by
-AI4Bharat's Indic Parler-TTS voices.
-"""
+"""Text-to-speech providers for OpenKrishi AI."""
 
 from dataclasses import dataclass
-import json
 import os
 from typing import Protocol
-from urllib import error, request
+
+import httpx
 
 
 @dataclass(frozen=True)
@@ -31,8 +27,8 @@ TTSFREE_LANGUAGE_CODES = {
     "te": "Telugu",
 }
 
-TTSFREE_DEFAULT_SPEAKERS = {
-    "bn": "Aditi",
+TTSFREE_SPEAKERS = {
+    "bn": "Ananya",
     "hi": "Divya",
     "ta": "Kavitha",
     "pa": "Divjot",
@@ -41,11 +37,11 @@ TTSFREE_DEFAULT_SPEAKERS = {
 
 
 class TTSFreeTextToSpeech:
-    """Regional-language TTS backed by TTSFree's free REST API."""
+    """Indian-language TTS backed by the TTSFree developer API."""
 
     def __init__(self, speaker: str | None = None) -> None:
+        self.base_url = os.getenv("TTSFREE_BASE_URL", "https://ttsfree.in")
         self.speaker = speaker
-        self.endpoint = os.getenv("TTSFREE_TTS_URL", "https://ttsfree.in/api/tts")
 
     def synthesize(self, text: str, language: str) -> SpeechAudio:
         if not text.strip():
@@ -61,44 +57,28 @@ class TTSFreeTextToSpeech:
                 "TTSFREE_API_KEY is not configured. Set it before generating audio."
             )
 
-        speaker = self.speaker or os.getenv(
-            "TTSFREE_TTS_SPEAKER", TTSFREE_DEFAULT_SPEAKERS[language]
-        )
-        payload = json.dumps(
-            {
-                "text": text,
-                "language": language_name,
-                "speaker": speaker,
-                "emotion": os.getenv("TTSFREE_TTS_EMOTION", "Neutral"),
-                "pitch": 1.0,
-                "rate": 1.0,
-            }
-        ).encode("utf-8")
-
-        http_request = request.Request(
-            self.endpoint,
-            data=payload,
-            method="POST",
+        speaker = self.speaker or TTSFREE_SPEAKERS[language]
+        response = httpx.post(
+            f"{self.base_url.rstrip('/')}/api/tts",
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
             },
+            json={
+                "text": text,
+                "language": language_name,
+                "speaker": speaker,
+                "emotion": "Neutral",
+            },
+            timeout=60.0,
         )
+        response.raise_for_status()
 
-        try:
-            with request.urlopen(http_request, timeout=30) as response:
-                audio = response.read()
-                mime_type = response.headers.get_content_type() or "audio/wav"
-        except error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")
-            raise RuntimeError(f"TTSFree TTS request failed ({exc.code}): {detail}") from exc
-        except error.URLError as exc:
-            raise RuntimeError(f"TTSFree TTS request failed: {exc.reason}") from exc
-
+        audio = response.content
         if not audio:
-            raise RuntimeError("TTSFree TTS returned empty audio.")
+            raise RuntimeError("TTSFree returned empty audio.")
 
-        return SpeechAudio(audio=audio, language=language, mime_type=mime_type)
+        return SpeechAudio(audio=audio, language=language, mime_type="audio/wav")
 
 
 class NotConfiguredTextToSpeech:
