@@ -36,7 +36,7 @@ TERM_MAP: dict[str, tuple[str, ...]] = {
         "మొక్క వాడిపోవడం", "వాడిపోవడం", "మొక్క వాడిపోతోంది", "మొక్కలు వాడిపోతున్నాయి",
         "పంట వాడిపోతోంది", "మొక్క వంగిపోతోంది",
     ),
-    "leaf spots": (
+    "leaf spot": (
         "leaf spot", "leaf spots", "spots", "spot", "brown spots", "black spots", "spots on leaves",
         "পাতায় দাগ", "পাতায় দাগ", "পাতায় বাদামি দাগ", "পাতায় বাদামি দাগ", "পাতায় কালো দাগ", "পাতায় কালো দাগ",
         "পাতায় দাগ হয়েছে", "পাতায় দাগ হয়েছে", "পাতায় ছোপ", "পাতায় ছোপ",
@@ -66,6 +66,12 @@ def normalize_agricultural_terms(text: str, language: str) -> tuple[str, list[st
                 )
                 if canonical not in matched:
                     matched.append(canonical)
+                # Preserve the plural form as a compatibility alias for clients/tests
+                # that historically consumed "leaf spots" or "yellow leaves".
+                if canonical == "leaf spot" and "leaf spots" not in matched:
+                    matched.append("leaf spots")
+                if canonical == "yellow leaf" and "yellow leaves" not in matched:
+                    matched.append("yellow leaves")
                 break
 
     return normalized, matched
