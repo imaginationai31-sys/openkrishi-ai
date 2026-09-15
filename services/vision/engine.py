@@ -1,11 +1,12 @@
-"""Crop image assessment with a conservative OpenAI vision provider."""
+"""Crop image assessment with a conservative Gemini vision provider."""
 
 from __future__ import annotations
 
 import base64
 import json
-import os
 from typing import Any
+
+from services.gemini.client import get_gemini_client, get_model, output_text
 
 SUPPORTED_CROPS = {"rice", "peanut", "vegetables", "flowers"}
 SUPPORTED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
@@ -51,49 +52,41 @@ def _safe_result(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def assess_crop_image(image_bytes: bytes, content_type: str, crop_category: str | None = None, growth_stage: str | None = None) -> dict[str, Any]:
-    """Assess a crop image using OpenAI when configured, otherwise validate it."""
+def assess_crop_image(
+    image_bytes: bytes,
+    content_type: str,
+    crop_category: str | None = None,
+    growth_stage: str | None = None,
+) -> dict[str, Any]:
+    """Assess a crop image using Gemini's native multimodal vision."""
     normalized_type = _validate_image(image_bytes, content_type, crop_category)
-    api_key = os.getenv("OPENAI_API_KEY")
 
-    if not api_key:
-        return {
-            "status": "ready_for_visual_model",
-            "image": {"content_type": normalized_type, "size_bytes": len(image_bytes)},
-            "crop_category": crop_category,
-            "growth_stage": growth_stage,
-            "observations": [],
-            "possible_causes": [],
-            "confidence": "low",
-            "safety": "caution",
-            "uncertainties": ["OPENAI_API_KEY is not configured; no visual model was called."],
-            "recommendations": [
-                "Use a clear close-up photo of affected plant parts in good natural light.",
-                "Do not apply pesticide or a large fertilizer dose based on an image alone.",
-            ],
-        }
+    client = get_gemini_client()
+    context = (
+        f"Crop category: {crop_category or 'unknown'}; "
+        f"growth stage: {growth_stage or 'unknown'}."
+    )
+    image_data = base64.b64encode(image_bytes).decode("ascii")
 
-    from openai import OpenAI
+    prompt = f"""{VISION_SYSTEM_PROMPT}
 
-    client = OpenAI(api_key=api_key)
-    image_url = f"data:{normalized_type};base64,{base64.b64encode(image_bytes).decode('ascii')}"
-    context = f"Crop category: {crop_category or 'unknown'}; growth stage: {growth_stage or 'unknown'}."
+Context:
+{context}
+
+Analyze the attached crop image. Return only the requested JSON object."""
 
     try:
-        response = client.responses.create(
-            model=os.getenv("OPENAI_VISION_MODEL", "gpt-5.6-luna"),
+        interaction = client.interactions.create(
+            model=get_model(),
             input=[
-                {"role": "system", "content": [{"type": "input_text", "text": VISION_SYSTEM_PROMPT}]},
-                {"role": "user", "content": [
-                    {"type": "input_text", "text": context},
-                    {"type": "input_image", "image_url": image_url},
-                ]},
+                {"type": "text", "text": prompt},
+                {"type": "image", "data": image_data, "mime_type": normalized_type},
             ],
         )
     except Exception as exc:
         raise RuntimeError("Vision provider is temporarily unavailable.") from exc
 
-    raw = response.output_text.strip()
+    raw = output_text(interaction)
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError as exc:
