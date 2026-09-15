@@ -1,8 +1,9 @@
+from io import BytesIO
 from types import SimpleNamespace
 
 import pytest
 from fastapi import HTTPException
-from starlette.datastructures import UploadFile
+from starlette.datastructures import Headers, UploadFile
 
 import services.api.routes.voice as voice_route
 
@@ -20,6 +21,14 @@ class FakeSpeechToText:
 class FakeTTS:
     def synthesize(self, text, language):
         return SimpleNamespace(audio=b"wav-audio", mime_type="audio/wav", language=language)
+
+
+def make_upload(filename, content_type, content):
+    return UploadFile(
+        file=BytesIO(content),
+        filename=filename,
+        headers=Headers({"content-type": content_type}),
+    )
 
 
 @pytest.mark.anyio
@@ -63,13 +72,8 @@ async def test_voice_vision_advisory_combines_voice_and_photo(monkeypatch):
 
     monkeypatch.setattr(voice_route, "generate_advisory", fake_advisory)
 
-    audio = UploadFile(filename="farmer.ogg", file=None)
-    image = UploadFile(filename="rice.jpg", file=None)
-    from io import BytesIO
-    audio.file = BytesIO(b"audio")
-    image.file = BytesIO(b"image")
-    audio.content_type = "audio/ogg"
-    image.content_type = "image/jpeg"
+    audio = make_upload("farmer.ogg", "audio/ogg", b"audio")
+    image = make_upload("rice.jpg", "image/jpeg", b"image")
 
     result = await voice_route.voice_vision_advisory(
         file=audio,
@@ -89,13 +93,8 @@ async def test_voice_vision_advisory_combines_voice_and_photo(monkeypatch):
 
 @pytest.mark.anyio
 async def test_voice_vision_advisory_rejects_unsupported_crop(monkeypatch):
-    audio = UploadFile(filename="farmer.ogg", file=None)
-    image = UploadFile(filename="rice.jpg", file=None)
-    from io import BytesIO
-    audio.file = BytesIO(b"audio")
-    image.file = BytesIO(b"image")
-    audio.content_type = "audio/ogg"
-    image.content_type = "image/jpeg"
+    audio = make_upload("farmer.ogg", "audio/ogg", b"audio")
+    image = make_upload("rice.jpg", "image/jpeg", b"image")
 
     with pytest.raises(HTTPException) as exc:
         await voice_route.voice_vision_advisory(
