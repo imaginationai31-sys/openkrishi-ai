@@ -88,12 +88,11 @@ def _audio_filename(audio: bytes, filename: str | None = None, content_type: str
 
 
 class GeminiSpeechToText:
-    """Speech-to-text provider backed by Gemini with a multimodal fallback."""
+    """Speech-to-text provider backed by Gemini audio understanding."""
 
     def __init__(self, model: str | None = None) -> None:
-        self.model = model or os.getenv("GEMINI_TRANSCRIBE_MODEL", "gemini-3.5-transcribe")
-        # Current Gemini model catalog uses Gemini 3.1 Flash-Lite.
-        self.fallback_model = os.getenv("GEMINI_STT_FALLBACK_MODEL", "gemini-3.1-flash-lite")
+        # Gemini's standard generateContent API supports audio input directly.
+        self.model = model or os.getenv("GEMINI_TRANSCRIBE_MODEL", "gemini-3.1-flash-lite")
 
     def _upload_audio(self, client, genai, audio: bytes, upload_name: str, mime_type: str):
         suffix = Path(upload_name).suffix or ".ogg"
@@ -146,7 +145,7 @@ class GeminiSpeechToText:
             raise ValueError(f"Unsupported Gemini voice language: {language}")
 
         from google import genai
-        from services.gemini.client import get_gemini_client, output_text
+        from services.gemini.client import get_gemini_client
 
         client = get_gemini_client()
         upload_name = _audio_filename(audio, filename, content_type)
@@ -157,45 +156,20 @@ class GeminiSpeechToText:
         try:
             audio_file = self._upload_audio(client, genai, audio, upload_name, mime_type)
 
-            # Primary path: dedicated Gemini transcription model.
-            interaction = client.interactions.create(
-                model=self.model,
-                input=[
-                    {
-                        "type": "audio",
-                        "uri": audio_file.uri,
-                        "mime_type": audio_file.mime_type or mime_type,
-                    }
-                ],
-                generation_config={
-                    "transcription_config": {
-                        "language_codes": [LANGUAGE_CODES[language]],
-                        "custom_vocabulary": AGRICULTURAL_VOCABULARY,
-                        "mode": "smart",
-                    }
-                },
+            # Use the standard Gemini generateContent API for audio transcription.
+            # This avoids the incompatible Interactions transcription_config schema
+            # that caused Gemini to return HTTP 400 invalid_request.
+            prompt = (
+                f"Transcribe this farmer's speech exactly in {LANGUAGE_NAMES[language]}. "
+                "Return only the spoken words as text. Do not explain, translate, "
+                "summarize, or answer the farmer. Preserve agricultural terms. "
+                f"Use the language hint {LANGUAGE_CODES[language]} when identifying speech."
             )
-            text = output_text(interaction)
-
-            # Some Transcribe responses can be empty. Use the standard multimodal
-            # Gemini model with the same uploaded audio as a second transcription path.
-            if not text:
-                logger.warning(
-                    "Gemini Transcribe returned empty output; falling back to %s",
-                    self.fallback_model,
-                )
-                response = client.models.generate_content(
-                    model=self.fallback_model,
-                    contents=[
-                        audio_file,
-                        (
-                            f"Transcribe this farmer's speech exactly in {LANGUAGE_NAMES[language]}. "
-                            "Return only the spoken words as text. Do not explain, translate, "
-                            "summarize, or answer the farmer. Preserve agricultural terms."
-                        ),
-                    ],
-                )
-                text = (getattr(response, "text", None) or "").strip()
+            response = client.models.generate_content(
+                model=self.model,
+                contents=[audio_file, prompt],
+            )
+            text = (getattr(response, "text", None) or "").strip()
 
             if not text:
                 raise RuntimeError("Speech-to-text returned an empty transcription.")
