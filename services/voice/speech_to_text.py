@@ -43,6 +43,14 @@ LANGUAGE_CODES = {
     "te": "te-IN",
 }
 
+LANGUAGE_NAMES = {
+    "bn": "Bengali",
+    "hi": "Hindi",
+    "ta": "Tamil",
+    "pa": "Punjabi",
+    "te": "Telugu",
+}
+
 AGRICULTURAL_VOCABULARY = [
     "rice", "paddy", "ধান", "dhan", "peanut", "groundnut", "বাদাম",
     "yellow leaves", "wilting", "leaf spots", "পোকা", "রোগ", "পাতা",
@@ -61,7 +69,8 @@ def _audio_filename(audio: bytes, filename: str | None = None, content_type: str
             "audio/ogg": "ogg", "application/ogg": "ogg", "audio/opus": "opus",
             "audio/wav": "wav", "audio/x-wav": "wav", "audio/mpeg": "mp3",
             "audio/mp3": "mp3", "audio/mp4": "mp4", "audio/x-m4a": "m4a",
-            "audio/webm": "webm", "audio/flac": "flac",
+            "audio/webm": "webm", "audio/flac": "flac", "audio/aac": "aac",
+            "audio/m4a": "m4a",
         }
         extension = mime_to_extension.get(content_type.split(";", 1)[0].strip().lower())
         if extension:
@@ -79,10 +88,47 @@ def _audio_filename(audio: bytes, filename: str | None = None, content_type: str
 
 
 class GeminiSpeechToText:
-    """Speech-to-text provider backed by Gemini 3.5 Transcribe."""
+    """Speech-to-text provider backed by Gemini, with a reliable fallback."""
 
     def __init__(self, model: str | None = None) -> None:
         self.model = model or os.getenv("GEMINI_TRANSCRIBE_MODEL", "gemini-3.5-transcribe")
+        self.fallback_model = os.getenv("GEMINI_STT_FALLBACK_MODEL", "gemini-3.5-flash-lite")
+
+    def _upload_audio(self, client, genai, audio: bytes, upload_name: str, mime_type: str):
+        suffix = Path(upload_name).suffix or ".ogg"
+        temp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_file:
+                temp_file.write(audio)
+                temp_path = temp_file.name
+
+            audio_file = client.files.upload(
+                file=temp_path,
+                config=genai.types.UploadFileConfig(
+                    display_name=upload_name,
+                    mime_type=mime_type,
+                ),
+            )
+
+            file_name = getattr(audio_file, "name", None)
+            if file_name:
+                for _ in range(20):
+                    state = str(getattr(audio_file, "state", "") or "").upper()
+                    if state not in {"PROCESSING", "FILE_STATE_PROCESSING"}:
+                        break
+                    time.sleep(0.5)
+                    audio_file = client.files.get(name=file_name)
+
+                state = str(getattr(audio_file, "state", "") or "").upper()
+                if state in {"FAILED", "FILE_STATE_FAILED"}:
+                    raise RuntimeError("Gemini rejected the uploaded audio file.")
+            return audio_file
+        finally:
+            if temp_path:
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    logger.warning("Could not remove temporary audio file: %s", temp_path)
 
     def transcribe(
         self,
@@ -107,36 +153,10 @@ class GeminiSpeechToText:
         if mime_type == "audio/x-wav":
             mime_type = "audio/wav"
 
-        temp_path: str | None = None
         try:
-            # The Python GenAI Files API is most reliable with a real file path.
-            suffix = Path(upload_name).suffix or ".ogg"
-            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_file:
-                temp_file.write(audio)
-                temp_path = temp_file.name
+            audio_file = self._upload_audio(client, genai, audio, upload_name, mime_type)
 
-            audio_file = client.files.upload(
-                file=temp_path,
-                config=genai.types.UploadFileConfig(
-                    display_name=upload_name,
-                    mime_type=mime_type,
-                ),
-            )
-
-            # Wait briefly for Gemini to finish processing the uploaded media.
-            file_name = getattr(audio_file, "name", None)
-            if file_name:
-                for _ in range(20):
-                    state = str(getattr(audio_file, "state", "") or "").upper()
-                    if state not in {"PROCESSING", "FILE_STATE_PROCESSING"}:
-                        break
-                    time.sleep(0.5)
-                    audio_file = client.files.get(name=file_name)
-
-                state = str(getattr(audio_file, "state", "") or "").upper()
-                if state in {"FAILED", "FILE_STATE_FAILED"}:
-                    raise RuntimeError("Gemini rejected the uploaded audio file.")
-
+            # Primary path: dedicated Gemini transcription model.
             interaction = client.interactions.create(
                 model=self.model,
                 input=[
@@ -154,20 +174,38 @@ class GeminiSpeechToText:
                     }
                 },
             )
+            text = output_text(interaction)
+
+            # The dedicated Transcribe endpoint can occasionally return HTTP 200
+            # with no output. Fall back to the stable multimodal Flash-Lite model.
+            if not text:
+                logger.warning(
+                    "Gemini Transcribe returned empty output; falling back to %s",
+                    self.fallback_model,
+                )
+                response = client.models.generate_content(
+                    model=self.fallback_model,
+                    contents=[
+                        audio_file,
+                        (
+                            f"Transcribe this farmer's speech exactly in {LANGUAGE_NAMES[language]}. "
+                            "Return only the spoken words as text. Do not explain, translate, "
+                            "summarize, or answer the farmer. Preserve agricultural terms."
+                        ),
+                    ],
+                )
+                text = (getattr(response, "text", None) or "").strip()
+
+            if not text:
+                raise RuntimeError("Speech-to-text returned an empty transcription.")
+            return Transcription(text=text, language=language, confidence=None)
+        except ValueError:
+            raise
+        except RuntimeError:
+            raise
         except Exception as exc:
             logger.exception("Gemini STT request failed: %s", exc)
             raise RuntimeError("Speech-to-text provider is temporarily unavailable.") from exc
-        finally:
-            if temp_path:
-                try:
-                    os.unlink(temp_path)
-                except OSError:
-                    logger.warning("Could not remove temporary audio file: %s", temp_path)
-
-        text = output_text(interaction)
-        if not text:
-            raise RuntimeError("Speech-to-text returned an empty transcription.")
-        return Transcription(text=text, language=language, confidence=None)
 
 
 class GroqSpeechToText:
