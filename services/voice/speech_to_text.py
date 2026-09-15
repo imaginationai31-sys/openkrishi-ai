@@ -33,24 +33,11 @@ class SpeechToTextProvider(Protocol):
 
 
 SUPPORTED_AUDIO_EXTENSIONS = {
-    "flac",
-    "mp3",
-    "mp4",
-    "mpeg",
-    "mpga",
-    "m4a",
-    "ogg",
-    "opus",
-    "wav",
-    "webm",
+    "flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "opus", "wav", "webm"
 }
 
 
-def _audio_filename(
-    audio: bytes,
-    filename: str | None = None,
-    content_type: str | None = None,
-) -> str:
+def _audio_filename(audio: bytes, filename: str | None = None, content_type: str | None = None) -> str:
     """Return a Groq-supported filename extension for the upload."""
     if filename:
         extension = Path(filename).suffix.lower().lstrip(".")
@@ -59,17 +46,10 @@ def _audio_filename(
 
     if content_type:
         mime_to_extension = {
-            "audio/ogg": "ogg",
-            "application/ogg": "ogg",
-            "audio/opus": "opus",
-            "audio/wav": "wav",
-            "audio/x-wav": "wav",
-            "audio/mpeg": "mp3",
-            "audio/mp3": "mp3",
-            "audio/mp4": "mp4",
-            "audio/x-m4a": "m4a",
-            "audio/webm": "webm",
-            "audio/flac": "flac",
+            "audio/ogg": "ogg", "application/ogg": "ogg", "audio/opus": "opus",
+            "audio/wav": "wav", "audio/x-wav": "wav", "audio/mpeg": "mp3",
+            "audio/mp3": "mp3", "audio/mp4": "mp4", "audio/x-m4a": "m4a",
+            "audio/webm": "webm", "audio/flac": "flac",
         }
         mime = content_type.split(";", 1)[0].strip().lower()
         extension = mime_to_extension.get(mime)
@@ -84,8 +64,6 @@ def _audio_filename(
         return "farmer_audio.mp3"
     if audio.startswith(b"\x1a\x45\xdf\xa3"):
         return "farmer_audio.webm"
-
-    # WhatsApp/Opus uploads can lack a recognizable signature in the first bytes.
     return "farmer_audio.ogg"
 
 
@@ -95,13 +73,7 @@ class GroqSpeechToText:
     def __init__(self, model: str | None = None) -> None:
         self.model = model or os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo")
 
-    def transcribe(
-        self,
-        audio: bytes,
-        language: str,
-        filename: str | None = None,
-        content_type: str | None = None,
-    ) -> Transcription:
+    def transcribe(self, audio: bytes, language: str, filename: str | None = None, content_type: str | None = None) -> Transcription:
         if not audio:
             raise ValueError("Audio input cannot be empty.")
         if not is_supported_language(language):
@@ -109,29 +81,25 @@ class GroqSpeechToText:
 
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
-            raise RuntimeError(
-                "GROQ_API_KEY is not configured. Set it before processing audio."
-            )
+            raise RuntimeError("GROQ_API_KEY is not configured. Set it before processing audio.")
 
         from groq import Groq
 
         client = Groq(api_key=api_key)
         upload_name = _audio_filename(audio, filename, content_type)
-
-        # Use Groq's documented `(filename, bytes)` multipart form explicitly.
-        # This is more reliable than relying on BytesIO.name to determine the
-        # uploaded media type, especially for WhatsApp OGG/Opus recordings.
-        result = client.audio.transcriptions.create(
-            model=self.model,
-            file=(upload_name, audio),
-            language=language,
-            response_format="json",
-        )
+        try:
+            result = client.audio.transcriptions.create(
+                model=self.model,
+                file=(upload_name, audio),
+                language=language,
+                response_format="json",
+            )
+        except Exception as exc:
+            raise RuntimeError("Speech-to-text provider is temporarily unavailable.") from exc
 
         text = (result.text or "").strip()
         if not text:
             raise RuntimeError("Speech-to-text returned an empty transcription.")
-
         return Transcription(text=text, language=language, confidence=None)
 
 
@@ -141,13 +109,7 @@ class OpenAISpeechToText:
     def __init__(self, model: str | None = None) -> None:
         self.model = model or os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe")
 
-    def transcribe(
-        self,
-        audio: bytes,
-        language: str,
-        filename: str | None = None,
-        content_type: str | None = None,
-    ) -> Transcription:
+    def transcribe(self, audio: bytes, language: str, filename: str | None = None, content_type: str | None = None) -> Transcription:
         if not audio:
             raise ValueError("Audio input cannot be empty.")
         if not is_supported_language(language):
@@ -155,19 +117,20 @@ class OpenAISpeechToText:
 
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise RuntimeError(
-                "OPENAI_API_KEY is not configured. Set it before processing audio."
-            )
+            raise RuntimeError("OPENAI_API_KEY is not configured. Set it before processing audio.")
 
         from openai import OpenAI
 
         client = OpenAI(api_key=api_key)
         upload_name = _audio_filename(audio, filename, content_type)
-        result = client.audio.transcriptions.create(
-            model=self.model,
-            file=(upload_name, audio),
-            language=language,
-        )
+        try:
+            result = client.audio.transcriptions.create(
+                model=self.model,
+                file=(upload_name, audio),
+                language=language,
+            )
+        except Exception as exc:
+            raise RuntimeError("Speech-to-text provider is temporarily unavailable.") from exc
         text = (result.text or "").strip()
         if not text:
             raise RuntimeError("Speech-to-text returned an empty transcription.")
@@ -178,7 +141,4 @@ class NotConfiguredSpeechToText:
     """Safe placeholder for deployments that do not configure an STT provider."""
 
     def transcribe(self, audio: bytes, language: str) -> Transcription:
-        raise RuntimeError(
-            "Speech-to-text provider is not configured. "
-            "Configure an STT provider before processing audio."
-        )
+        raise RuntimeError("Speech-to-text provider is not configured. Configure an STT provider before processing audio.")
