@@ -17,12 +17,46 @@ VISION_SYSTEM_PROMPT = """You are a conservative agricultural image-assessment a
 Assess only what is visibly supported by the crop photo.
 Do not claim a definitive disease, pest, nutrient deficiency, or treatment.
 Do not recommend pesticide products, rates, or large fertilizer doses.
-Return JSON with exactly these keys:
-observations (array of short strings), possible_causes (array of cautious possibilities),
-confidence (one of low, medium, high), uncertainties (array of strings),
-recommendations (array of safe next-step checks).
+Return only a JSON object matching the supplied response schema.
 If the image is unclear, say so and use low confidence.
 """
+
+VISION_RESPONSE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "observations": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Short observations directly supported by the image.",
+        },
+        "possible_causes": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Cautious possible causes; never definitive diagnoses.",
+        },
+        "confidence": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+        },
+        "uncertainties": {
+            "type": "array",
+            "items": {"type": "string"},
+        },
+        "recommendations": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Safe next-step checks only.",
+        },
+    },
+    "required": [
+        "observations",
+        "possible_causes",
+        "confidence",
+        "uncertainties",
+        "recommendations",
+    ],
+    "additionalProperties": False,
+}
 
 
 def _validate_image(image_bytes: bytes, content_type: str, crop_category: str | None) -> str:
@@ -52,6 +86,27 @@ def _safe_result(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _parse_assessment(raw: str) -> dict[str, Any]:
+    """Parse Gemini JSON while tolerating harmless markdown fences."""
+    text = (raw or "").strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Vision provider returned an invalid assessment format.") from exc
+
+    if not isinstance(payload, dict):
+        raise RuntimeError("Vision provider returned an invalid assessment format.")
+    return payload
+
+
 def assess_crop_image(
     image_bytes: bytes,
     content_type: str,
@@ -73,7 +128,7 @@ def assess_crop_image(
 Context:
 {context}
 
-Analyze the attached crop image. Return only the requested JSON object."""
+Analyze the attached crop image. Return only the JSON object matching the response schema."""
 
     try:
         interaction = client.interactions.create(
@@ -82,16 +137,16 @@ Analyze the attached crop image. Return only the requested JSON object."""
                 {"type": "text", "text": prompt},
                 {"type": "image", "data": image_data, "mime_type": normalized_type},
             ],
+            response_format={
+                "type": "text",
+                "mime_type": "application/json",
+                "schema": VISION_RESPONSE_SCHEMA,
+            },
         )
     except Exception as exc:
         raise RuntimeError("Vision provider is temporarily unavailable.") from exc
 
-    raw = output_text(interaction)
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError("Vision provider returned an invalid assessment format.") from exc
-
+    payload = _parse_assessment(output_text(interaction))
     result = _safe_result(payload)
     result["image"] = {"content_type": normalized_type, "size_bytes": len(image_bytes)}
     result["crop_category"] = crop_category
