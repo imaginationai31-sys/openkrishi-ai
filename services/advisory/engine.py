@@ -3,24 +3,13 @@
 from typing import Any
 
 from .knowledge import get_knowledge
-from .safety import low_confidence_safety
+from .safety import enforce_advisory_safety
 
 SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
-CROP_LABELS = {
-    "rice": "Rice",
-    "peanut": "Peanut",
-    "vegetables": "Vegetables",
-    "flowers": "Flowers",
-}
+CROP_LABELS = {"rice": "Rice", "peanut": "Peanut", "vegetables": "Vegetables", "flowers": "Flowers"}
 
 
-def generate_advisory(
-    query: str,
-    language: str,
-    crop_category: str | None = None,
-    growth_stage: str | None = None,
-    location: str | None = None,
-) -> dict[str, Any]:
+def generate_advisory(query: str, language: str, crop_category: str | None = None, growth_stage: str | None = None, location: str | None = None) -> dict[str, Any]:
     crop_label = CROP_LABELS.get(crop_category or "")
     location_value = location.strip() if location else None
     location_value = location_value or None
@@ -33,17 +22,14 @@ def generate_advisory(
     uncertainties = list(knowledge["uncertainties"])
 
     if location_value:
-        recommendations.insert(
-            0,
-            f"Use the supplied location ({location_value}) when checking local agricultural extension or agronomy guidance; no local conditions are assumed by this MVP.",
-        )
-        uncertainties.append(
-            "Location was provided, but this MVP does not yet retrieve live local weather, soil, pest alerts, or region-specific agronomy data."
-        )
+        recommendations.insert(0, f"Use the supplied location ({location_value}) when checking local agricultural extension or agronomy guidance; no local conditions are assumed by this MVP.")
+        uncertainties.append("Location was provided, but this MVP does not yet retrieve live local weather, soil, pest alerts, or region-specific agronomy data.")
     else:
-        uncertainties.append(
-            "Location was not provided; local weather, soil, pest pressure, and regional agronomy guidance cannot be considered."
-        )
+        uncertainties.append("Location was not provided; local weather, soil, pest pressure, and regional agronomy guidance cannot be considered.")
+
+    recommendations, uncertainties, safety = enforce_advisory_safety(
+        recommendations, uncertainties, confidence="low"
+    )
 
     if crop_label:
         answer = {
@@ -64,14 +50,4 @@ def generate_advisory(
             "te": "మీ వ్యవసాయ ప్రశ్నను అర్థం చేసుకున్నాను. మరింత నిర్దిష్టమైన సలహా కోసం పంట రకం మరియు ప్రస్తుత దశను ఇవ్వండి.",
         }[language]
 
-    return {
-        "answer": answer,
-        "language": language,
-        "confidence": "low",
-        "safety": low_confidence_safety(),
-        "observations": knowledge["observations"],
-        "recommendations": recommendations,
-        "uncertainties": uncertainties,
-        "source_references": [],
-        "location": location_value,
-    }
+    return {"answer": answer, "language": language, "confidence": "low", "safety": safety, "observations": knowledge["observations"], "recommendations": recommendations, "uncertainties": uncertainties, "source_references": [], "location": location_value}
