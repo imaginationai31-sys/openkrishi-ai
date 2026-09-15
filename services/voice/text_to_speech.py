@@ -1,9 +1,14 @@
-"""Text-to-speech providers for OpenKrishi AI."""
+"""Text-to-speech providers for OpenKrishi AI.
+
+The default concrete provider uses TTSFree's free REST API backed by
+AI4Bharat's Indic Parler-TTS voices.
+"""
 
 from dataclasses import dataclass
-import base64
+import json
 import os
 from typing import Protocol
+from urllib import error, request
 
 
 @dataclass(frozen=True)
@@ -18,54 +23,82 @@ class TextToSpeechProvider(Protocol):
         """Convert an advisory response into spoken audio."""
 
 
-SARVAM_LANGUAGE_CODES = {
-    "bn": "bn-IN",
-    "hi": "hi-IN",
-    "ta": "ta-IN",
-    "pa": "pa-IN",
-    "te": "te-IN",
+TTSFREE_LANGUAGE_CODES = {
+    "bn": "Bengali",
+    "hi": "Hindi",
+    "ta": "Tamil",
+    "pa": "Punjabi",
+    "te": "Telugu",
+}
+
+TTSFREE_DEFAULT_SPEAKERS = {
+    "bn": "Aditi",
+    "hi": "Divya",
+    "ta": "Kavitha",
+    "pa": "Divjot",
+    "te": "Priya_tel",
 }
 
 
-class SarvamTextToSpeech:
-    """Regional-language TTS backed by Sarvam Bulbul v3."""
+class TTSFreeTextToSpeech:
+    """Regional-language TTS backed by TTSFree's free REST API."""
 
-    def __init__(self, model: str | None = None, speaker: str | None = None) -> None:
-        self.model = model or os.getenv("SARVAM_TTS_MODEL", "bulbul:v3")
-        self.speaker = speaker or os.getenv("SARVAM_TTS_SPEAKER", "Shubh")
+    def __init__(self, speaker: str | None = None) -> None:
+        self.speaker = speaker
+        self.endpoint = os.getenv("TTSFREE_TTS_URL", "https://ttsfree.in/api/tts")
 
     def synthesize(self, text: str, language: str) -> SpeechAudio:
         if not text.strip():
             raise ValueError("Text input cannot be empty.")
 
-        language_code = SARVAM_LANGUAGE_CODES.get(language)
-        if not language_code:
+        language_name = TTSFREE_LANGUAGE_CODES.get(language)
+        if not language_name:
             raise ValueError(f"Unsupported TTS language: {language}")
 
-        api_key = os.getenv("SARVAM_API_KEY")
+        api_key = os.getenv("TTSFREE_API_KEY")
         if not api_key:
             raise RuntimeError(
-                "SARVAM_API_KEY is not configured. Set it before generating audio."
+                "TTSFREE_API_KEY is not configured. Set it before generating audio."
             )
 
-        from sarvamai import SarvamAI
+        speaker = self.speaker or os.getenv(
+            "TTSFREE_TTS_SPEAKER", TTSFREE_DEFAULT_SPEAKERS[language]
+        )
+        payload = json.dumps(
+            {
+                "text": text,
+                "language": language_name,
+                "speaker": speaker,
+                "emotion": os.getenv("TTSFREE_TTS_EMOTION", "Neutral"),
+                "pitch": 1.0,
+                "rate": 1.0,
+            }
+        ).encode("utf-8")
 
-        client = SarvamAI(api_subscription_key=api_key)
-        response = client.text_to_speech.convert(
-            text=text,
-            target_language_code=language_code,
-            model=self.model,
-            speaker=self.speaker,
+        http_request = request.Request(
+            self.endpoint,
+            data=payload,
+            method="POST",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
         )
 
-        if not response.audios:
-            raise RuntimeError("Sarvam TTS returned no audio.")
+        try:
+            with request.urlopen(http_request, timeout=30) as response:
+                audio = response.read()
+                mime_type = response.headers.get_content_type() or "audio/wav"
+        except error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"TTSFree TTS request failed ({exc.code}): {detail}") from exc
+        except error.URLError as exc:
+            raise RuntimeError(f"TTSFree TTS request failed: {exc.reason}") from exc
 
-        audio = base64.b64decode(response.audios[0])
         if not audio:
-            raise RuntimeError("Sarvam TTS returned empty audio.")
+            raise RuntimeError("TTSFree TTS returned empty audio.")
 
-        return SpeechAudio(audio=audio, language=language, mime_type="audio/wav")
+        return SpeechAudio(audio=audio, language=language, mime_type=mime_type)
 
 
 class NotConfiguredTextToSpeech:
