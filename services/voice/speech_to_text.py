@@ -32,7 +32,7 @@ class SpeechToTextProvider(Protocol):
 
 
 SUPPORTED_AUDIO_EXTENSIONS = {
-    "flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "opus", "wav", "webm"
+    "aac", "flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "opus", "wav", "webm"
 }
 
 LANGUAGE_CODES = {
@@ -66,11 +66,11 @@ def _audio_filename(audio: bytes, filename: str | None = None, content_type: str
 
     if content_type:
         mime_to_extension = {
-            "audio/ogg": "ogg", "application/ogg": "ogg", "audio/opus": "opus",
-            "audio/wav": "wav", "audio/x-wav": "wav", "audio/mpeg": "mp3",
-            "audio/mp3": "mp3", "audio/mp4": "mp4", "audio/x-m4a": "m4a",
-            "audio/webm": "webm", "audio/flac": "flac", "audio/aac": "aac",
-            "audio/m4a": "m4a",
+            "audio/aac": "aac", "audio/ogg": "ogg", "application/ogg": "ogg",
+            "audio/opus": "opus", "audio/wav": "wav", "audio/x-wav": "wav",
+            "audio/mpeg": "mp3", "audio/mp3": "mp3", "audio/mp4": "mp4",
+            "audio/x-m4a": "m4a", "audio/m4a": "m4a", "audio/webm": "webm",
+            "audio/flac": "flac",
         }
         extension = mime_to_extension.get(content_type.split(";", 1)[0].strip().lower())
         if extension:
@@ -88,11 +88,12 @@ def _audio_filename(audio: bytes, filename: str | None = None, content_type: str
 
 
 class GeminiSpeechToText:
-    """Speech-to-text provider backed by Gemini, with a reliable fallback."""
+    """Speech-to-text provider backed by Gemini with a multimodal fallback."""
 
     def __init__(self, model: str | None = None) -> None:
         self.model = model or os.getenv("GEMINI_TRANSCRIBE_MODEL", "gemini-3.5-transcribe")
-        self.fallback_model = os.getenv("GEMINI_STT_FALLBACK_MODEL", "gemini-3.5-flash-lite")
+        # Current Gemini model catalog uses Gemini 3.1 Flash-Lite.
+        self.fallback_model = os.getenv("GEMINI_STT_FALLBACK_MODEL", "gemini-3.1-flash-lite")
 
     def _upload_audio(self, client, genai, audio: bytes, upload_name: str, mime_type: str):
         suffix = Path(upload_name).suffix or ".ogg"
@@ -176,8 +177,8 @@ class GeminiSpeechToText:
             )
             text = output_text(interaction)
 
-            # The dedicated Transcribe endpoint can occasionally return HTTP 200
-            # with no output. Fall back to the stable multimodal Flash-Lite model.
+            # Some Transcribe responses can be empty. Use the standard multimodal
+            # Gemini model with the same uploaded audio as a second transcription path.
             if not text:
                 logger.warning(
                     "Gemini Transcribe returned empty output; falling back to %s",
