@@ -3,13 +3,33 @@ import pytest
 from services.vision.engine import assess_crop_image
 
 
-def test_crop_image_is_accepted_for_supported_crop():
+class FakeInteraction:
+    output_text = '{"observations":["yellowing visible"],"possible_causes":["water stress"],"confidence":"low","uncertainties":["image is synthetic"],"recommendations":["check soil moisture"]}'
+
+
+class FakeInteractions:
+    def create(self, **kwargs):
+        assert kwargs["model"]
+        assert kwargs["input"][0]["type"] == "text"
+        assert kwargs["input"][1]["type"] == "image"
+        assert kwargs["input"][1]["mime_type"] == "image/jpeg"
+        return FakeInteraction()
+
+
+class FakeGeminiClient:
+    interactions = FakeInteractions()
+
+
+def test_crop_image_is_accepted_for_supported_crop(monkeypatch):
+    monkeypatch.setattr("services.vision.engine.get_gemini_client", lambda: FakeGeminiClient())
+
     result = assess_crop_image(b"fake-image", "image/jpeg", "rice", "tillering")
-    assert result["status"] == "ready_for_visual_model"
+    assert result["status"] == "assessed"
     assert result["crop_category"] == "rice"
     assert result["growth_stage"] == "tillering"
     assert result["confidence"] == "low"
     assert result["safety"] == "caution"
+    assert result["observations"] == ["yellowing visible"]
 
 
 def test_supported_crop_scope_excludes_tomato_and_chilli():
