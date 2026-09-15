@@ -1,10 +1,9 @@
 """Text-to-speech providers for OpenKrishi AI."""
 
 from dataclasses import dataclass
+import base64
 import os
 from typing import Protocol
-
-import httpx
 
 
 @dataclass(frozen=True)
@@ -19,45 +18,85 @@ class TextToSpeechProvider(Protocol):
         """Convert an advisory response into spoken audio."""
 
 
-TTSFREE_LANGUAGE_CODES = {"bn": "Bengali", "hi": "Hindi", "ta": "Tamil", "pa": "Punjabi", "te": "Telugu"}
-TTSFREE_SPEAKERS = {"bn": "Ananya", "hi": "Divya", "ta": "Kavitha", "pa": "Divjot", "te": "Priya_tel"}
+GEMINI_TTS_MODEL = "gemini-3.1-flash-tts-preview"
+GEMINI_TTS_LANGUAGES = {"bn": "bn-IN", "hi": "hi-IN", "ta": "ta-IN", "pa": "pa-IN", "te": "te-IN"}
+GEMINI_TTS_VOICES = {"bn": "Kore", "hi": "Kore", "ta": "Kore", "pa": "Kore", "te": "Kore"}
 
 
-class TTSFreeTextToSpeech:
-    """Indian-language TTS backed by the TTSFree developer API."""
+def _pcm_to_wav(pcm: bytes, sample_rate: int = 24000, channels: int = 1, sample_width: int = 2) -> bytes:
+    """Wrap Gemini PCM output in a WAV container."""
+    import io
+    import wave
 
-    def __init__(self, speaker: str | None = None) -> None:
-        self.base_url = os.getenv("TTSFREE_BASE_URL", "https://ttsfree.in")
-        self.speaker = speaker
+    output = io.BytesIO()
+    with wave.open(output, "wb") as wav:
+        wav.setnchannels(channels)
+        wav.setsampwidth(sample_width)
+        wav.setframerate(sample_rate)
+        wav.writeframes(pcm)
+    return output.getvalue()
+
+
+class GeminiTextToSpeech:
+    """Indian-language TTS backed by Gemini 3.1 Flash TTS."""
+
+    def __init__(self, model: str | None = None, voice: str | None = None) -> None:
+        self.model = model or os.getenv("GEMINI_TTS_MODEL", GEMINI_TTS_MODEL)
+        self.voice = voice
 
     def synthesize(self, text: str, language: str) -> SpeechAudio:
         if not text.strip():
             raise ValueError("Text input cannot be empty.")
 
-        language_name = TTSFREE_LANGUAGE_CODES.get(language)
-        if not language_name:
+        language_code = GEMINI_TTS_LANGUAGES.get(language)
+        if not language_code:
             raise ValueError(f"Unsupported TTS language: {language}")
 
-        api_key = os.getenv("TTSFREE_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            raise RuntimeError("TTSFREE_API_KEY is not configured. Set it before generating audio.")
+            raise RuntimeError("GEMINI_API_KEY is not configured. Set it before generating audio.")
 
-        speaker = self.speaker or TTSFREE_SPEAKERS[language]
+        from google import genai
+
+        client = genai.Client(api_key=api_key)
+        voice = self.voice or GEMINI_TTS_VOICES[language]
+        prompt = (
+            f"Synthesize the following OpenKrishi farmer advisory in {language_code}. "
+            "Speak naturally, clearly, warmly, and at a moderate pace. "
+            "Do not add or remove information. Spoken text:\n" + text
+        )
         try:
-            response = httpx.post(
-                f"{self.base_url.rstrip('/')}/api/tts",
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                json={"text": text, "language": language_name, "speaker": speaker, "emotion": "Neutral"},
-                timeout=60.0,
+            interaction = client.interactions.create(
+                model=self.model,
+                input=prompt,
+                response_format={"type": "audio"},
+                generation_config={
+                    "speech_config": [{"voice": voice, "language": language_code}]
+                },
             )
-            response.raise_for_status()
-        except httpx.HTTPError as exc:
+        except Exception as exc:
             raise RuntimeError("Text-to-speech provider is temporarily unavailable.") from exc
 
-        audio = response.content
-        if not audio:
-            raise RuntimeError("TTSFree returned empty audio.")
-        return SpeechAudio(audio=audio, language=language, mime_type="audio/wav")
+        output_audio = getattr(interaction, "output_audio", None)
+        data = getattr(output_audio, "data", None) if output_audio is not None else None
+        if not data:
+            raise RuntimeError("Gemini TTS returned empty audio.")
+
+        try:
+            pcm = base64.b64decode(data)
+        except Exception as exc:
+            raise RuntimeError("Gemini TTS returned invalid audio data.") from exc
+
+        if not pcm:
+            raise RuntimeError("Gemini TTS returned empty audio.")
+        return SpeechAudio(audio=_pcm_to_wav(pcm), language=language, mime_type="audio/wav")
+
+
+class TTSFreeTextToSpeech:
+    """Backward-compatible TTSFree provider."""
+
+    def synthesize(self, text: str, language: str) -> SpeechAudio:
+        raise RuntimeError("TTSFree provider is no longer the primary provider. Use GeminiTextToSpeech.")
 
 
 class NotConfiguredTextToSpeech:
