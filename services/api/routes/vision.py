@@ -29,16 +29,13 @@ async def vision_assess(
             content_type=file.content_type or "",
             crop_category=crop_category,
             growth_stage=growth_stage,
+            language=language,
         )
 
         observations = visual.get("observations", [])
         possible_causes = visual.get("possible_causes", [])
         visual_query = "; ".join([*observations, *possible_causes]).strip()
-
-        if visual.get("status") == "assessed" and visual_query:
-            advisory_query = visual_query
-        else:
-            advisory_query = "crop photo assessment is unclear; no reliable visual symptom identified"
+        advisory_query = visual_query if visual.get("status") == "assessed" and visual_query else "crop photo assessment is unclear; no reliable visual symptom identified"
 
         advisory = generate_advisory(
             query=advisory_query,
@@ -54,11 +51,13 @@ async def vision_assess(
             "crop_category": crop_category,
             "growth_stage": growth_stage,
             "vision": {
+                "language": language,
                 "observations": observations,
                 "possible_causes": possible_causes,
                 "confidence": visual["confidence"],
                 "safety": visual["safety"],
                 "uncertainties": visual["uncertainties"],
+                "recommendations": visual.get("recommendations", []),
             },
             "advisory": advisory,
         }
