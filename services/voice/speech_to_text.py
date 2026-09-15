@@ -1,12 +1,16 @@
 """Speech-to-text providers for OpenKrishi AI."""
 
 from dataclasses import dataclass
-import io
+import logging
 import os
 from pathlib import Path
+import tempfile
+import time
 from typing import Protocol
 
 from .languages import is_supported_language
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -94,20 +98,45 @@ class GeminiSpeechToText:
         if language not in LANGUAGE_CODES:
             raise ValueError(f"Unsupported Gemini voice language: {language}")
 
+        from google import genai
         from services.gemini.client import get_gemini_client, output_text
 
         client = get_gemini_client()
         upload_name = _audio_filename(audio, filename, content_type)
-        mime_type = content_type or "audio/ogg"
-        mime_type = mime_type.split(";", 1)[0].strip().lower()
+        mime_type = (content_type or "audio/ogg").split(";", 1)[0].strip().lower()
         if mime_type == "audio/x-wav":
             mime_type = "audio/wav"
 
+        temp_path: str | None = None
         try:
+            # The Python GenAI Files API is most reliable with a real file path.
+            suffix = Path(upload_name).suffix or ".ogg"
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_file:
+                temp_file.write(audio)
+                temp_path = temp_file.name
+
             audio_file = client.files.upload(
-                file=io.BytesIO(audio),
-                config={"display_name": upload_name, "mime_type": mime_type},
+                file=temp_path,
+                config=genai.types.UploadFileConfig(
+                    display_name=upload_name,
+                    mime_type=mime_type,
+                ),
             )
+
+            # Wait briefly for Gemini to finish processing the uploaded media.
+            file_name = getattr(audio_file, "name", None)
+            if file_name:
+                for _ in range(20):
+                    state = str(getattr(audio_file, "state", "") or "").upper()
+                    if state not in {"PROCESSING", "FILE_STATE_PROCESSING"}:
+                        break
+                    time.sleep(0.5)
+                    audio_file = client.files.get(name=file_name)
+
+                state = str(getattr(audio_file, "state", "") or "").upper()
+                if state in {"FAILED", "FILE_STATE_FAILED"}:
+                    raise RuntimeError("Gemini rejected the uploaded audio file.")
+
             interaction = client.interactions.create(
                 model=self.model,
                 input=[
@@ -126,7 +155,14 @@ class GeminiSpeechToText:
                 },
             )
         except Exception as exc:
+            logger.exception("Gemini STT request failed: %s", exc)
             raise RuntimeError("Speech-to-text provider is temporarily unavailable.") from exc
+        finally:
+            if temp_path:
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    logger.warning("Could not remove temporary audio file: %s", temp_path)
 
         text = output_text(interaction)
         if not text:
