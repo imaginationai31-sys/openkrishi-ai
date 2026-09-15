@@ -17,8 +17,8 @@
     .card { background: white; border: 1px solid #dce7d9; border-radius: 20px; padding: 18px; box-shadow: 0 5px 20px rgba(20, 55, 25, .06); margin-top: 14px; }
     label { display: block; font-weight: 700; margin-bottom: 7px; }
     select { width: 100%; padding: 13px; border: 1px solid #cbd8c8; border-radius: 12px; background: white; font-size: 16px; margin-bottom: 14px; }
-    .record { width: 150px; height: 150px; border-radius: 50%; border: 0; background: #166534; color: white; display: grid; place-items: center; margin: 14px auto; font-size: 18px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 25px rgba(22,101,52,.22); }
-    .record.recording { background: #b91c1c; }
+    .record { width: 150px; height: 150px; border-radius: 50%; border: 0; background: #166534; color: white; display: grid; place-items: center; margin: 14px auto; font-size: 18px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 25px rgba(22,101,52,.22); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+    .record.recording { background: #b91c1c; transform: scale(1.03); }
     .hint { text-align: center; color: #6b756d; font-size: 14px; }
     .status { text-align: center; min-height: 24px; font-weight: 700; }
     .result { white-space: pre-wrap; line-height: 1.6; font-size: 17px; }
@@ -54,9 +54,9 @@
         <option value="flowers">Flowers</option>
       </select>
 
-      <button id="record" class="record" type="button">🎙️<br>Hold to Speak</button>
-      <div id="status" class="status">Tap and hold the microphone to ask your question.</div>
-      <p class="hint">Example: “আমার ধান গাছে হলুদ রঙের পাতা দেখা যাচ্ছে।”</p>
+      <button id="record" class="record" type="button" aria-label="Hold to speak">🎙️<br>Hold to Speak</button>
+      <div id="status" class="status">Press and hold the microphone while speaking.</div>
+      <p class="hint">Example: “मेरे धान के पत्ते पीले हो रहे हैं।”</p>
     </section>
 
     <section id="resultCard" class="card" hidden>
@@ -77,35 +77,53 @@ const resultEl = document.getElementById('result');
 const safetyEl = document.getElementById('safety');
 const audioEl = document.getElementById('audio');
 const detailsEl = document.getElementById('details');
-let recorder;
+let recorder = null;
 let chunks = [];
-let stream;
+let stream = null;
+let recording = false;
+let activePointerId = null;
 
 function setStatus(text, error = false) {
   statusEl.textContent = text;
   statusEl.classList.toggle('error', error);
 }
 
-async function startRecording() {
+async function startRecording(event) {
+  if (recording) return;
+  recording = true;
+  activePointerId = event.pointerId;
   try {
+    if (recordButton.setPointerCapture) recordButton.setPointerCapture(event.pointerId);
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     chunks = [];
-    recorder = new MediaRecorder(stream);
-    recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    const mimeCandidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus'];
+    const mimeType = mimeCandidates.find(type => MediaRecorder.isTypeSupported(type)) || '';
+    recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
     recorder.onstop = sendRecording;
-    recorder.start();
+    recorder.start(250);
     recordButton.classList.add('recording');
     recordButton.innerHTML = '⏹️<br>Release to Send';
-    setStatus('Listening…');
+    setStatus('Listening… Keep holding while you speak.');
   } catch (err) {
+    recording = false;
+    activePointerId = null;
+    stream?.getTracks().forEach(t => t.stop());
+    stream = null;
     setStatus('Microphone permission is required.', true);
   }
 }
 
-function stopRecording() {
-  if (!recorder || recorder.state === 'inactive') return;
-  recorder.stop();
+function stopRecording(event) {
+  if (!recording) return;
+  if (event && activePointerId !== null && event.pointerId !== activePointerId) return;
+  recording = false;
+  activePointerId = null;
+  if (recorder && recorder.state !== 'inactive') {
+    recorder.stop();
+  }
   stream?.getTracks().forEach(t => t.stop());
+  stream = null;
   recordButton.classList.remove('recording');
   recordButton.innerHTML = '🎙️<br>Hold to Speak';
   setStatus('Processing your question…');
@@ -113,8 +131,9 @@ function stopRecording() {
 
 async function sendRecording() {
   try {
-    const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-    const extension = blob.type.includes('ogg') ? 'ogg' : blob.type.includes('mp4') ? 'm4a' : 'webm';
+    const type = recorder?.mimeType || 'audio/webm';
+    const blob = new Blob(chunks, { type });
+    const extension = type.includes('ogg') ? 'ogg' : type.includes('mp4') ? 'm4a' : 'webm';
     const form = new FormData();
     form.append('file', blob, `farmer-question.${extension}`);
     form.append('language', document.getElementById('language').value);
@@ -136,13 +155,29 @@ async function sendRecording() {
     setStatus('Advice ready.');
   } catch (err) {
     setStatus(err.message || 'Something went wrong.', true);
+  } finally {
+    recorder = null;
+    chunks = [];
   }
 }
 
-recordButton.addEventListener('pointerdown', e => { e.preventDefault(); startRecording(); });
-recordButton.addEventListener('pointerup', e => { e.preventDefault(); stopRecording(); });
-recordButton.addEventListener('pointercancel', stopRecording);
-recordButton.addEventListener('pointerleave', e => { if (recorder?.state === 'recording') stopRecording(); });
+recordButton.addEventListener('pointerdown', event => {
+  event.preventDefault();
+  startRecording(event);
+});
+recordButton.addEventListener('pointerup', event => {
+  event.preventDefault();
+  stopRecording(event);
+});
+recordButton.addEventListener('pointercancel', event => stopRecording(event));
+recordButton.addEventListener('lostpointercapture', event => {
+  if (recording) stopRecording(event);
+});
+
+// Keep recording even if the finger moves outside the button. Pointer capture
+// normally handles this, while window-level release provides a mobile fallback.
+window.addEventListener('pointerup', event => stopRecording(event));
+window.addEventListener('pointercancel', event => stopRecording(event));
 </script>
 </body>
 </html>
