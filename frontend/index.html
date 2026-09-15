@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#166534" />
-  <title>OpenKrishi AI — Voice Advisory</title>
+  <title>OpenKrishi AI — Voice & Vision Advisory</title>
   <style>
     :root { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #17251b; background: #f4f8f2; }
     * { box-sizing: border-box; }
@@ -16,7 +16,7 @@
     .tagline { margin: 7px 0 0; color: #647067; }
     .card { background: white; border: 1px solid #dce7d9; border-radius: 20px; padding: 18px; box-shadow: 0 5px 20px rgba(20, 55, 25, .06); margin-top: 14px; }
     label { display: block; font-weight: 700; margin-bottom: 7px; }
-    select { width: 100%; padding: 13px; border: 1px solid #cbd8c8; border-radius: 12px; background: white; font-size: 16px; margin-bottom: 14px; }
+    select, input[type="file"] { width: 100%; padding: 13px; border: 1px solid #cbd8c8; border-radius: 12px; background: white; font-size: 16px; margin-bottom: 14px; }
     .record { width: 150px; height: 150px; border-radius: 50%; border: 0; background: #166534; color: white; display: grid; place-items: center; margin: 14px auto; font-size: 18px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 25px rgba(22,101,52,.22); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
     .record.recording { background: #b91c1c; transform: scale(1.03); }
     .hint { text-align: center; color: #6b756d; font-size: 14px; }
@@ -26,6 +26,7 @@
     audio { width: 100%; margin-top: 14px; }
     .small { color: #6b756d; font-size: 12px; margin-top: 12px; }
     .error { color: #991b1b; }
+    .photo-preview { width: 100%; max-height: 240px; object-fit: contain; border-radius: 14px; margin: 2px 0 14px; border: 1px solid #dce7d9; }
   </style>
 </head>
 <body>
@@ -33,7 +34,7 @@
     <header>
       <div class="logo">🌾</div>
       <h1>OpenKrishi AI</h1>
-      <p class="tagline">Ask about your crop in your own language</p>
+      <p class="tagline">Speak your crop problem and optionally add a photo</p>
     </header>
 
     <section class="card">
@@ -54,9 +55,13 @@
         <option value="flowers">Flowers</option>
       </select>
 
+      <label for="image">Crop photo (optional)</label>
+      <input id="image" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" />
+      <img id="photoPreview" class="photo-preview" hidden alt="Selected crop photo preview" />
+
       <button id="record" class="record" type="button" aria-label="Hold to speak">🎙️<br>Hold to Speak</button>
       <div id="status" class="status">Press and hold the microphone while speaking.</div>
-      <p class="hint">Example: “मेरे धान के पत्ते पीले हो रहे हैं।”</p>
+      <p class="hint">Add a clear leaf or plant photo for visual assessment.</p>
     </section>
 
     <section id="resultCard" class="card" hidden>
@@ -64,6 +69,7 @@
       <div id="result" class="result"></div>
       <span id="safety" class="safety">Safety: Caution</span>
       <audio id="audio" controls></audio>
+      <div id="vision" class="small"></div>
       <div id="details" class="small"></div>
     </section>
   </main>
@@ -72,10 +78,13 @@
 const API_BASE = window.OPENKRISHI_API_BASE || 'https://openkrishi-ai-api.onrender.com';
 const recordButton = document.getElementById('record');
 const statusEl = document.getElementById('status');
+const imageInput = document.getElementById('image');
+const photoPreview = document.getElementById('photoPreview');
 const resultCard = document.getElementById('resultCard');
 const resultEl = document.getElementById('result');
 const safetyEl = document.getElementById('safety');
 const audioEl = document.getElementById('audio');
+const visionEl = document.getElementById('vision');
 const detailsEl = document.getElementById('details');
 let recorder = null;
 let chunks = [];
@@ -87,6 +96,18 @@ function setStatus(text, error = false) {
   statusEl.textContent = text;
   statusEl.classList.toggle('error', error);
 }
+
+imageInput.addEventListener('change', () => {
+  const file = imageInput.files?.[0];
+  if (!file) {
+    photoPreview.hidden = true;
+    photoPreview.removeAttribute('src');
+    return;
+  }
+  photoPreview.src = URL.createObjectURL(file);
+  photoPreview.hidden = false;
+  setStatus('Photo selected. Now hold the microphone and describe the problem.');
+});
 
 async function startRecording(event) {
   if (recording) return;
@@ -119,9 +140,7 @@ function stopRecording(event) {
   if (event && activePointerId !== null && event.pointerId !== activePointerId) return;
   recording = false;
   activePointerId = null;
-  if (recorder && recorder.state !== 'inactive') {
-    recorder.stop();
-  }
+  if (recorder && recorder.state !== 'inactive') recorder.stop();
   stream?.getTracks().forEach(t => t.stop());
   stream = null;
   recordButton.classList.remove('recording');
@@ -139,7 +158,11 @@ async function sendRecording() {
     form.append('language', document.getElementById('language').value);
     form.append('crop_category', document.getElementById('crop').value);
 
-    const response = await fetch(`${API_BASE}/api/v1/voice/advisory`, { method: 'POST', body: form });
+    const image = imageInput.files?.[0];
+    const endpoint = image ? '/api/v1/voice/vision-advisory' : '/api/v1/voice/advisory';
+    if (image) form.append('image', image, image.name);
+
+    const response = await fetch(`${API_BASE}${endpoint}`, { method: 'POST', body: form });
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || 'Unable to process your question.');
 
@@ -148,11 +171,19 @@ async function sendRecording() {
     safetyEl.textContent = `Safety: ${data.advisory?.safety?.status || 'caution'}`;
     detailsEl.textContent = `Detected crop: ${data.understanding?.detected_crop || 'not specified'} · Confidence: ${data.advisory?.confidence || 'low'}`;
 
+    if (data.vision) {
+      const observations = data.vision.observations || [];
+      const causes = data.vision.possible_causes || [];
+      visionEl.textContent = `Vision: ${observations.join(' ')}${causes.length ? ` Possible causes: ${causes.join(', ')}.` : ''}`;
+    } else {
+      visionEl.textContent = '';
+    }
+
     if (data.audio?.base64) {
       audioEl.src = `data:${data.audio.mime_type};base64,${data.audio.base64}`;
       audioEl.play().catch(() => {});
     }
-    setStatus('Advice ready.');
+    setStatus(image ? 'Voice + photo advice ready.' : 'Advice ready.');
   } catch (err) {
     setStatus(err.message || 'Something went wrong.', true);
   } finally {
@@ -173,9 +204,6 @@ recordButton.addEventListener('pointercancel', event => stopRecording(event));
 recordButton.addEventListener('lostpointercapture', event => {
   if (recording) stopRecording(event);
 });
-
-// Keep recording even if the finger moves outside the button. Pointer capture
-// normally handles this, while window-level release provides a mobile fallback.
 window.addEventListener('pointerup', event => stopRecording(event));
 window.addEventListener('pointercancel', event => stopRecording(event));
 </script>
