@@ -24,11 +24,7 @@ If the image is unclear, say so and use low confidence.
 """
 
 
-def _validate_image(
-    image_bytes: bytes,
-    content_type: str,
-    crop_category: str | None,
-) -> str:
+def _validate_image(image_bytes: bytes, content_type: str, crop_category: str | None) -> str:
     normalized_type = (content_type or "").lower().split(";", 1)[0].strip()
     if not image_bytes:
         raise ValueError("Image is empty.")
@@ -55,12 +51,7 @@ def _safe_result(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def assess_crop_image(
-    image_bytes: bytes,
-    content_type: str,
-    crop_category: str | None = None,
-    growth_stage: str | None = None,
-) -> dict[str, Any]:
+def assess_crop_image(image_bytes: bytes, content_type: str, crop_category: str | None = None, growth_stage: str | None = None) -> dict[str, Any]:
     """Assess a crop image using OpenAI when configured, otherwise validate it."""
     normalized_type = _validate_image(image_bytes, content_type, crop_category)
     api_key = os.getenv("OPENAI_API_KEY")
@@ -88,22 +79,19 @@ def assess_crop_image(
     image_url = f"data:{normalized_type};base64,{base64.b64encode(image_bytes).decode('ascii')}"
     context = f"Crop category: {crop_category or 'unknown'}; growth stage: {growth_stage or 'unknown'}."
 
-    response = client.responses.create(
-        model=os.getenv("OPENAI_VISION_MODEL", "gpt-5.6-luna"),
-        input=[
-            {
-                "role": "system",
-                "content": [{"type": "input_text", "text": VISION_SYSTEM_PROMPT}],
-            },
-            {
-                "role": "user",
-                "content": [
+    try:
+        response = client.responses.create(
+            model=os.getenv("OPENAI_VISION_MODEL", "gpt-5.6-luna"),
+            input=[
+                {"role": "system", "content": [{"type": "input_text", "text": VISION_SYSTEM_PROMPT}]},
+                {"role": "user", "content": [
                     {"type": "input_text", "text": context},
                     {"type": "input_image", "image_url": image_url},
-                ],
-            },
-        ],
-    )
+                ]},
+            ],
+        )
+    except Exception as exc:
+        raise RuntimeError("Vision provider is temporarily unavailable.") from exc
 
     raw = response.output_text.strip()
     try:
