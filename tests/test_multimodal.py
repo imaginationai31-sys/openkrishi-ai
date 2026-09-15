@@ -33,8 +33,8 @@ def make_upload(filename, content_type, content):
 
 @pytest.mark.anyio
 async def test_voice_vision_advisory_combines_voice_and_photo(monkeypatch):
-    monkeypatch.setattr(voice_route, "GroqSpeechToText", FakeSpeechToText)
-    monkeypatch.setattr(voice_route, "TTSFreeTextToSpeech", FakeTTS)
+    monkeypatch.setattr(voice_route, "_transcribe", FakeSpeechToText().transcribe)
+    monkeypatch.setattr(voice_route, "_synthesize", FakeTTS().synthesize)
     monkeypatch.setattr(
         voice_route,
         "normalize_agricultural_terms",
