@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from services.api.middleware import RequestTraceMiddleware
 from services.api.routes import advisory, health, vision, voice
 
 app = FastAPI(
@@ -7,6 +8,8 @@ app = FastAPI(
     description="Open-source, multilingual agricultural intelligence API.",
     version="0.1.0",
 )
+
+app.add_middleware(RequestTraceMiddleware)
 
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(advisory.router, prefix="/api/v1")
