@@ -1,3 +1,4 @@
+import base64
 from typing import Any
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
@@ -5,6 +6,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from services.advisory.engine import generate_advisory
 from services.voice.languages import is_supported_language
 from services.voice.speech_to_text import GroqSpeechToText
+from services.voice.text_to_speech import TTSFreeTextToSpeech
 
 router = APIRouter()
 
@@ -55,7 +57,7 @@ async def voice_advisory(
     growth_stage: str | None = Form(default=None),
     location: str | None = Form(default=None),
 ) -> dict[str, Any]:
-    """Transcribe a farmer voice recording and pass the text to the advisory engine."""
+    """Run voice -> STT -> advisory -> TTS and return spoken audio as base64."""
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
 
@@ -88,6 +90,16 @@ async def voice_advisory(
         location=location,
     )
 
+    try:
+        spoken = TTSFreeTextToSpeech().synthesize(
+            advisory["answer"],
+            transcription.language,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
     return {
         "transcription": {
             "text": transcription.text,
@@ -95,4 +107,9 @@ async def voice_advisory(
             "confidence": transcription.confidence,
         },
         "advisory": advisory,
+        "audio": {
+            "mime_type": spoken.mime_type,
+            "language": spoken.language,
+            "base64": base64.b64encode(spoken.audio).decode("ascii"),
+        },
     }
