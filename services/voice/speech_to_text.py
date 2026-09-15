@@ -52,8 +52,9 @@ LANGUAGE_NAMES = {
 }
 
 AGRICULTURAL_VOCABULARY = [
-    "rice", "paddy", "ধান", "dhan", "peanut", "groundnut", "বাদাম",
-    "yellow leaves", "wilting", "leaf spots", "পোকা", "রোগ", "পাতা",
+    "rice", "paddy", "धान", "dhan", "peanut", "groundnut", "বাদাম",
+    "yellow leaves", "wilting", "leaf spots", "पत्ता", "पत्ते", "पत्तियों",
+    "पीले पत्ते", "मुरझाना", "कीट", "रोग", "पत्ती",
 ]
 
 
@@ -88,11 +89,10 @@ def _audio_filename(audio: bytes, filename: str | None = None, content_type: str
 
 
 class GeminiSpeechToText:
-    """Speech-to-text provider backed by Gemini audio understanding."""
+    """Speech-to-text provider backed by Gemini 3.5 Transcribe."""
 
     def __init__(self, model: str | None = None) -> None:
-        # Gemini's standard generateContent API supports audio input directly.
-        self.model = model or os.getenv("GEMINI_TRANSCRIBE_MODEL", "gemini-3.1-flash-lite")
+        self.model = model or os.getenv("GEMINI_TRANSCRIBE_MODEL", "gemini-3.5-transcribe")
 
     def _upload_audio(self, client, genai, audio: bytes, upload_name: str, mime_type: str):
         suffix = Path(upload_name).suffix or ".ogg"
@@ -156,18 +156,21 @@ class GeminiSpeechToText:
         try:
             audio_file = self._upload_audio(client, genai, audio, upload_name, mime_type)
 
-            # Use the standard Gemini generateContent API for audio transcription.
-            # This avoids the incompatible Interactions transcription_config schema
-            # that caused Gemini to return HTTP 400 invalid_request.
-            prompt = (
-                f"Transcribe this farmer's speech exactly in {LANGUAGE_NAMES[language]}. "
-                "Return only the spoken words as text. Do not explain, translate, "
-                "summarize, or answer the farmer. Preserve agricultural terms. "
-                f"Use the language hint {LANGUAGE_CODES[language]} when identifying speech."
+            # Gemini 3.5 Transcribe supports explicit BCP-47 language hints through
+            # GenerateContentConfig. This is important when the farmer selects a
+            # language in the UI instead of relying on automatic detection.
+            transcription_config = genai.types.AudioTranscriptionConfig(
+                language_codes=[LANGUAGE_CODES[language]],
+                custom_vocabulary=AGRICULTURAL_VOCABULARY,
             )
+            config = genai.types.GenerateContentConfig(
+                audio_transcription_config=transcription_config,
+            )
+
             response = client.models.generate_content(
                 model=self.model,
-                contents=[audio_file, prompt],
+                contents=[audio_file],
+                config=config,
             )
             text = (getattr(response, "text", None) or "").strip()
 
@@ -179,7 +182,7 @@ class GeminiSpeechToText:
         except RuntimeError:
             raise
         except Exception as exc:
-            logger.exception("Gemini STT request failed: %s", exc)
+            logger.exception("Gemini STT request failed for language %s: %s", language, exc)
             raise RuntimeError("Speech-to-text provider is temporarily unavailable.") from exc
 
 
