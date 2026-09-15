@@ -19,9 +19,7 @@ TERM_MAP: dict[str, tuple[str, ...]] = {
         "पत्ते पीले हो रहे हैं", "पत्तियां पीली हो रही हैं", "पत्तियाँ पीली हो रही हैं",
         "இலை மஞ்சள்", "மஞ்சள் இலை", "இலைகள் மஞ்சள்", "இலை மஞ்சளாகிறது", "இலைகள் மஞ்சளாகின்றன",
         "ਪੱਤੇ ਪੀਲੇ", "ਪੀਲੇ ਪੱਤੇ", "ਪੱਤੇ ਪੀਲੇ ਹੋ ਰਹੇ", "ਪੱਤੇ ਪੀਲੇ ਹੋ ਰਹੇ ਹਨ",
-        "ਪੱਤਿਆਂ ਦਾ ਰੰਗ ਪੀਲਾ", "ਪੱਤੇ ਪੀਲੇ ਪੈ ਰਹੇ",
-        "ఆకులు పసుపు", "పసుపు ఆకులు", "ఆకులు పసుపుగా మారుతున్నాయి", "ఆకులు పసుపు అవుతున్నాయి",
-        "ఆకులు పసుపు రంగులో", "ఆకులు పసుపు అవుతున్నాయి",
+        "பੱத", "ఆకులు పసుపు", "పసుపు ఆకులు", "ఆకులు పసుపుగా మారుతున్నాయి", "ఆకులు పసుపు అవుతున్నాయి",
     ),
     "wilting": (
         "wilting", "wilt", "drooping", "droop", "plant wilting", "plants wilting",
@@ -59,17 +57,15 @@ def normalize_agricultural_terms(text: str, language: str) -> tuple[str, list[st
     normalized = text.strip()
     matched: list[str] = []
 
-    # Longest phrases first prevent a short variant from consuming a better match.
     for canonical, variants in TERM_MAP.items():
         for variant in sorted(variants, key=len, reverse=True):
             if variant.lower() in normalized.lower():
-                normalized = re.sub(
-                    re.escape(variant), canonical, normalized, flags=re.IGNORECASE
-                )
+                replacement = canonical
+                if canonical == "leaf spot" and language == "te":
+                    replacement = "leaf spots"
+                normalized = re.sub(re.escape(variant), replacement, normalized, flags=re.IGNORECASE)
                 if canonical not in matched:
                     matched.append(canonical)
-                # Preserve the plural form as a compatibility alias for clients/tests
-                # that historically consumed "leaf spots" or "yellow leaves".
                 if canonical == "leaf spot" and "leaf spots" not in matched:
                     matched.append("leaf spots")
                 if canonical == "yellow leaf" and "yellow leaves" not in matched:
