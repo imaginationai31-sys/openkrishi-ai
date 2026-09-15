@@ -1,11 +1,9 @@
-from io import BytesIO
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
-from starlette.datastructures import Headers, UploadFile
 
 from services.api.server import app
-from services.voice.speech_to_text import TranscriptionResult
+from services.voice.speech_to_text import Transcription
 from services.voice.text_to_speech import SpeechAudio
 
 
@@ -22,7 +20,6 @@ def make_image_upload(filename="rice.jpg", content_type="image/jpeg", content=b"
 
 def test_root_health():
     response = client.get("/")
-
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
     assert response.headers.get("x-trace-id")
@@ -37,7 +34,6 @@ def test_advisory_http_success():
             "crop_category": "rice",
         },
     )
-
     assert response.status_code == 200
     body = response.json()
     assert body["language"] == "en"
@@ -55,7 +51,6 @@ def test_advisory_rejects_unsupported_crop():
             "crop_category": "tomato",
         },
     )
-
     assert response.status_code == 422
 
 
@@ -65,7 +60,6 @@ def test_voice_transcribe_empty_audio_returns_400():
         files={"file": make_audio_upload(content=b"")},
         data={"language": "bn"},
     )
-
     assert response.status_code == 400
     assert "empty" in response.json()["detail"].lower()
 
@@ -80,28 +74,17 @@ def test_voice_transcribe_provider_failure_returns_503():
             files={"file": make_audio_upload()},
             data={"language": "bn"},
         )
-
     assert response.status_code == 503
     assert "speech-to-text provider" in response.json()["detail"].lower()
 
 
 def test_voice_advisory_end_to_end_with_provider_mocks():
-    transcription = TranscriptionResult(
-        text="My rice leaves have yellow spots",
-        language="en",
-        confidence="high",
-    )
+    transcription = Transcription(text="My rice leaves have yellow spots", language="en", confidence=None)
     spoken = SpeechAudio(audio=b"RIFF-fake-wav", mime_type="audio/wav", language="en")
 
     with (
-        patch(
-            "services.api.routes.voice.GroqSpeechToText.transcribe",
-            return_value=transcription,
-        ),
-        patch(
-            "services.api.routes.voice.TTSFreeTextToSpeech.synthesize",
-            return_value=spoken,
-        ),
+        patch("services.api.routes.voice.GroqSpeechToText.transcribe", return_value=transcription),
+        patch("services.api.routes.voice.TTSFreeTextToSpeech.synthesize", return_value=spoken),
     ):
         response = client.post(
             "/api/v1/voice/advisory",
@@ -127,7 +110,6 @@ def test_vision_assess_invalid_image_returns_400():
             files={"file": make_image_upload()},
             data={"language": "en", "crop_category": "rice"},
         )
-
     assert response.status_code == 400
     assert "unsupported image" in response.json()["detail"].lower()
 
@@ -142,17 +124,12 @@ def test_vision_assess_provider_failure_returns_502():
             files={"file": make_image_upload()},
             data={"language": "en", "crop_category": "rice"},
         )
-
     assert response.status_code == 502
     assert "vision provider" in response.json()["detail"].lower()
 
 
 def test_voice_vision_advisory_end_to_end_with_provider_mocks():
-    transcription = TranscriptionResult(
-        text="My rice leaves are yellow",
-        language="en",
-        confidence="high",
-    )
+    transcription = Transcription(text="My rice leaves are yellow", language="en", confidence=None)
     spoken = SpeechAudio(audio=b"RIFF-fake-wav", mime_type="audio/wav", language="en")
     visual = {
         "status": "assessed",
@@ -165,25 +142,13 @@ def test_voice_vision_advisory_end_to_end_with_provider_mocks():
     }
 
     with (
-        patch(
-            "services.api.routes.voice.GroqSpeechToText.transcribe",
-            return_value=transcription,
-        ),
-        patch(
-            "services.api.routes.voice.assess_crop_image",
-            return_value=visual,
-        ),
-        patch(
-            "services.api.routes.voice.TTSFreeTextToSpeech.synthesize",
-            return_value=spoken,
-        ),
+        patch("services.api.routes.voice.GroqSpeechToText.transcribe", return_value=transcription),
+        patch("services.api.routes.voice.assess_crop_image", return_value=visual),
+        patch("services.api.routes.voice.TTSFreeTextToSpeech.synthesize", return_value=spoken),
     ):
         response = client.post(
             "/api/v1/voice/vision-advisory",
-            files={
-                "file": make_audio_upload(),
-                "image": make_image_upload(),
-            },
+            files={"file": make_audio_upload(), "image": make_image_upload()},
             data={"language": "en", "crop_category": "rice"},
         )
 
@@ -199,12 +164,8 @@ def test_voice_vision_advisory_end_to_end_with_provider_mocks():
 def test_voice_vision_advisory_rejects_unsupported_language():
     response = client.post(
         "/api/v1/voice/vision-advisory",
-        files={
-            "file": make_audio_upload(),
-            "image": make_image_upload(),
-        },
+        files={"file": make_audio_upload(), "image": make_image_upload()},
         data={"language": "fr", "crop_category": "rice"},
     )
-
     assert response.status_code == 422
     assert "unsupported voice language" in response.json()["detail"].lower()
