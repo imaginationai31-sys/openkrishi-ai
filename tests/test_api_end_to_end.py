@@ -66,7 +66,7 @@ def test_voice_transcribe_empty_audio_returns_400():
 
 def test_voice_transcribe_provider_failure_returns_503():
     with patch(
-        "services.api.routes.voice.GroqSpeechToText.transcribe",
+        "services.api.routes.voice._transcribe",
         side_effect=RuntimeError("Speech-to-text provider is temporarily unavailable."),
     ):
         response = client.post(
@@ -83,8 +83,8 @@ def test_voice_advisory_end_to_end_with_provider_mocks():
     spoken = SpeechAudio(audio=b"RIFF-fake-wav", mime_type="audio/wav", language="bn")
 
     with (
-        patch("services.api.routes.voice.GroqSpeechToText.transcribe", return_value=transcription),
-        patch("services.api.routes.voice.TTSFreeTextToSpeech.synthesize", return_value=spoken),
+        patch("services.api.routes.voice._transcribe", return_value=transcription),
+        patch("services.api.routes.voice._synthesize", return_value=spoken),
     ):
         response = client.post(
             "/api/v1/voice/advisory",
@@ -143,9 +143,9 @@ def test_voice_vision_advisory_end_to_end_with_provider_mocks():
     }
 
     with (
-        patch("services.api.routes.voice.GroqSpeechToText.transcribe", return_value=transcription),
+        patch("services.api.routes.voice._transcribe", return_value=transcription),
         patch("services.api.routes.voice.assess_crop_image", return_value=visual),
-        patch("services.api.routes.voice.TTSFreeTextToSpeech.synthesize", return_value=spoken),
+        patch("services.api.routes.voice._synthesize", return_value=spoken),
     ):
         response = client.post(
             "/api/v1/voice/vision-advisory",
