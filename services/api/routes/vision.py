@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from services.advisory.engine import generate_advisory
+from services.advisory.localization import localize_advisory, localize_visual
 from services.vision.engine import assess_crop_image
 
 router = APIRouter()
@@ -18,7 +19,7 @@ async def vision_assess(
     language: str = Form(default="en"),
     location: str | None = Form(default=None),
 ) -> dict[str, Any]:
-    """Assess a crop photo and turn visible findings into safe agronomy guidance."""
+    """Assess a crop photo and return all farmer-facing text in the selected language."""
     if language not in SUPPORTED_LANGUAGES:
         raise HTTPException(status_code=400, detail="Unsupported language.")
 
@@ -31,6 +32,7 @@ async def vision_assess(
             growth_stage=growth_stage,
             language=language,
         )
+        visual = localize_visual(visual, language)
 
         observations = visual.get("observations", [])
         possible_causes = visual.get("possible_causes", [])
@@ -44,6 +46,7 @@ async def vision_assess(
             growth_stage=growth_stage,
             location=location,
         )
+        advisory = localize_advisory(advisory, language)
 
         return {
             "status": visual["status"],
