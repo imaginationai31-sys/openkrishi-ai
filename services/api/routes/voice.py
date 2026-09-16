@@ -4,6 +4,7 @@ from typing import Any
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from services.advisory.engine import generate_advisory
+from services.advisory.localization import localize_advisory, localize_visual
 from services.advisory.normalizer import normalize_agricultural_terms
 from services.advisory.voice_understanding import build_voice_understanding
 from services.voice.languages import is_supported_language
@@ -21,6 +22,16 @@ def _transcribe(audio: bytes, language: str, filename: str | None, content_type:
 
 
 def _spoken_advisory(advisory: dict[str, Any], visual: dict[str, Any] | None = None) -> str:
+    labels = {
+        "en": ("Photo observations", "Possible causes", "Safe solutions and next steps", "Important", "No advisory information is available yet."),
+        "bn": ("ছবিতে দেখা লক্ষণ", "সম্ভাব্য কারণ", "নিরাপদ সমাধান ও পরবর্তী পদক্ষেপ", "গুরুত্বপূর্ণ", "এখনও কোনো পরামর্শের তথ্য পাওয়া যায়নি।"),
+        "hi": ("फोटो में दिखाई देने वाले लक्षण", "संभावित कारण", "सुरक्षित समाधान और अगले कदम", "महत्वपूर्ण", "अभी कोई सलाह उपलब्ध नहीं है।"),
+        "ta": ("படத்தில் காணப்படும் அறிகுறிகள்", "சாத்தியமான காரணங்கள்", "பாதுகாப்பான தீர்வுகள் மற்றும் அடுத்தடுத்த நடவடிக்கைகள்", "முக்கியம்", "இப்போது எந்த ஆலோசனைத் தகவலும் இல்லை."),
+        "pa": ("ਤਸਵੀਰ ਵਿੱਚ ਦਿਖਾਈ ਦੇਣ ਵਾਲੇ ਲੱਛਣ", "ਸੰਭਾਵੀ ਕਾਰਨ", "ਸੁਰੱਖਿਅਤ ਹੱਲ ਅਤੇ ਅਗਲੇ ਕਦਮ", "ਮਹੱਤਵਪੂਰਨ", "ਹਾਲੇ ਕੋਈ ਸਲਾਹ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।"),
+        "te": ("చిత్రంలో కనిపించే లక్షణాలు", "సంభావ్య కారణాలు", "సురక్షిత పరిష్కారాలు మరియు తదుపరి చర్యలు", "ముఖ్యమైన విషయం", "ప్రస్తుతం ఎలాంటి సలహా సమాచారం అందుబాటులో లేదు."),
+    }
+    language = str(advisory.get("language") or "en")
+    photo_label, causes_label, solution_label, important_label, empty_text = labels.get(language, labels["en"])
     parts: list[str] = []
     answer = str(advisory.get("answer") or "").strip()
     if answer:
@@ -29,20 +40,20 @@ def _spoken_advisory(advisory: dict[str, Any], visual: dict[str, Any] | None = N
         observations = [str(x).strip() for x in visual.get("observations", []) if str(x).strip()]
         causes = [str(x).strip() for x in visual.get("possible_causes", []) if str(x).strip()]
         if observations:
-            parts.append("Photo observations: " + " ".join(observations))
+            parts.append(photo_label + ": " + " ".join(observations))
         if causes:
-            parts.append("Possible causes: " + "; ".join(causes))
+            parts.append(causes_label + ": " + "; ".join(causes))
     else:
         observations = [str(x).strip() for x in advisory.get("observations", []) if str(x).strip()]
         if observations:
-            parts.append("Possible causes: " + " ".join(observations))
+            parts.append(causes_label + ": " + " ".join(observations))
     recommendations = [str(x).strip() for x in advisory.get("recommendations", []) if str(x).strip()]
     if recommendations:
-        parts.append("Safe solutions and next steps: " + " ".join(recommendations))
+        parts.append(solution_label + ": " + " ".join(recommendations))
     uncertainties = [str(x).strip() for x in advisory.get("uncertainties", []) if str(x).strip()]
     if uncertainties:
-        parts.append("Important: " + " ".join(uncertainties[:2]))
-    return " ".join(parts).strip() or "No advisory information is available yet."
+        parts.append(important_label + ": " + " ".join(uncertainties[:2]))
+    return " ".join(parts).strip() or empty_text
 
 
 def _synthesize(text: str, language: str):
@@ -87,6 +98,7 @@ async def voice_advisory(file: UploadFile = File(...), language: str = Form(...)
             advisory["confidence"] = "low"
             advisory["uncertainties"].insert(0, "The farmer's wording could not be mapped confidently to a known agricultural symptom.")
             advisory["recommendations"].extend(understanding["follow_up_questions"])
+        advisory = localize_advisory(advisory, transcription.language)
         spoken = _synthesize(_spoken_advisory(advisory), transcription.language)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -119,6 +131,7 @@ async def voice_vision_advisory(file: UploadFile = File(...), image: UploadFile 
         normalized_text, matched_terms = normalize_agricultural_terms(transcription.text, transcription.language)
         understanding = build_voice_understanding(transcription.text, normalized_text, matched_terms, transcription.language, crop_category)
         visual = assess_crop_image(image_bytes=image_bytes, content_type=image.content_type or "", crop_category=crop_category, growth_stage=growth_stage, language=transcription.language)
+        visual = localize_visual(visual, transcription.language)
         visual_query = "; ".join([*visual.get("observations", []), *visual.get("possible_causes", [])]).strip()
         combined_query = "; ".join(part for part in (normalized_text, visual_query) if part).strip() or "farmer crop concern is unclear; crop photo assessment is unclear"
         advisory = generate_advisory(query=combined_query, language=transcription.language, crop_category=crop_category, growth_stage=growth_stage, location=location)
@@ -129,6 +142,7 @@ async def voice_vision_advisory(file: UploadFile = File(...), image: UploadFile 
         if visual.get("confidence") == "low":
             advisory["confidence"] = "low"
             advisory["uncertainties"].insert(0, "The crop photo did not provide enough reliable visual evidence for a confident conclusion.")
+        advisory = localize_advisory(advisory, transcription.language)
         spoken = _synthesize(_spoken_advisory(advisory, visual), transcription.language)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
