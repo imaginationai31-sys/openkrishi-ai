@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import json
 from typing import Any
 
@@ -95,7 +94,6 @@ def assess_crop_image(
     client = get_gemini_client()
     language_name = LANGUAGE_NAMES[language]
     context = f"Crop category: {crop_category or 'unknown'}; growth stage: {growth_stage or 'unknown'}."
-    image_data = base64.b64encode(image_bytes).decode("ascii")
     prompt = f"""You are a conservative agricultural image-assessment assistant.
 Assess only what is visibly supported by the crop photo.
 Do not claim a definitive disease, pest, nutrient deficiency, or treatment.
@@ -110,18 +108,31 @@ Context:
 Analyze the attached crop image. Return only the JSON object matching the response schema."""
 
     try:
-        interaction = client.interactions.create(
+        # Use generateContent for image input. The Gemini Python SDK supports raw
+        # image bytes through Part.from_bytes; this avoids the invalid Interactions
+        # API image-data shape that caused the generic provider-unavailable error.
+        from google.genai import types
+
+        response = client.models.generate_content(
             model=get_model(),
-            input=[
-                {"type": "text", "text": prompt},
-                {"type": "image", "data": image_data, "mime_type": normalized_type},
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type=normalized_type),
+                prompt,
             ],
-            response_format={"type": "text", "mime_type": "application/json", "schema": VISION_RESPONSE_SCHEMA},
+            config={
+                "response_format": {
+                    "text": {
+                        "mime_type": "application/json",
+                        "schema": VISION_RESPONSE_SCHEMA,
+                    }
+                }
+            },
         )
     except Exception as exc:
         raise RuntimeError("Vision provider is temporarily unavailable.") from exc
 
-    payload = _parse_assessment(output_text(interaction))
+    raw_text = getattr(response, "text", None) or output_text(response)
+    payload = _parse_assessment(raw_text)
     result = _safe_result(payload)
     result["image"] = {"content_type": normalized_type, "size_bytes": len(image_bytes)}
     result["crop_category"] = crop_category
