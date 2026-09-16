@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from services.advisory.engine import generate_advisory
+from services.advisory.localization import localize_advisory
 
 router = APIRouter()
 
@@ -20,10 +21,11 @@ class AdvisoryRequest(BaseModel):
 
 @router.post("/advisory")
 def advisory(request: AdvisoryRequest) -> dict[str, Any]:
-    return generate_advisory(
+    result = generate_advisory(
         query=request.query,
         language=request.language,
         crop_category=request.crop_category,
         growth_stage=request.growth_stage,
         location=request.location,
     )
+    return localize_advisory(result, request.language)
