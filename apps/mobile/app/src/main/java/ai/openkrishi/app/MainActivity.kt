@@ -1,5 +1,8 @@
 package ai.openkrishi.app
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -10,7 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,16 +29,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -44,11 +42,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -60,10 +55,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 
 private val KrishiGreen = Color(0xFF087443)
 private val KrishiDeep = Color(0xFF063D2A)
@@ -82,41 +80,84 @@ class MainActivity : ComponentActivity() {
 }
 
 private enum class AppTab { HOME, HISTORY, PROFILE }
+private enum class ImageSource { CAMERA, GALLERY, FILE }
 
 @Composable
 fun OpenKrishiApp() {
     MaterialTheme {
         Surface(color = Color(0xFFF6FAF7), modifier = Modifier.fillMaxSize()) {
+            val context = LocalContext.current
             var tab by remember { mutableStateOf(AppTab.HOME) }
             var screen by remember { mutableStateOf("home") }
             var language by remember { mutableStateOf("বাংলা") }
             var selectedImage by remember { mutableStateOf<Bitmap?>(null) }
+            var imageSource by remember { mutableStateOf<ImageSource?>(null) }
+            var cameraDenied by remember { mutableStateOf(false) }
 
             val galleryLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.GetContent()
             ) { uri ->
-                uri?.let { selectedImage = contentResolverBitmap(it) }
-                if (uri != null) screen = "diagnosis"
+                if (uri != null) {
+                    selectedImage = context.contentResolverBitmap(uri)
+                    imageSource = ImageSource.GALLERY
+                    screen = "diagnosis"
+                }
             }
+
+            val fileLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.OpenDocument()
+            ) { uri ->
+                if (uri != null) {
+                    selectedImage = context.contentResolverBitmap(uri)
+                    imageSource = ImageSource.FILE
+                    screen = "diagnosis"
+                }
+            }
+
             val cameraLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.TakePicturePreview()
             ) { bitmap ->
-                if (bitmap != null) selectedImage = bitmap
-                if (bitmap != null) screen = "diagnosis"
+                if (bitmap != null) {
+                    selectedImage = bitmap
+                    imageSource = ImageSource.CAMERA
+                    cameraDenied = false
+                    screen = "diagnosis"
+                }
+            }
+
+            val cameraPermissionLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { granted ->
+                cameraDenied = !granted
+                if (granted) cameraLauncher.launch(null)
+            }
+
+            fun openCamera() {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    cameraLauncher.launch(null)
+                } else {
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                }
             }
 
             when (screen) {
                 "diagnosis" -> DiagnosisScreen(
                     language = language,
                     selectedImage = selectedImage,
+                    imageSource = imageSource,
+                    cameraDenied = cameraDenied,
                     onBack = { screen = "home" },
                     onGallery = { galleryLauncher.launch("image/*") },
-                    onCamera = { cameraLauncher.launch(null) },
+                    onCamera = ::openCamera,
+                    onFile = { fileLauncher.launch(arrayOf("image/*")) },
+                    onClear = {
+                        selectedImage = null
+                        imageSource = null
+                    },
                     onResult = { screen = "result" },
                     onVoice = { screen = "voice" }
                 )
                 "result" -> ResultScreen(
-                    language = language,
                     selectedImage = selectedImage,
                     onBack = { screen = "diagnosis" },
                     onVoice = { screen = "voice" }
@@ -170,7 +211,7 @@ fun OpenKrishiApp() {
     }
 }
 
-private fun ComponentActivity.contentResolverBitmap(uri: android.net.Uri): Bitmap? =
+private fun Context.contentResolverBitmap(uri: android.net.Uri): Bitmap? =
     runCatching {
         contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
     }.getOrNull()
@@ -183,17 +224,12 @@ private fun HomeScreen(
     onDiagnosis: () -> Unit,
     onVoice: () -> Unit
 ) {
-    Column(
-        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())
-    ) {
+    Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(305.dp)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(KrishiDeep, Color(0xFF0B6B45), Color(0xFF65B76B))
-                    )
+                .background(Brush.verticalGradient(listOf(KrishiDeep, Color(0xFF0B6B45), Color(0xFF65B76B)))
                 )
         ) {
             FieldPattern()
@@ -223,24 +259,8 @@ private fun HomeScreen(
             SectionTitle("আপনার জন্য দ্রুত সাহায্য", "সব টুল এক জায়গায়")
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                FeatureCard(
-                    modifier = Modifier.weight(1f),
-                    icon = "⌾",
-                    title = "রোগ শনাক্তকরণ",
-                    subtitle = "ছবি তুলে সমস্যা জানুন",
-                    tint = KrishiMint,
-                    iconTint = KrishiGreen,
-                    onClick = onDiagnosis
-                )
-                FeatureCard(
-                    modifier = Modifier.weight(1f),
-                    icon = "♩",
-                    title = "ভয়েস পরামর্শ",
-                    subtitle = "কথা বলুন, উত্তর শুনুন",
-                    tint = KrishiPurple,
-                    iconTint = Color(0xFF7046C8),
-                    onClick = onVoice
-                )
+                FeatureCard(Modifier.weight(1f), "⌾", "রোগ শনাক্তকরণ", "ছবি তুলে সমস্যা জানুন", KrishiMint, KrishiGreen, onDiagnosis)
+                FeatureCard(Modifier.weight(1f), "♩", "ভয়েস পরামর্শ", "কথা বলুন, উত্তর শুনুন", KrishiPurple, Color(0xFF7046C8), onVoice)
             }
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -258,34 +278,29 @@ private fun HomeScreen(
                         elevation = CardDefaults.cardElevation(1.dp),
                         modifier = Modifier.width(78.dp)
                     ) {
-                        Text(crop, modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center, fontSize = 14.sp, lineHeight = 22.sp)
+                        Text(crop, modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth(), textAlign = TextAlign.Center, fontSize = 14.sp, lineHeight = 22.sp)
                     }
                 }
             }
             Spacer(Modifier.height(22.dp))
             TrustStrip()
             Spacer(Modifier.height(12.dp))
-            Text("Healthy Crops  •  Prosperous Farmers  •  A Greener Tomorrow", color = Muted, fontSize = 11.sp, modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text("Healthy Crops  •  Prosperous Farmers  •  A Greener Tomorrow", color = Muted, fontSize = 11.sp, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         }
     }
 }
 
 @Composable
 private fun BrandMark() {
-    Box(
-        modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(.15f)),
-        contentAlignment = Alignment.Center
-    ) { Text("🌿", fontSize = 24.sp) }
+    Box(Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(.15f)), contentAlignment = Alignment.Center) {
+        Text("🌿", fontSize = 24.sp)
+    }
 }
 
 @Composable
 private fun LanguagePill(language: String, onLanguage: (String) -> Unit) {
     val next = if (language == "বাংলা") "हिन्दी" else "বাংলা"
-    Surface(
-        shape = RoundedCornerShape(50),
-        color = Color.White.copy(.15f),
-        modifier = Modifier.clickable { onLanguage(next) }
-    ) {
+    Surface(shape = RoundedCornerShape(50), color = Color.White.copy(.15f), modifier = Modifier.clickable { onLanguage(next) }) {
         Text("文  $language", color = Color.White, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
     }
 }
@@ -326,14 +341,9 @@ private fun FeatureCard(
     iconTint: Color,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = modifier.clickable(onClick = onClick),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(Color.White),
-        elevation = CardDefaults.cardElevation(1.dp)
-    ) {
+    Card(modifier = modifier.clickable(onClick = onClick), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), elevation = CardDefaults.cardElevation(1.dp)) {
         Column(modifier = Modifier.padding(14.dp)) {
-            Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(13.dp)).background(tint), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(42.dp).clip(RoundedCornerShape(13.dp)).background(tint), contentAlignment = Alignment.Center) {
                 Text(icon, color = iconTint, fontSize = 22.sp)
             }
             Spacer(Modifier.height(12.dp))
@@ -366,218 +376,181 @@ private fun FieldPattern() {
         for (i in 0..7) {
             drawCircle(Color.White.copy(alpha = .035f), radius = 120f + i * 22f, center = Offset(w * .82f, h * .18f))
         }
-        drawCircle(Color.White.copy(alpha = .08f), radius = 80f, center = Offset(w * .05f, h * .92f))
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DiagnosisScreen(
     language: String,
     selectedImage: Bitmap?,
+    imageSource: ImageSource?,
+    cameraDenied: Boolean,
     onBack: () -> Unit,
     onGallery: () -> Unit,
     onCamera: () -> Unit,
+    onFile: () -> Unit,
+    onClear: () -> Unit,
     onResult: () -> Unit,
     onVoice: () -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("রোগ শনাক্তকরণ", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Text("‹", fontSize = 34.sp) } },
-                actions = { Text("⚡ AI", color = KrishiGreen, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 16.dp)) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        },
-        containerColor = Color(0xFFF6FAF7)
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(18.dp).verticalScroll(rememberScrollState())) {
-            Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(Color(0xFF102019)), modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.fillMaxWidth().height(390.dp)) {
-                    if (selectedImage != null) {
-                        Image(selectedImage.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                        Box(Modifier.fillMaxSize().background(Color.Black.copy(.18f)))
-                    } else {
-                        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF1C4D37), Color(0xFF0B261B)))))
-                        Text("🌿", fontSize = 72.sp, modifier = Modifier.align(Alignment.Center))
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("‹", fontSize = 36.sp, color = Ink, modifier = Modifier.clickable(onClick = onBack))
+            Spacer(Modifier.width(8.dp))
+            Column(Modifier.weight(1f)) {
+                Text("AI Crop Diagnosis", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Ink)
+                Text("ফসলের ছবি দিয়ে সমস্যা শনাক্ত করুন", fontSize = 12.sp, color = Muted)
+            }
+            Text(language, fontSize = 12.sp, color = KrishiGreen, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(Modifier.height(18.dp))
+
+        if (selectedImage == null) {
+            Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(Color.White), elevation = CardDefaults.cardElevation(1.dp), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.size(78.dp).clip(RoundedCornerShape(22.dp)).background(KrishiMint), contentAlignment = Alignment.Center) {
+                        Text("🌱", fontSize = 42.sp)
                     }
-                    Column(Modifier.align(Alignment.BottomCenter).padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Surface(shape = RoundedCornerShape(50), color = KrishiGreen.copy(.92f)) {
-                            Text(if (selectedImage == null) "AI ছবি বিশ্লেষণ শুরু করুন" else "AI ছবি বিশ্লেষণের জন্য প্রস্তুত", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 15.dp, vertical = 9.dp))
+                    Spacer(Modifier.height(12.dp))
+                    Text("ফসলের একটি পরিষ্কার ছবি দিন", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Ink)
+                    Spacer(Modifier.height(5.dp))
+                    Text("পাতা, কান্ড বা আক্রান্ত অংশটি কাছ থেকে তুলুন", fontSize = 12.sp, color = Muted, textAlign = TextAlign.Center)
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            Text("ছবি বাছাই করুন", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Ink)
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                ImageSourceCard(Modifier.weight(1f), "📷", "ক্যামেরা", "সরাসরি ছবি", KrishiMint, onCamera)
+                ImageSourceCard(Modifier.weight(1f), "🖼️", "গ্যালারি", "ফোনের ছবি", KrishiSky, onGallery)
+                ImageSourceCard(Modifier.weight(1f), "📁", "ফাইল", "ফাইল থেকে", KrishiPurple, onFile)
+            }
+            if (cameraDenied) {
+                Spacer(Modifier.height(10.dp))
+                Text("ক্যামেরা অনুমতি দেওয়া হয়নি। গ্যালারি বা ফাইল থেকেও ছবি বেছে নিতে পারেন।", color = Color(0xFF9A5B00), fontSize = 12.sp)
+            }
+        } else {
+            Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(Color.White), elevation = CardDefaults.cardElevation(1.dp), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(12.dp)) {
+                    Image(bitmap = selectedImage.asImageBitmap(), contentDescription = "Selected crop image", modifier = Modifier.fillMaxWidth().height(300.dp).clip(RoundedCornerShape(16.dp)), contentScale = ContentScale.Crop)
+                    Spacer(Modifier.height(10.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("ছবি প্রস্তুত", color = KrishiGreen, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(sourceLabel(imageSource), color = Muted, fontSize = 11.sp)
                         }
+                        Text("পরিবর্তন করুন", color = KrishiGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable(onClick = onClear))
                     }
                 }
             }
             Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                PickerButton("📷", "ক্যামেরা", Modifier.weight(1f), onCamera)
-                PickerButton("▣", "গ্যালারি", Modifier.weight(1f), onGallery)
-                PickerButton("▤", "ফাইল", Modifier.weight(1f), onGallery)
-            }
-            Spacer(Modifier.height(14.dp))
-            Surface(shape = RoundedCornerShape(18.dp), color = Color.White, modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    Text("ফসলের ধরন", color = Muted, fontSize = 12.sp)
-                    Spacer(Modifier.height(6.dp))
-                    Text("🌾  ধান (Rice)", color = Ink, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-            Spacer(Modifier.height(14.dp))
-            Button(onClick = if (selectedImage != null) onResult else onCamera, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(17.dp), colors = ButtonDefaults.buttonColors(KrishiGreen)) {
-                Text(if (selectedImage == null) "📷  ছবি তুলুন" else "✦  AI দিয়ে বিশ্লেষণ করুন", fontSize = 15.sp, fontWeight = FontWeight.Bold)
-            }
-            Spacer(Modifier.height(10.dp))
-            OutlinedButton(onClick = onVoice, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp)) {
-                Text("🎙  ভয়েসে সমস্যাটি বলুন", color = KrishiGreen, fontWeight = FontWeight.Bold)
-            }
-            Spacer(Modifier.height(10.dp))
-            Text("আপনার ভাষা: $language  •  ছবি পরিষ্কার ও কাছ থেকে তুলুন", color = Muted, fontSize = 11.sp, modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        }
-    }
-}
-
-@Composable
-private fun PickerButton(icon: String, title: String, modifier: Modifier, onClick: () -> Unit) {
-    Surface(shape = RoundedCornerShape(15.dp), color = Color.White, modifier = modifier.clickable(onClick = onClick).border(1.dp, Color(0xFFDCE7DF), RoundedCornerShape(15.dp))) {
-        Column(Modifier.padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(icon, fontSize = 22.sp)
-            Spacer(Modifier.height(5.dp))
-            Text(title, color = Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ResultScreen(language: String, selectedImage: Bitmap?, onBack: () -> Unit, onVoice: () -> Unit) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("পরামর্শের ফলাফল", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Text("‹", fontSize = 34.sp) } },
-                actions = { Text("🔊", fontSize = 20.sp, modifier = Modifier.padding(end = 16.dp).clickable(onClick = onVoice)) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        },
-        containerColor = Color(0xFFF6FAF7)
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(18.dp).verticalScroll(rememberScrollState())) {
-            Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) {
-                Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (selectedImage != null) Image(selectedImage.asImageBitmap(), null, Modifier.size(72.dp).clip(RoundedCornerShape(14.dp)), contentScale = ContentScale.Crop)
-                    else Box(Modifier.size(72.dp).clip(RoundedCornerShape(14.dp)).background(KrishiMint), contentAlignment = Alignment.Center) { Text("🌾", fontSize = 34.sp) }
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text("ধান (Rice)", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(5.dp))
-                        Surface(shape = RoundedCornerShape(50), color = KrishiMint) { Text("সম্ভাব্য সমস্যা", color = KrishiGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)) }
-                        Text("বিশ্বাসযোগ্যতা  92%", color = Muted, fontSize = 11.sp, modifier = Modifier.padding(top = 5.dp))
-                    }
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-            InfoCard("⚠", "পাতা হলুদ হয়ে যাচ্ছে", "সম্ভাব্য পুষ্টির ঘাটতি / অতিরিক্ত পানি / শিকড়ের সমস্যা", KrishiAmber, Color(0xFF9A6A00))
-            Spacer(Modifier.height(12.dp))
-            Text("প্রস্তাবিত সমাধান", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("অন্য ছবি ব্যবহার করবেন?", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Ink)
             Spacer(Modifier.height(9.dp))
-            ActionItem("পুরনো ও নতুন পাতার রং তুলনা করুন")
-            ActionItem("মাটির আর্দ্রতা ও পানি নিষ্কাশন পরীক্ষা করুন")
-            ActionItem("পাতার নিচে পোকা বা রোগের দাগ দেখুন")
-            ActionItem("কারণ নিশ্চিত না হওয়া পর্যন্ত অতিরিক্ত সার বা কীটনাশক ব্যবহার করবেন না")
-            Spacer(Modifier.height(14.dp))
-            InfoCard("🌱", "চারা পর্যায়: টিলারিং", "সুস্থ গাছের সঙ্গে আক্রান্ত গাছ তুলনা করুন এবং প্রয়োজনে স্থানীয় কৃষি বিশেষজ্ঞের পরামর্শ নিন।", KrishiMint, KrishiGreen)
-            Spacer(Modifier.height(14.dp))
-            WeatherMiniCard()
-            Spacer(Modifier.height(14.dp))
-            Button(onClick = onVoice, modifier = Modifier.fillMaxWidth().height(54.dp), shape = RoundedCornerShape(17.dp), colors = ButtonDefaults.buttonColors(KrishiGreen)) {
-                Text("🔊  এই পরামর্শ শুনুন", fontWeight = FontWeight.Bold)
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SmallSourceButton(Modifier.weight(1f), "📷 ক্যামেরা", onCamera)
+                SmallSourceButton(Modifier.weight(1f), "🖼️ গ্যালারি", onGallery)
+                SmallSourceButton(Modifier.weight(1f), "📁 ফাইল", onFile)
             }
-            Spacer(Modifier.height(8.dp))
-            Text("ভাষা: $language  •  AI পরামর্শ সহায়ক তথ্য; গুরুত্বপূর্ণ সিদ্ধান্তে স্থানীয় বিশেষজ্ঞের পরামর্শ নিন।", color = Muted, fontSize = 10.sp, lineHeight = 15.sp)
+            Spacer(Modifier.height(20.dp))
+            Button(onClick = onResult, modifier = Modifier.fillMaxWidth().height(54.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = KrishiGreen)) {
+                Text("AI দিয়ে বিশ্লেষণ করুন", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(10.dp))
+            OutlinedButton(onClick = onVoice, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(16.dp)) {
+                Text("🎙️ ভয়েসে পরামর্শ নিন")
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
+        Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(KrishiMint), modifier = Modifier.fillMaxWidth()) {
+            Text("টিপস: ভালো আলোতে পাতার আক্রান্ত অংশটি কাছ থেকে তুললে AI বিশ্লেষণ আরও পরিষ্কার হতে পারে।", color = KrishiDeep, fontSize = 12.sp, lineHeight = 18.sp, modifier = Modifier.padding(14.dp))
         }
     }
 }
 
 @Composable
-private fun InfoCard(icon: String, title: String, body: String, background: Color, iconColor: Color) {
-    Surface(shape = RoundedCornerShape(18.dp), color = background, modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(15.dp), verticalAlignment = Alignment.Top) {
-            Text(icon, color = iconColor, fontSize = 21.sp)
+private fun ImageSourceCard(modifier: Modifier, icon: String, title: String, subtitle: String, tint: Color, onClick: () -> Unit) {
+    Card(modifier = modifier.clickable(onClick = onClick), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), elevation = CardDefaults.cardElevation(1.dp)) {
+        Column(Modifier.padding(vertical = 16.dp, horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(Modifier.size(48.dp).clip(RoundedCornerShape(15.dp)).background(tint), contentAlignment = Alignment.Center) { Text(icon, fontSize = 24.sp) }
+            Spacer(Modifier.height(8.dp))
+            Text(title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Ink)
+            Spacer(Modifier.height(3.dp))
+            Text(subtitle, fontSize = 10.sp, color = Muted, textAlign = TextAlign.Center)
+        }
+    }
+}
+
+@Composable
+private fun SmallSourceButton(modifier: Modifier, label: String, onClick: () -> Unit) {
+    OutlinedButton(onClick = onClick, modifier = modifier.height(46.dp), shape = RoundedCornerShape(13.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)) {
+        Text(label, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+private fun sourceLabel(source: ImageSource?): String = when (source) {
+    ImageSource.CAMERA -> "ক্যামেরা থেকে নেওয়া ছবি"
+    ImageSource.GALLERY -> "গ্যালারি থেকে নির্বাচিত ছবি"
+    ImageSource.FILE -> "ফাইল পিকার থেকে নির্বাচিত ছবি"
+    null -> "ছবি"
+}
+
+@Composable
+private fun ResultScreen(selectedImage: Bitmap?, onBack: () -> Unit, onVoice: () -> Unit) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
+        Text("‹", fontSize = 36.sp, color = Ink, modifier = Modifier.clickable(onClick = onBack))
+        Text("বিশ্লেষণের ফলাফল", fontSize = 23.sp, fontWeight = FontWeight.Bold, color = Ink)
+        Spacer(Modifier.height(14.dp))
+        if (selectedImage != null) {
+            Image(bitmap = selectedImage.asImageBitmap(), contentDescription = "Crop", modifier = Modifier.fillMaxWidth().height(230.dp).clip(RoundedCornerShape(20.dp)), contentScale = ContentScale.Crop)
+            Spacer(Modifier.height(14.dp))
+        }
+        ResultCard("🌾", "ফসল", "ধান")
+        ResultCard("🔎", "সমস্যা", "AI Vision ফলাফল Phase 4-এ সংযুক্ত হবে")
+        ResultCard("💡", "সম্ভাব্য কারণ", "ছবির ভিত্তিতে বিস্তারিত কারণ AI Vision সংযোগের পরে দেখানো হবে")
+        ResultCard("✓", "পরামর্শ", "কারণ নিশ্চিত না হওয়া পর্যন্ত বড় মাত্রায় সার বা কীটনাশক ব্যবহার করবেন না")
+        Spacer(Modifier.height(10.dp))
+        Button(onClick = onVoice, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = KrishiGreen)) {
+            Text("🔊 পরামর্শ শুনুন", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun ResultCard(icon: String, title: String, body: String) {
+    Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.Top) {
+            Text(icon, fontSize = 22.sp)
             Spacer(Modifier.width(10.dp))
             Column {
-                Text(title, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(5.dp))
-                Text(body, color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+                Text(title, color = KrishiGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(4.dp))
+                Text(body, color = Ink, fontSize = 14.sp, lineHeight = 20.sp)
             }
         }
     }
 }
 
-@Composable
-private fun ActionItem(text: String) {
-    Row(Modifier.padding(vertical = 5.dp), verticalAlignment = Alignment.Top) {
-        Text("✓", color = KrishiGreen, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.width(8.dp))
-        Text(text, color = Ink, fontSize = 13.sp, lineHeight = 19.sp)
-    }
-}
-
-@Composable
-private fun WeatherMiniCard() {
-    Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("🌦️", fontSize = 28.sp)
-            Spacer(Modifier.width(10.dp))
-            Column(Modifier.weight(1f)) {
-                Text("আবহাওয়া তথ্য", color = Ink, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                Text("28°C  •  82% আর্দ্রতা  •  বৃষ্টি 10%", color = Muted, fontSize = 11.sp)
-            }
-            Text("›", color = KrishiGreen, fontSize = 25.sp)
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun VoiceScreen(language: String, onBack: () -> Unit) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("ভয়েস পরামর্শ", color = Color.White, fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Text("‹", color = Color.White, fontSize = 34.sp) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = KrishiDeep)
-            )
-        },
-        containerColor = KrishiDeep
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Spacer(Modifier.height(22.dp))
-            Text("আপনার সমস্যা বলুন…", color = Color.White.copy(.82f), fontSize = 15.sp)
-            Spacer(Modifier.height(26.dp))
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(210.dp)) {
-                Box(Modifier.size(210.dp).clip(CircleShape).background(Color.White.copy(.05f)).border(1.dp, Color.White.copy(.12f), CircleShape))
-                Box(Modifier.size(150.dp).clip(CircleShape).background(Color.White.copy(.09f)).border(1.dp, Color(0xFF76E7A0).copy(.45f), CircleShape))
-                Box(Modifier.size(92.dp).clip(CircleShape).background(Brush.radialGradient(listOf(Color(0xFF76E7A0), KrishiGreen))), contentAlignment = Alignment.Center) {
-                    Text("🎙", fontSize = 40.sp)
+    Column(Modifier.fillMaxSize().padding(18.dp)) {
+        Text("‹", fontSize = 36.sp, color = Ink, modifier = Modifier.clickable(onClick = onBack))
+        Text("ভয়েস পরামর্শ", fontSize = 23.sp, fontWeight = FontWeight.Bold, color = Ink)
+        Spacer(Modifier.height(8.dp))
+        Text("ভাষা: $language", color = Muted, fontSize = 13.sp)
+        Spacer(Modifier.height(28.dp))
+        Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(KrishiPurple), modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("🎙️", fontSize = 54.sp)
+                Spacer(Modifier.height(12.dp))
+                Text("কথা বলুন", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Ink)
+                Spacer(Modifier.height(6.dp))
+                Text("Real Speech-to-Text Phase 5-এ সংযুক্ত হবে।", color = Muted, textAlign = TextAlign.Center)
+                Spacer(Modifier.height(18.dp))
+                Button(onClick = {}, shape = RoundedCornerShape(50), colors = ButtonDefaults.buttonColors(containerColor = KrishiGreen)) {
+                    Text("মাইক প্রস্তুত")
                 }
-            }
-            Spacer(Modifier.height(25.dp))
-            Text("মাইক্রোফোন ধরে কথা বলুন", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text("ভাষা: $language", color = Color.White.copy(.65f), fontSize = 12.sp, modifier = Modifier.padding(top = 7.dp))
-            Spacer(Modifier.height(35.dp))
-            Surface(shape = RoundedCornerShape(22.dp), color = Color.White, modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(18.dp)) {
-                    Text("উদাহরণ", color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(7.dp))
-                    Text("“আমার ধানের পাতায় হলুদ দাগ পড়েছে, কী করব?”", color = Ink, fontSize = 14.sp, lineHeight = 21.sp)
-                    Spacer(Modifier.height(14.dp))
-                    Text("AI আপনার ভাষায় উত্তর দেবে এবং উত্তরটি শুনিয়েও দেবে।", color = Muted, fontSize = 11.sp, lineHeight = 17.sp)
-                }
-            }
-            Spacer(Modifier.weight(1f))
-            Button(onClick = { }, modifier = Modifier.fillMaxWidth().height(58.dp), shape = RoundedCornerShape(18.dp), colors = ButtonDefaults.buttonColors(Color.White)) {
-                Text("🎙  কথা বলা শুরু করুন", color = KrishiGreen, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
         }
     }
@@ -585,45 +558,28 @@ private fun VoiceScreen(language: String, onBack: () -> Unit) {
 
 @Composable
 private fun HistoryScreen(modifier: Modifier) {
-    Column(modifier.fillMaxSize().padding(20.dp)) {
-        Text("আপনার ইতিহাস", color = Ink, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-        Text("সাম্প্রতিক AI পরামর্শ", color = Muted, fontSize = 13.sp, modifier = Modifier.padding(top = 5.dp))
+    Column(modifier.fillMaxSize().padding(18.dp)) {
+        Text("ইতিহাস", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink)
+        Spacer(Modifier.height(8.dp))
+        Text("আপনার আগের AI পরামর্শ এখানে দেখা যাবে।", color = Muted, fontSize = 13.sp)
         Spacer(Modifier.height(18.dp))
-        listOf("ধান — পাতা হলুদ", "ধান — পাতায় দাগ", "সবজি — গাছ ঢলে পড়া").forEach { item ->
-            Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
-                Row(Modifier.padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(48.dp).clip(RoundedCornerShape(13.dp)).background(KrishiMint), contentAlignment = Alignment.Center) { Text("🌿", fontSize = 24.sp) }
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(item, color = Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Text("AI advisory • সম্প্রতি", color = Muted, fontSize = 11.sp)
-                    }
-                    Text("›", color = KrishiGreen, fontSize = 25.sp)
-                }
-            }
+        Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) {
+            Text("এখনও কোনো বিশ্লেষণ সংরক্ষিত নেই।", color = Muted, modifier = Modifier.padding(18.dp))
         }
     }
 }
 
 @Composable
 private fun ProfileScreen(modifier: Modifier, language: String) {
-    Column(modifier.fillMaxSize().padding(20.dp)) {
-        Text("প্রোফাইল", color = Ink, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+    Column(modifier.fillMaxSize().padding(18.dp)) {
+        Text("প্রোফাইল", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink)
         Spacer(Modifier.height(18.dp))
-        Surface(shape = RoundedCornerShape(22.dp), color = KrishiMint, modifier = Modifier.fillMaxWidth()) {
-            Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(58.dp).clip(CircleShape).background(KrishiGreen), contentAlignment = Alignment.Center) { Text("🌾", fontSize = 29.sp) }
-                Spacer(Modifier.width(12.dp))
-                Column {
-                    Text("কৃষক বন্ধু", color = Ink, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                    Text("OpenKrishi AI", color = Muted, fontSize = 12.sp)
-                }
-            }
-        }
-        Spacer(Modifier.height(14.dp))
-        listOf("🌐  ভাষা: $language", "🔔  আবহাওয়া সতর্কতা", "🛡  গোপনীয়তা ও নিরাপত্তা", "ℹ  OpenKrishi AI সম্পর্কে").forEach { item ->
-            Surface(shape = RoundedCornerShape(16.dp), color = Color.White, modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
-                Text(item, color = Ink, fontSize = 14.sp, modifier = Modifier.padding(16.dp))
+        Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(18.dp)) {
+                Text("🌾 কৃষক প্রোফাইল", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Ink)
+                Spacer(Modifier.height(10.dp))
+                Text("নির্বাচিত ভাষা: $language", color = Muted, fontSize = 13.sp)
+                Text("ফসল, জমি ও অন্যান্য তথ্য Phase 8-এ সংযুক্ত হবে।", color = Muted, fontSize = 13.sp)
             }
         }
     }
