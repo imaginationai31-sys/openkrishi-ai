@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   remove-file-picker:
-    if: ${{ !contains(github.event.head_commit.message, 'chore: remove file picker from frontend') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,36 +25,18 @@ jobs:
           path = Path('frontend/index.html')
           text = path.read_text(encoding='utf-8')
 
-          # Keep only Camera + Gallery in the photo action row.
           text = text.replace('grid-template-columns:repeat(3,1fr)', 'grid-template-columns:repeat(2,1fr)')
-          text = text.replace('grid-template-columns:repeat(3,1fr)', 'grid-template-columns:repeat(2,1fr)')
-
-          # Remove the File Picker button and hidden input.
           text = re.sub(r'\n<button id="fileButton"[^>]*></button>', '', text)
           text = re.sub(r'\n<input id="fileInput"[^>]*>', '', text)
-
-          # Remove JS element references.
           text = re.sub(r"\nfileButton=document\.getElementById\('fileButton'\),", '', text)
           text = re.sub(r"\nfileInput=document\.getElementById\('fileInput'\),", '', text)
-
-          # Remove File Picker localization entries from every language block.
           text = re.sub(r"\nfile:'[^']*',", '', text)
-
-          # Update photo hints so they mention only the two supported methods.
-          text = re.sub(r'Use Direct Camera, Gallery, or File Picker', 'Use Direct Camera or Gallery', text)
-          text = re.sub(r'ক্যামেরা, গ্যালারি অথবা ফাইল.*?ছবি', 'ক্যামেরা অথবা গ্যালারি থেকে ছবি', text)
-          text = re.sub(r'कैमरा, गैलरी या फ़ाइल.*?फोटो', 'कैमरा या गैलरी से फोटो', text)
-          text = re.sub(r'கேமரா, கேலரி அல்லது கோப்ப.*?படம்', 'கேமரா அல்லது கேலரியில் இருந்து படம்', text)
-          text = re.sub(r'ਕੈਮਰਾ, ਗੈਲਰੀ ਜਾਂ ਫ਼ਾਈਲ.*?ਫੋਟੋ', 'ਕੈਮਰਾ ਜਾਂ ਗੈਲਰੀ ਤੋਂ ਫੋਟੋ', text)
-          text = re.sub(r'కెమెరా, గ్యాలరీ లేదా ఫైల్.*?ఫోటో', 'కెమెరా లేదా గ్యాలరీ నుండి ఫోటో', text)
-
-          # Remove click/change handlers for the deleted file picker if present.
+          text = text.replace('Use Direct Camera, Gallery, or File Picker', 'Use Direct Camera or Gallery')
           text = re.sub(r"\nfileButton\.addEventListener\([^;]+;", '', text)
           text = re.sub(r"\nfileInput\.addEventListener\('change',[\s\S]*?\n\}\);", '', text)
 
           path.write_text(text, encoding='utf-8')
 
-          # Fail the workflow rather than silently committing a partial removal.
           remaining = [x for x in ('fileButton', 'fileInput') if x in text]
           if remaining:
               raise SystemExit(f'Remaining file-picker references: {remaining}')
