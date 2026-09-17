@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
 
 from services.gemini.client import get_gemini_client, get_model, output_text
+
+logger = logging.getLogger(__name__)
 
 SUPPORTED_CROPS = {"rice", "peanut", "vegetables", "flowers"}
 SUPPORTED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
@@ -122,6 +125,16 @@ Analyze the attached crop image. Return only the JSON object matching the respon
             ),
         )
     except Exception as exc:
+        logger.exception(
+            "Gemini vision request failed: model=%s mime_type=%s size_bytes=%d crop=%s language=%s error_type=%s error=%s",
+            get_model(),
+            normalized_type,
+            len(image_bytes),
+            crop_category,
+            language,
+            type(exc).__name__,
+            exc,
+        )
         raise RuntimeError("Vision provider is temporarily unavailable.") from exc
 
     raw_text = getattr(response, "text", None) or output_text(response)
