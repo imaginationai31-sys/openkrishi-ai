@@ -108,9 +108,6 @@ Context:
 Analyze the attached crop image. Return only the JSON object matching the response schema."""
 
     try:
-        # Use generateContent for image input. The Gemini Python SDK supports raw
-        # image bytes through Part.from_bytes; this avoids the invalid Interactions
-        # API image-data shape that caused the generic provider-unavailable error.
         from google.genai import types
 
         response = client.models.generate_content(
@@ -119,14 +116,10 @@ Analyze the attached crop image. Return only the JSON object matching the respon
                 types.Part.from_bytes(data=image_bytes, mime_type=normalized_type),
                 prompt,
             ],
-            config={
-                "response_format": {
-                    "text": {
-                        "mime_type": "application/json",
-                        "schema": VISION_RESPONSE_SCHEMA,
-                    }
-                }
-            },
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=VISION_RESPONSE_SCHEMA,
+            ),
         )
     except Exception as exc:
         raise RuntimeError("Vision provider is temporarily unavailable.") from exc
