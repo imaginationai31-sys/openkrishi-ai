@@ -2,6 +2,7 @@ package ai.openkrishi.app
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -316,18 +317,18 @@ private fun VoiceScreen(language: String, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
         TopBar("ভয়েস পরামর্শ", language, onBack)
         Spacer(Modifier.height(20.dp))
-        Card(shape=RoundedCornerShape(24.dp), colors=CardDefaults.cardColors(Purple), modifier=Modifier.fillMaxWidth()) {
+        Card(shape=RoundedCornerShape(24.dp), colors=CardDefaults.cardColors(KrishiPurple), modifier=Modifier.fillMaxWidth()) {
             Column(Modifier.padding(25.dp), horizontalAlignment=Alignment.CenterHorizontally) {
                 Text("🎙️", fontSize=55.sp)
                 Spacer(Modifier.height(10.dp))
                 Text(if(listening) "শুনছি…" else "আপনার ফসলের সমস্যা বলুন", fontSize=20.sp, fontWeight=FontWeight.Bold, color=Ink)
                 Spacer(Modifier.height(14.dp))
-                Button(onClick=::startListening, enabled=!listening && !loading, colors=ButtonDefaults.buttonColors(Green)) {
+                Button(onClick=::startListening, enabled=!listening && !loading, colors=ButtonDefaults.buttonColors(KrishiGreen)) {
                     Text(if(listening) "● শুনছি" else "🎙️ কথা বলা শুরু করুন")
                 }
             }
         }
-        if (loading) { Spacer(Modifier.height(15.dp)); CircularProgressIndicator(color=Green) }
+        if (loading) { Spacer(Modifier.height(15.dp)); CircularProgressIndicator(color=KrishiGreen) }
         if (transcript.isNotBlank()) { Spacer(Modifier.height(15.dp)); ResultCard("📝","আপনি বলেছেন",transcript) }
         if (answer.isNotBlank()) { ResultCard("💡","AI পরামর্শ",answer); OutlinedButton(onClick={ tts.speak(answer, TextToSpeech.QUEUE_FLUSH, null, "openkrishi-advisory") }, modifier=Modifier.fillMaxWidth()){ Text("🔊 আবার শুনুন") } }
         error?.let { Spacer(Modifier.height(10.dp)); Text(it,color=Color(0xFF9A5B00),fontSize=12.sp) }
