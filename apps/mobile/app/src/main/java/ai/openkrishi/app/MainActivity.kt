@@ -61,6 +61,7 @@ class MainActivity : ComponentActivity() {
 
 private enum class AppTab { HOME, HISTORY, PROFILE }
 private enum class ImageSource { CAMERA, GALLERY }
+private val LANG_OPTIONS = listOf("বাংলা", "हिन्दी", "தமிழ்", "ਪੰਜਾਬੀ", "తెలుగు", "English")
 
 @Composable
 fun OpenKrishiApp() {
@@ -76,6 +77,9 @@ fun OpenKrishiApp() {
             var advisoryResult by remember { mutableStateOf<AdvisoryResult?>(null) }
             var advisoryError by remember { mutableStateOf<String?>(null) }
             var analyzing by remember { mutableStateOf(false) }
+            var advisoryQuery by remember { mutableStateOf("") }
+            var weather by remember { mutableStateOf<WeatherResult?>(null) }
+            var weatherLoading by remember { mutableStateOf(false) }
 
             val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
                 if (uri != null) {
@@ -119,11 +123,41 @@ fun OpenKrishiApp() {
                 }.start()
             }
 
+            fun askAdvisory(query: String) {
+                advisoryQuery = query
+                analyzing = true
+                advisoryResult = null
+                advisoryError = null
+                screen = "advisory"
+                Thread {
+                    try {
+                        val result = OpenKrishiApi.getAdvisory(query, language, "rice")
+                        Handler(Looper.getMainLooper()).post { advisoryResult = result; analyzing = false }
+                    } catch (e: Exception) {
+                        Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "OpenKrishi AI is unavailable."; analyzing = false }
+                    }
+                }.start()
+            }
+            fun loadWeather() {
+                weatherLoading = true
+                screen = "weather"
+                Thread {
+                    try {
+                        val result = OpenKrishiApi.getWeather(22.5726, 88.3639, language)
+                        Handler(Looper.getMainLooper()).post { weather = result; weatherLoading = false }
+                    } catch (e: Exception) {
+                        Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "Weather service is unavailable."; weatherLoading = false }
+                    }
+                }.start()
+            }
+
             when (screen) {
                 "diagnosis" -> DiagnosisScreen(language, selectedImage, imageSource, cameraDenied, { screen = "home" }, { galleryLauncher.launch("image/*") }, ::openCamera, {
                     selectedImage = null; imageSource = null; advisoryResult = null; advisoryError = null
                 }, ::analyze, { screen = "voice" })
                 "result" -> ResultScreen(selectedImage, advisoryResult, advisoryError, analyzing, { screen = "diagnosis" }, ::analyze, { screen = "voice" })
+                "advisory" -> if (advisoryResult == null && !analyzing) AdvisoryInputScreen(language, advisoryQuery, { advisoryQuery = it }, ::askAdvisory) { screen = "home" } else ResultScreen(null, advisoryResult, advisoryError, analyzing, { screen = "home" }, { askAdvisory(advisoryQuery) }, { screen = "voice" })
+                "weather" -> WeatherScreen(language, weather, weatherLoading, ::loadWeather) { screen = "home" }
                 "voice" -> VoiceScreen(language) { screen = "home" }
                 else -> Scaffold(
                     containerColor = Color(0xFFF6FAF7),
@@ -136,9 +170,9 @@ fun OpenKrishiApp() {
                     }
                 ) { padding ->
                     when (tab) {
-                        AppTab.HOME -> HomeScreen(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" }, { screen = "weather" }, { screen = "advisory" })
+                        AppTab.HOME -> HomeScreen(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" }, { screen = "weather"; loadWeather() }, { screen = "advisory" })
                         AppTab.HISTORY -> HistoryScreen(Modifier.padding(padding))
-                        AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language)
+                        AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language, { language = it })
                     }
                 }
             }
@@ -298,6 +332,34 @@ private fun VoiceScreen(language: String, onBack: () -> Unit) {
         if (answer.isNotBlank()) { ResultCard("💡","AI পরামর্শ",answer); OutlinedButton(onClick={ tts.speak(answer, TextToSpeech.QUEUE_FLUSH, null, "openkrishi-advisory") }, modifier=Modifier.fillMaxWidth()){ Text("🔊 আবার শুনুন") } }
         error?.let { Spacer(Modifier.height(10.dp)); Text(it,color=Color(0xFF9A5B00),fontSize=12.sp) }
         Spacer(Modifier.height(12.dp)); Text("ভয়েস ইনপুট আপনার নির্বাচিত ভাষায় নেওয়া হবে এবং AI পরামর্শ একই ভাষায় দেওয়া হবে।",color=Muted,fontSize=11.sp,textAlign=TextAlign.Center,modifier=Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+private fun WeatherScreen(language: String, weather: WeatherResult?, loading: Boolean, onRefresh: () -> Unit, onBack: () -> Unit) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
+        TopBar(if(language=="English") "Weather" else "আবহাওয়া", language, onBack)
+        Spacer(Modifier.height(15.dp))
+        if (loading) { CircularProgressIndicator(color=KrishiGreen); Spacer(Modifier.height(12.dp)) }
+        weather?.let { w ->
+            ResultCard("🌤️", w.location, "${w.temperature} • ${w.description}\n${w.humidity}")
+            ResultCard("⚠️", if(language=="English") "Farm alert" else "কৃষি সতর্কতা", w.alert)
+        }
+        Spacer(Modifier.height(10.dp))
+        Button(onClick=onRefresh, modifier=Modifier.fillMaxWidth(), colors=ButtonDefaults.buttonColors(KrishiGreen)) { Text(if(language=="English") "Refresh weather" else "আবহাওয়া আপডেট করুন") }
+    }
+}
+
+@Composable
+private fun AdvisoryInputScreen(language:String, query:String, onQuery:(String)->Unit, onAsk:(String)->Unit, onBack:()->Unit) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
+        TopBar(if(language=="English") "Crop advisory" else "ফসলের পরামর্শ", language, onBack)
+        Spacer(Modifier.height(18.dp))
+        Text(if(language=="English") "Describe your crop problem" else "আপনার ফসলের সমস্যাটি লিখুন", color=Ink, fontSize=18.sp, fontWeight=FontWeight.Bold)
+        Spacer(Modifier.height(10.dp))
+        OutlinedTextField(value=query, onValueChange=onQuery, modifier=Modifier.fillMaxWidth().height(150.dp), placeholder={Text(if(language=="English") "Example: rice leaves are turning yellow" else "উদাহরণ: ধানের পাতা হলুদ হয়ে যাচ্ছে")})
+        Spacer(Modifier.height(12.dp))
+        Button(onClick={onAsk(query)}, enabled=query.isNotBlank(), modifier=Modifier.fillMaxWidth().height(52.dp), colors=ButtonDefaults.buttonColors(KrishiGreen)) { Text(if(language=="English") "Get AI advisory" else "AI পরামর্শ নিন", fontWeight=FontWeight.Bold) }
     }
 }
 
