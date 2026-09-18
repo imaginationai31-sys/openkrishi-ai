@@ -367,4 +367,21 @@ private fun AdvisoryInputScreen(language:String, query:String, onQuery:(String)-
 private fun HistoryScreen(modifier: Modifier) { Column(modifier.fillMaxSize().padding(18.dp)) { Text("ইতিহাস", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(8.dp)); Text("আপনার আগের AI পরামর্শ এখানে দেখা যাবে।", color = Muted, fontSize = 13.sp); Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Text("এখনও কোনো বিশ্লেষণ সংরক্ষিত নেই।", color = Muted, modifier = Modifier.padding(18.dp)) } } }
 
 @Composable
-private fun ProfileScreen(modifier: Modifier, language: String) { Column(modifier.fillMaxSize().padding(18.dp)) { Text("প্রোফাইল", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Column(Modifier.padding(18.dp)) { Text("🌾 কৃষক প্রোফাইল", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(10.dp)); Text("নির্বাচিত ভাষা: $language", color = Muted, fontSize = 13.sp); Text("ফসল, জমি ও অন্যান্য তথ্য পরে সংযুক্ত হবে।", color = Muted, fontSize = 13.sp) } } } }
+private fun ProfileScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit) {
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
+        Text("প্রোফাইল", fontSize=24.sp, fontWeight=FontWeight.Bold, color=Ink)
+        Spacer(Modifier.height(18.dp))
+        Card(shape=RoundedCornerShape(20.dp), colors=CardDefaults.cardColors(Color.White), modifier=Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(18.dp)) {
+                Text("🌾 কৃষক প্রোফাইল", fontSize=18.sp, fontWeight=FontWeight.Bold, color=Ink)
+                Spacer(Modifier.height(8.dp)); Text("নির্বাচিত ভাষা: $language", color=Muted, fontSize=13.sp)
+                Spacer(Modifier.height(12.dp)); Text("ভাষা নির্বাচন করুন", color=Ink, fontWeight=FontWeight.Bold)
+                LANG_OPTIONS.forEach { label ->
+                    Row(Modifier.fillMaxWidth().clickable { onLanguage(label) }.padding(vertical=6.dp), verticalAlignment=Alignment.CenterVertically) {
+                        RadioButton(selected=language==label, onClick={onLanguage(label)}); Text(label, color=Ink)
+                    }
+                }
+            }
+        }
+    }
+}
