@@ -3,21 +3,21 @@ import pytest
 from services.vision.engine import assess_crop_image
 
 
-class FakeInteraction:
-    output_text = '{"observations":["yellowing visible"],"possible_causes":["water stress"],"confidence":"low","uncertainties":["image is synthetic"],"recommendations":["check soil moisture"]}'
+class FakeResponse:
+    text = '{"observations":["yellowing visible"],"possible_causes":["water stress"],"confidence":"low","uncertainties":["image is synthetic"],"recommendations":["check soil moisture"]}'
 
 
-class FakeInteractions:
-    def create(self, **kwargs):
+class FakeModels:
+    def generate_content(self, **kwargs):
         assert kwargs["model"]
-        assert kwargs["input"][0]["type"] == "text"
-        assert kwargs["input"][1]["type"] == "image"
-        assert kwargs["input"][1]["mime_type"] == "image/jpeg"
-        return FakeInteraction()
+        assert kwargs["contents"][0]
+        assert kwargs["contents"][1]
+        assert kwargs["config"]["response_format"]["text"]["mime_type"] == "application/json"
+        return FakeResponse()
 
 
 class FakeGeminiClient:
-    interactions = FakeInteractions()
+    models = FakeModels()
 
 
 def test_crop_image_is_accepted_for_supported_crop(monkeypatch):
