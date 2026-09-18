@@ -8,6 +8,11 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
+import android.speech.tts.TextToSpeech
+import java.util.Locale
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -131,7 +136,7 @@ fun OpenKrishiApp() {
                     }
                 ) { padding ->
                     when (tab) {
-                        AppTab.HOME -> HomeScreen(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" })
+                        AppTab.HOME -> HomeScreen(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" }, { screen = "weather" }, { screen = "advisory" })
                         AppTab.HISTORY -> HistoryScreen(Modifier.padding(padding))
                         AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language)
                     }
@@ -144,16 +149,17 @@ fun OpenKrishiApp() {
 private fun Context.contentResolverBitmap(uri: android.net.Uri): Bitmap? = runCatching { contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) } }.getOrNull()
 
 @Composable
-private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit, onDiagnosis: () -> Unit, onVoice: () -> Unit) {
+private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit, onDiagnosis: () -> Unit, onVoice: () -> Unit, onWeather: () -> Unit, onAdvice: () -> Unit) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Box(Modifier.fillMaxWidth().height(305.dp).background(Brush.verticalGradient(listOf(KrishiDeep, Color(0xFF0B6B45), Color(0xFF65B76B))))) {
             Column(Modifier.padding(22.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(.15f)), Alignment.Center) { Text("🌿", fontSize = 24.sp) }
                     Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("OpenKrishi AI", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold); Text("Smart farming • Better tomorrow", color = Color.White.copy(.78f), fontSize = 12.sp) }
-                    Surface(Modifier.clickable { onLanguage(if (language == "বাংলা") "हिन्दी" else "বাংলা") }, RoundedCornerShape(50), Color.White.copy(.15f)) { Text("文  $language", color = Color.White, fontSize = 12.sp, modifier = Modifier.padding(12.dp, 8.dp)) }
+                    Text(language, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
-                Spacer(Modifier.height(34.dp)); Text("নমস্কার, কৃষক বন্ধু!", color = Color.White, fontSize = 27.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(24.dp)); Text("নমস্কার, কৃষক বন্ধু!", color = Color.White, fontSize = 27.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(12.dp)); LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { items(listOf("বাংলা","हिन्दी","தமிழ்","ਪੰਜਾਬੀ","తెలుగు","English")) { label -> FilterChip(selected = language == label, onClick = { onLanguage(label) }, label = { Text(label, fontSize = 10.sp) }) } }
                 Spacer(Modifier.height(7.dp)); Text("আপনার ফসলের সুস্থতা আমাদের লক্ষ্য।\nছবি তুলুন বা কথা বলুন — AI সাহায্য করবে।", color = Color.White.copy(.88f), fontSize = 15.sp, lineHeight = 22.sp)
                 Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White.copy(.97f)), modifier = Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Text("🌤️", fontSize = 35.sp); Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("28°C", color = Ink, fontSize = 24.sp, fontWeight = FontWeight.Bold); Text("আংশিক মেঘলা", color = Muted, fontSize = 12.sp) }; Column(horizontalAlignment = Alignment.End) { Text("⌖ Kolkata", color = Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold); Text("82% আর্দ্রতা", color = Muted, fontSize = 11.sp) } }
@@ -163,7 +169,7 @@ private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String
         Column(Modifier.padding(18.dp)) {
             Text("আপনার জন্য দ্রুত সাহায্য", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "⌾", "রোগ শনাক্তকরণ", "ছবি তুলে সমস্যা জানুন", KrishiMint, KrishiGreen, onDiagnosis); FeatureCard(Modifier.weight(1f), "♩", "ভয়েস পরামর্শ", "কথা বলুন, উত্তর শুনুন", KrishiPurple, Color(0xFF7046C8), onVoice) }
-            Spacer(Modifier.height(12.dp)); Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "☁", "আবহাওয়া আপডেট", "বৃষ্টি ও সতর্কতা", KrishiSky, Color(0xFF2574C8)) {}; FeatureCard(Modifier.weight(1f), "✦", "ফসলের পরামর্শ", "চাষের সঠিক গাইড", KrishiAmber, Color(0xFFC48200)) {} }
+            Spacer(Modifier.height(12.dp)); Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "☁", "আবহাওয়া আপডেট", "বৃষ্টি ও সতর্কতা", KrishiSky, Color(0xFF2574C8), onWeather); FeatureCard(Modifier.weight(1f), "✦", "ফসলের পরামর্শ", "চাষের সঠিক গাইড", KrishiAmber, Color(0xFFC48200), onAdvice) }
             Spacer(Modifier.height(22.dp)); Text("জনপ্রিয় ফসল", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(10.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) { items(listOf("🌾\nধান", "🌿\nপাট", "🥜\nবাদাম", "🥬\nসবজি", "🌸\nফুল")) { crop -> Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.width(78.dp)) { Text(crop, Modifier.fillMaxWidth().padding(vertical = 12.dp), textAlign = TextAlign.Center, fontSize = 14.sp, lineHeight = 22.sp) } } }
             Spacer(Modifier.height(22.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(KrishiMint), modifier = Modifier.fillMaxWidth()) { Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Text("✓", color = KrishiGreen, fontSize = 24.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.width(10.dp)); Column { Text("কৃষকের ভাষায়, কৃষকের পাশে", color = KrishiDeep, fontWeight = FontWeight.Bold, fontSize = 14.sp); Text("AI Vision • Voice • Weather • ৬টি ভাষা", color = Muted, fontSize = 11.sp) } } }
@@ -218,7 +224,82 @@ private fun ResultScreen(selectedImage: Bitmap?, result: AdvisoryResult?, error:
 private fun ResultCard(icon: String, title: String, body: String) { Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) { Row(Modifier.padding(14.dp), verticalAlignment = Alignment.Top) { Text(icon, fontSize = 22.sp); Spacer(Modifier.width(10.dp)); Column { Text(title, color = KrishiGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(4.dp)); Text(body, color = Ink, fontSize = 14.sp, lineHeight = 20.sp) } } } }
 
 @Composable
-private fun VoiceScreen(language: String, onBack: () -> Unit) { Column(Modifier.fillMaxSize().padding(18.dp)) { Text("‹", fontSize = 36.sp, color = Ink, modifier = Modifier.clickable(onClick = onBack)); Text("ভয়েস পরামর্শ", fontSize = 23.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(8.dp)); Text("ভাষা: $language", color = Muted, fontSize = 13.sp); Spacer(Modifier.height(28.dp)); Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(KrishiPurple), modifier = Modifier.fillMaxWidth()) { Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text("🎙️", fontSize = 54.sp); Spacer(Modifier.height(12.dp)); Text("কথা বলুন", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(6.dp)); Text("Real Speech-to-Text পরের ধাপে সংযুক্ত হবে।", color = Muted, textAlign = TextAlign.Center) } } } }
+private fun VoiceScreen(language: String, onBack: () -> Unit) {
+    val context = LocalContext.current
+    var transcript by remember { mutableStateOf("") }
+    var answer by remember { mutableStateOf("") }
+    var listening by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val tts = remember { TextToSpeech(context) { } }
+    DisposableEffect(Unit) { onDispose { tts.stop(); tts.shutdown() } }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        listening = false
+        val text = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull().orEmpty()
+        if (text.isNotBlank()) {
+            transcript = text
+            loading = true
+            error = null
+            Thread {
+                try {
+                    val r = OpenKrishiApi.getAdvisory(text, language, "rice")
+                    Handler(Looper.getMainLooper()).post {
+                        answer = r.answer
+                        loading = false
+                        val locale = when(language) {
+                            "বাংলা" -> Locale("bn","IN")
+                            "हिन्दी" -> Locale("hi","IN")
+                            "தமிழ்" -> Locale("ta","IN")
+                            "ਪੰਜਾਬੀ" -> Locale("pa","IN")
+                            "తెలుగు" -> Locale("te","IN")
+                            else -> Locale.US
+                        }
+                        tts.language = locale
+                        tts.speak(r.answer, TextToSpeech.QUEUE_FLUSH, null, "openkrishi-advisory")
+                    }
+                } catch (e: Exception) {
+                    Handler(Looper.getMainLooper()).post { error = e.message ?: "AI service is unavailable."; loading = false }
+                }
+            }.start()
+        }
+    }
+    fun startListening() {
+        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+            error = "Speech recognition is not available on this device."
+            return
+        }
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, when(language) {
+                "বাংলা" -> "bn-IN"; "हिन्दी" -> "hi-IN"; "தமிழ்" -> "ta-IN"
+                "ਪੰਜਾਬੀ" -> "pa-IN"; "తెలుగు" -> "te-IN"; else -> "en-IN"
+            })
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "OpenKrishi AI")
+        }
+        listening = true
+        launcher.launch(intent)
+    }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
+        TopBar("ভয়েস পরামর্শ", language, onBack)
+        Spacer(Modifier.height(20.dp))
+        Card(shape=RoundedCornerShape(24.dp), colors=CardDefaults.cardColors(Purple), modifier=Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(25.dp), horizontalAlignment=Alignment.CenterHorizontally) {
+                Text("🎙️", fontSize=55.sp)
+                Spacer(Modifier.height(10.dp))
+                Text(if(listening) "শুনছি…" else "আপনার ফসলের সমস্যা বলুন", fontSize=20.sp, fontWeight=FontWeight.Bold, color=Ink)
+                Spacer(Modifier.height(14.dp))
+                Button(onClick=::startListening, enabled=!listening && !loading, colors=ButtonDefaults.buttonColors(Green)) {
+                    Text(if(listening) "● শুনছি" else "🎙️ কথা বলা শুরু করুন")
+                }
+            }
+        }
+        if (loading) { Spacer(Modifier.height(15.dp)); CircularProgressIndicator(color=Green) }
+        if (transcript.isNotBlank()) { Spacer(Modifier.height(15.dp)); ResultCard("📝","আপনি বলেছেন",transcript) }
+        if (answer.isNotBlank()) { ResultCard("💡","AI পরামর্শ",answer); OutlinedButton(onClick={ tts.speak(answer, TextToSpeech.QUEUE_FLUSH, null, "openkrishi-advisory") }, modifier=Modifier.fillMaxWidth()){ Text("🔊 আবার শুনুন") } }
+        error?.let { Spacer(Modifier.height(10.dp)); Text(it,color=Color(0xFF9A5B00),fontSize=12.sp) }
+        Spacer(Modifier.height(12.dp)); Text("ভয়েস ইনপুট আপনার নির্বাচিত ভাষায় নেওয়া হবে এবং AI পরামর্শ একই ভাষায় দেওয়া হবে।",color=Muted,fontSize=11.sp,textAlign=TextAlign.Center,modifier=Modifier.fillMaxWidth())
+    }
+}
 
 @Composable
 private fun HistoryScreen(modifier: Modifier) { Column(modifier.fillMaxSize().padding(18.dp)) { Text("ইতিহাস", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(8.dp)); Text("আপনার আগের AI পরামর্শ এখানে দেখা যাবে।", color = Muted, fontSize = 13.sp); Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Text("এখনও কোনো বিশ্লেষণ সংরক্ষিত নেই।", color = Muted, modifier = Modifier.padding(18.dp)) } } }
