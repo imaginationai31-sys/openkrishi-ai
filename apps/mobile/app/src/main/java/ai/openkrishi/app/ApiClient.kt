@@ -1,5 +1,6 @@
 package ai.openkrishi.app
 
+import android.graphics.Bitmap
 import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -26,27 +27,18 @@ private fun languageCode(language: String): String = when (language) {
     else -> "en"
 }
 
-internal object OpenKrishiApi {
-    fun getAdvisory(
-        query: String,
-        language: String,
-        cropCategory: String = "rice"
-    ): AdvisoryResult {
-        val languageCode = when (language) {
-            "বাংলা" -> "bn"
-            "हिन्दी" -> "hi"
-            "தமிழ்" -> "ta"
-            "ਪੰਜਾਬੀ" -> "pa"
-            "తెలుగు" -> "te"
-            else -> "en"
-        }
+private fun readResponse(connection: HttpURLConnection): String {
+    val stream = if (connection.responseCode in 200..299) connection.inputStream else connection.errorStream
+    return stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+}
 
+internal object OpenKrishiApi {
+    fun getAdvisory(query: String, language: String, cropCategory: String = "rice"): AdvisoryResult {
         val body = JSONObject().apply {
             put("query", query)
-            put("language", languageCode)
+            put("language", languageCode(language))
             put("crop_category", cropCategory)
         }.toString()
-
         val connection = (URL("$OPENKRISHI_API_BASE/api/v1/advisory").openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = 15_000
@@ -55,22 +47,72 @@ internal object OpenKrishiApi {
             setRequestProperty("Content-Type", "application/json")
             setRequestProperty("Accept", "application/json")
         }
-
         return try {
             connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
-            val responseCode = connection.responseCode
-            val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
-            val responseText = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
-
-            if (responseCode !in 200..299) {
-                throw IllegalStateException("API request failed ($responseCode)")
-            }
-
-            val json = JSONObject(responseText)
+            val code = connection.responseCode
+            val text = readResponse(connection)
+            if (code !in 200..299) throw IllegalStateException("API request failed ($code)")
+            val json = JSONObject(text)
             AdvisoryResult(
-                answer = json.optString("answer", "কোনো পরামর্শ পাওয়া যায়নি।"),
+                answer = json.optString("answer", "No advisory was returned."),
                 confidence = json.optString("confidence", "unknown"),
-                safety = json.optString("safety", "unknown")
+                safety = json.optString("safety", "unknown"),
+                cropCategory = json.optString("crop_category", cropCategory)
+            )
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    fun assessImage(bitmap: Bitmap, language: String, cropCategory: String = "rice", growthStage: String? = null): AdvisoryResult {
+        val output = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 88, output)
+        val imageBytes = output.toByteArray()
+        val boundary = "----OpenKrishiBoundary" + System.currentTimeMillis()
+        val connection = (URL("$OPENKRISHI_API_BASE/api/v1/vision/assess").openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            connectTimeout = 20_000
+            readTimeout = 60_000
+            doOutput = true
+            setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
+            setRequestProperty("Accept", "application/json")
+        }
+        return try {
+            connection.outputStream.use { out ->
+                fun field(name: String, value: String) {
+                    out.write("--$boundary\r\n".toByteArray())
+                    out.write("Content-Disposition: form-data; name=\"$name\"\r\n\r\n".toByteArray())
+                    out.write(value.toByteArray(Charsets.UTF_8))
+                    out.write("\r\n".toByteArray())
+                }
+                field("crop_category", cropCategory)
+                field("language", languageCode(language))
+                if (!growthStage.isNullOrBlank()) field("growth_stage", growthStage)
+                out.write("--$boundary\r\n".toByteArray())
+                out.write("Content-Disposition: form-data; name=\"file\"; filename=\"crop.jpg\"\r\n".toByteArray())
+                out.write("Content-Type: image/jpeg\r\n\r\n".toByteArray())
+                out.write(imageBytes)
+                out.write("\r\n".toByteArray())
+                out.write("--$boundary--\r\n".toByteArray())
+            }
+            val code = connection.responseCode
+            val text = readResponse(connection)
+            if (code !in 200..299) throw IllegalStateException("Vision API request failed ($code)")
+            val json = JSONObject(text)
+            val vision = json.optJSONObject("vision") ?: JSONObject()
+            val advisory = json.optJSONObject("advisory") ?: JSONObject()
+            fun list(obj: JSONObject, key: String): List<String> {
+                val array = obj.optJSONArray(key) ?: return emptyList()
+                return (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) }
+            }
+            AdvisoryResult(
+                answer = advisory.optString("answer", "No advisory was returned."),
+                confidence = vision.optString("confidence", advisory.optString("confidence", "unknown")),
+                safety = vision.optString("safety", advisory.optString("safety", "unknown")),
+                observations = list(vision, "observations"),
+                possibleCauses = list(vision, "possible_causes"),
+                recommendations = list(vision, "recommendations"),
+                cropCategory = json.optString("crop_category", cropCategory)
             )
         } finally {
             connection.disconnect()
