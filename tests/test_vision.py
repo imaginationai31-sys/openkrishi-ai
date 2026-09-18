@@ -12,7 +12,9 @@ class FakeModels:
         assert kwargs["model"]
         assert kwargs["contents"][0]
         assert kwargs["contents"][1]
-        assert kwargs["config"]["response_format"]["text"]["mime_type"] == "application/json"
+        config = kwargs["config"]
+        assert config.response_mime_type == "application/json"
+        assert config.response_schema["type"] == "object"
         return FakeResponse()
 
 
