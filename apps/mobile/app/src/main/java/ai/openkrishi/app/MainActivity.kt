@@ -106,11 +106,7 @@ fun OpenKrishiApp() {
                 screen = "result"
                 Thread {
                     try {
-                        val result = OpenKrishiApi.getAdvisory(
-                            query = "The farmer uploaded a crop image and wants advice about the crop problem, possible causes, what to check, and immediate safe steps.",
-                            language = language,
-                            cropCategory = "rice"
-                        )
+                        val result = OpenKrishiApi.assessImage(selectedImage ?: throw IllegalStateException("No crop image selected."), language, "rice")
                         Handler(Looper.getMainLooper()).post { advisoryResult = result; analyzing = false }
                     } catch (e: Exception) {
                         Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "OpenKrishi AI से कनेक्ट नहीं हो सका।"; analyzing = false }
@@ -210,11 +206,11 @@ private fun ResultScreen(selectedImage: Bitmap?, result: AdvisoryResult?, error:
         when {
             analyzing -> { Card(RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) { CircularProgressIndicator(color = KrishiGreen); Spacer(Modifier.height(14.dp)); Text("OpenKrishi AI থেকে পরামর্শ আনা হচ্ছে…", color = Ink, fontWeight = FontWeight.Bold); Spacer(Modifier.height(6.dp)); Text("আপনার নির্বাচিত ভাষায় উত্তর প্রস্তুত হচ্ছে।", color = Muted, textAlign = TextAlign.Center, fontSize = 12.sp) } } }
             error != null -> { ResultCard("⚠️", "সংযোগ সমস্যা", "পরামর্শ আনা যায়নি: $error"); Button(onRetry, Modifier.fillMaxWidth().height(50.dp), RoundedCornerShape(15.dp), colors = ButtonDefaults.buttonColors(KrishiGreen)) { Text("আবার চেষ্টা করুন") } }
-            result != null -> { ResultCard("🌾", "ফসল", "ধান"); ResultCard("💡", "AI পরামর্শ", result.answer); ResultCard("◉", "Confidence", result.confidence); ResultCard("✓", "Safety", result.safety) }
+            result != null -> { ResultCard("🌾", "ফসল", "ধান"); if (result.observations.isNotEmpty()) ResultCard("👁️", "ছবিতে দেখা লক্ষণ", result.observations.joinToString("\n• ", prefix = "• ")); if (result.possibleCauses.isNotEmpty()) ResultCard("🔎", "সম্ভাব্য কারণ", result.possibleCauses.joinToString("\n• ", prefix = "• ")); ResultCard("💡", "AI পরামর্শ", result.answer); if (result.recommendations.isNotEmpty()) ResultCard("✓", "নিরাপদ পরবর্তী পদক্ষেপ", result.recommendations.joinToString("\n• ", prefix = "• ")); ResultCard("◉", "Confidence", result.confidence); ResultCard("✓", "Safety", result.safety) }
             else -> ResultCard("ℹ️", "অপেক্ষা করুন", "বিশ্লেষণ শুরু করা হয়নি।")
         }
         Spacer(Modifier.height(10.dp)); Button(onVoice, Modifier.fillMaxWidth().height(52.dp), RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(KrishiGreen)) { Text("🔊 পরামর্শ শুনুন", fontWeight = FontWeight.Bold) }
-        Spacer(Modifier.height(10.dp)); Card(RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(KrishiAmber), modifier = Modifier.fillMaxWidth()) { Text("নোট: এই ধাপে ছবি অ্যাপ থেকে নেওয়া হচ্ছে, কিন্তু লাইভ API-তে এখনো ছবিটি পাঠানো হচ্ছে না। প্রকৃত AI Vision upload পরের ধাপে যুক্ত হবে।", color = Ink, fontSize = 11.sp, lineHeight = 17.sp, modifier = Modifier.padding(13.dp)) }
+        Spacer(Modifier.height(10.dp)); Card(RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(KrishiMint), modifier = Modifier.fillMaxWidth()) { Text("ছবিটি AI Vision-এ পাঠিয়ে নির্বাচিত ভাষায় ফলাফল তৈরি করা হয়েছে।", color = KrishiDeep, fontSize = 11.sp, lineHeight = 17.sp, modifier = Modifier.padding(13.dp)) }
     }
 }
 
