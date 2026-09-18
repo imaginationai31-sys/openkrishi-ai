@@ -1,5 +1,6 @@
 package ai.openkrishi.app
 
+import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import org.json.JSONObject
@@ -9,8 +10,21 @@ private const val OPENKRISHI_API_BASE = "https://openkrishi-ai-api.onrender.com"
 internal data class AdvisoryResult(
     val answer: String,
     val confidence: String,
-    val safety: String
+    val safety: String,
+    val observations: List<String> = emptyList(),
+    val possibleCauses: List<String> = emptyList(),
+    val recommendations: List<String> = emptyList(),
+    val cropCategory: String? = null
 )
+
+private fun languageCode(language: String): String = when (language) {
+    "বাংলা" -> "bn"
+    "हिन्दी" -> "hi"
+    "தமிழ்" -> "ta"
+    "ਪੰਜਾਬੀ" -> "pa"
+    "తెలుగు" -> "te"
+    else -> "en"
+}
 
 internal object OpenKrishiApi {
     fun getAdvisory(
