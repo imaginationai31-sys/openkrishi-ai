@@ -250,6 +250,10 @@ private val FLOWER_CROPS = listOf(
 )
 
 
+private fun tx(language: String, en: String, bn: String, hi: String, ta: String, pa: String, te: String): String = when (language) {
+    "বাংলা" -> bn; "हिन्दी" -> hi; "தமிழ்" -> ta; "ਪੰਜਾਬੀ" -> pa; "తెలుగు" -> te; else -> en
+}
+
 private fun ui(language: String, key: String): String = when (key) {
     "home" -> mapOf("বাংলা" to "হোম", "हिन्दी" to "होम", "தமிழ்" to "முகப்பு", "ਪੰਜਾਬੀ" to "ਹੋਮ", "తెలుగు" to "హోమ్", "English" to "Home")[language] ?: "Home"
     "history" -> mapOf("বাংলা" to "ইতিহাস", "हिन्दी" to "इतिहास", "தமிழ்" to "வரலாறு", "ਪੰਜਾਬੀ" to "ਇਤਿਹਾਸ", "తెలుగు" to "చరిత్ర", "English" to "History")[language] ?: "History"
