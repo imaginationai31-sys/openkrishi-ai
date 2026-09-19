@@ -71,7 +71,7 @@ fun OpenKrishiApp() {
             val context = LocalContext.current
             var tab by remember { mutableStateOf(AppTab.HOME) }
             var screen by remember { mutableStateOf("home") }
-            var language by remember { mutableStateOf("বাংলা") }
+            var language by remember { mutableStateOf("English") }
             var selectedImage by remember { mutableStateOf<Bitmap?>(null) }
             var imageSource by remember { mutableStateOf<ImageSource?>(null) }
             var cameraDenied by remember { mutableStateOf(false) }
@@ -164,9 +164,9 @@ fun OpenKrishiApp() {
                     containerColor = Color(0xFFF6FAF7),
                     bottomBar = {
                         NavigationBar(containerColor = Color.White, modifier = Modifier.navigationBarsPadding()) {
-                            NavigationBarItem(tab == AppTab.HOME, { tab = AppTab.HOME }, icon = { Text("⌂", fontSize = 24.sp) }, label = { Text("হোম") })
-                            NavigationBarItem(tab == AppTab.HISTORY, { tab = AppTab.HISTORY }, icon = { Text("◷", fontSize = 22.sp) }, label = { Text("ইতিহাস") })
-                            NavigationBarItem(tab == AppTab.PROFILE, { tab = AppTab.PROFILE }, icon = { Text("○", fontSize = 24.sp) }, label = { Text("প্রোফাইল") })
+                            NavigationBarItem(tab == AppTab.HOME, { tab = AppTab.HOME }, icon = { Text("⌂", fontSize = 24.sp) }, label = { Text("Home") })
+                            NavigationBarItem(tab == AppTab.HISTORY, { tab = AppTab.HISTORY }, icon = { Text("◷", fontSize = 22.sp) }, label = { Text("History") })
+                            NavigationBarItem(tab == AppTab.PROFILE, { tab = AppTab.PROFILE }, icon = { Text("○", fontSize = 24.sp) }, label = { Text("Profile") })
                         }
                     }
                 ) { padding ->
@@ -197,7 +197,7 @@ private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String
                 Spacer(Modifier.height(12.dp)); LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { items(listOf("বাংলা","हिन्दी","தமிழ்","ਪੰਜਾਬੀ","తెలుగు","English")) { label -> FilterChip(selected = language == label, onClick = { onLanguage(label) }, label = { Text(label, fontSize = 10.sp) }) } }
                 Spacer(Modifier.height(7.dp)); Text("আপনার ফসলের সুস্থতা আমাদের লক্ষ্য।\nছবি তুলুন বা কথা বলুন — AI সাহায্য করবে।", color = Color.White.copy(.88f), fontSize = 15.sp, lineHeight = 22.sp)
                 Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White.copy(.97f)), modifier = Modifier.fillMaxWidth()) {
-                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Text("🌤️", fontSize = 35.sp); Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("28°C", color = Ink, fontSize = 24.sp, fontWeight = FontWeight.Bold); Text("আংশিক মেঘলা", color = Muted, fontSize = 12.sp) }; Column(horizontalAlignment = Alignment.End) { Text("⌖ Kolkata", color = Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold); Text("82% আর্দ্রতা", color = Muted, fontSize = 11.sp) } }
+                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Text("🌤️", fontSize = 35.sp); Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("28°C", color = Ink, fontSize = 24.sp, fontWeight = FontWeight.Bold); Text("Partly cloudy", color = Muted, fontSize = 12.sp) }; Column(horizontalAlignment = Alignment.End) { Text("⌖ Kolkata", color = Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold); Text("82% আর্দ্রতা", color = Muted, fontSize = 11.sp) } }
                 }
             }
         }
