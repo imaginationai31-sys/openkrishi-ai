@@ -245,13 +245,6 @@ private fun cropSearchItems(category: String): List<String> = when(category) {
     else -> emptyList()
 }
 
-private fun cropLabel(crop: String, language: String): String = when (crop) {
-    "rice" -> when(language) { "বাংলা" -> "ধান"; "हिन्दी" -> "धान"; "தமிழ்" -> "நெல்"; "ਪੰਜਾਬੀ" -> "ਚੌਲ"; "తెలుగు" -> "వరి"; else -> "Rice" }
-    "peanut" -> when(language) { "বাংলা" -> "বাদাম"; "हिन्दी" -> "मूंगफली"; "தமிழ்" -> "நிலக்கடலை"; "ਪੰਜਾਬੀ" -> "ਮੂੰਗਫਲੀ"; "తెలుగు" -> "వేరుశెనగ"; else -> "Peanut" }
-    "vegetables" -> when(language) { "বাংলা" -> "সবজি"; "हिन्दी" -> "सब्ज़ियाँ"; "தமிழ்" -> "காய்கறிகள்"; "ਪੰਜਾਬੀ" -> "ਸਬਜ਼ੀਆਂ"; "తెలుగు" -> "కూరగాయలు"; else -> "Vegetables" }
-    "flowers" -> when(language) { "বাংলা" -> "ফুল"; "हिन्दी" -> "फूल"; "தமிழ்" -> "மலர்கள்"; "ਪੰਜਾਬੀ" -> "ਫੁੱਲ"; "తెలుగు" -> "పూలు"; else -> "Flowers" }
-    else -> crop
-}
 
 @Composable
 private fun CropSelector(language: String, selectedCrop: String, onCropChange: (String) -> Unit, selectedCropName: String, onCropNameChange: (String) -> Unit) {
