@@ -81,6 +81,7 @@ fun OpenKrishiApp() {
             var advisoryQuery by remember { mutableStateOf("") }
             var weather by remember { mutableStateOf<WeatherResult?>(null) }
             var weatherLoading by remember { mutableStateOf(false) }
+            var selectedCrop by remember { mutableStateOf("rice") }
 
             val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
                 if (uri != null) {
@@ -116,7 +117,7 @@ fun OpenKrishiApp() {
                 screen = "result"
                 Thread {
                     try {
-                        val result = OpenKrishiApi.assessImage(selectedImage ?: throw IllegalStateException("No crop image selected."), language, "rice")
+                        val result = OpenKrishiApi.assessImage(selectedImage ?: throw IllegalStateException("No crop image selected."), language, selectedCrop)
                         Handler(Looper.getMainLooper()).post { advisoryResult = result; analyzing = false }
                     } catch (e: Exception) {
                         Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "OpenKrishi AI से कनेक्ट नहीं हो सका।"; analyzing = false }
@@ -132,7 +133,7 @@ fun OpenKrishiApp() {
                 screen = "advisory"
                 Thread {
                     try {
-                        val result = OpenKrishiApi.getAdvisory(query, language, "rice")
+                        val result = OpenKrishiApi.getAdvisory(query, language, selectedCrop)
                         Handler(Looper.getMainLooper()).post { advisoryResult = result; analyzing = false }
                     } catch (e: Exception) {
                         Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "OpenKrishi AI is unavailable."; analyzing = false }
@@ -153,13 +154,13 @@ fun OpenKrishiApp() {
             }
 
             when (screen) {
-                "diagnosis" -> DiagnosisScreen(language, selectedImage, imageSource, cameraDenied, { screen = "home" }, { galleryLauncher.launch("image/*") }, ::openCamera, {
+                "diagnosis" -> DiagnosisScreen(language, selectedCrop, { selectedCrop = it }, selectedImage, imageSource, cameraDenied, { screen = "home" }, { galleryLauncher.launch("image/*") }, ::openCamera, {
                     selectedImage = null; imageSource = null; advisoryResult = null; advisoryError = null
                 }, ::analyze, { screen = "voice" })
-                "result" -> ResultScreen(selectedImage, advisoryResult, advisoryError, analyzing, { screen = "diagnosis" }, ::analyze, { screen = "voice" })
-                "advisory" -> if (advisoryResult == null && !analyzing) AdvisoryInputScreen(language, advisoryQuery, { advisoryQuery = it }, ::askAdvisory) { screen = "home" } else ResultScreen(null, advisoryResult, advisoryError, analyzing, { screen = "home" }, { askAdvisory(advisoryQuery) }, { screen = "voice" })
+                "result" -> ResultScreen(selectedImage, selectedCrop, language, advisoryResult, advisoryError, analyzing, { screen = "diagnosis" }, ::analyze, { screen = "voice" })
+                "advisory" -> if (advisoryResult == null && !analyzing) AdvisoryInputScreen(language, selectedCrop, { selectedCrop = it }, advisoryQuery, { advisoryQuery = it }, ::askAdvisory) { screen = "home" } else ResultScreen(null, selectedCrop, language, advisoryResult, advisoryError, analyzing, { screen = "home" }, { askAdvisory(advisoryQuery) }, { screen = "voice" })
                 "weather" -> WeatherScreen(language, weather, weatherLoading, ::loadWeather) { screen = "home" }
-                "voice" -> VoiceScreen(language) { screen = "home" }
+                "voice" -> VoiceScreen(language, selectedCrop, { selectedCrop = it }) { screen = "home" }
                 else -> Scaffold(
                     containerColor = Color(0xFFF6FAF7),
                     bottomBar = {
@@ -212,13 +213,41 @@ private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String
     }
 }
 
+
+private val CROP_OPTIONS = listOf("rice", "peanut", "vegetables", "flowers")
+
+private fun cropLabel(crop: String, language: String): String = when (crop) {
+    "rice" -> when(language) { "বাংলা" -> "ধান"; "हिन्दी" -> "धान"; "தமிழ்" -> "நெல்"; "ਪੰਜਾਬੀ" -> "ਚੌਲ"; "తెలుగు" -> "వరి"; else -> "Rice" }
+    "peanut" -> when(language) { "বাংলা" -> "বাদাম"; "हिन्दी" -> "मूंगफली"; "தமிழ்" -> "நிலக்கடலை"; "ਪੰਜਾਬੀ" -> "ਮੂੰਗਫਲੀ"; "తెలుగు" -> "వేరుశెనగ"; else -> "Peanut" }
+    "vegetables" -> when(language) { "বাংলা" -> "সবজি"; "हिन्दी" -> "सब्ज़ियाँ"; "தமிழ்" -> "காய்கறிகள்"; "ਪੰਜਾਬੀ" -> "ਸਬਜ਼ੀਆਂ"; "తెలుగు" -> "కూరగాయలు"; else -> "Vegetables" }
+    "flowers" -> when(language) { "বাংলা" -> "ফুল"; "हिन्दी" -> "फूल"; "தமிழ்" -> "மலர்கள்"; "ਪੰਜਾਬੀ" -> "ਫੁੱਲ"; "తెలుగు" -> "పూలు"; else -> "Flowers" }
+    else -> crop
+}
+
+@Composable
+private fun CropSelector(language: String, selectedCrop: String, onCropChange: (String) -> Unit) {
+    Column {
+        Text(if(language=="English") "Select crop category" else "ফসলের বিভাগ নির্বাচন করুন", color=Ink, fontSize=16.sp, fontWeight=FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        LazyRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            items(CROP_OPTIONS) { crop ->
+                FilterChip(
+                    selected = selectedCrop == crop,
+                    onClick = { onCropChange(crop) },
+                    label = { Text(cropLabel(crop, language), fontSize=12.sp) }
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun FeatureCard(modifier: Modifier, icon: String, title: String, subtitle: String, tint: Color, iconTint: Color, onClick: () -> Unit) {
     Card(modifier = modifier.clickable(onClick = onClick), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White)) { Column(Modifier.padding(14.dp)) { Box(Modifier.size(42.dp).clip(RoundedCornerShape(13.dp)).background(tint), Alignment.Center) { Text(icon, color = iconTint, fontSize = 22.sp) }; Spacer(Modifier.height(12.dp)); Text(title, color = Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis); Spacer(Modifier.height(4.dp)); Text(subtitle, color = Muted, fontSize = 11.sp, lineHeight = 16.sp) } }
 }
 
 @Composable
-private fun DiagnosisScreen(language: String, selectedImage: Bitmap?, imageSource: ImageSource?, cameraDenied: Boolean, onBack: () -> Unit, onGallery: () -> Unit, onCamera: () -> Unit, onClear: () -> Unit, onAnalyze: () -> Unit, onVoice: () -> Unit) {
+private fun DiagnosisScreen(language: String, selectedCrop: String, onCropChange: (String) -> Unit, selectedImage: Bitmap?, imageSource: ImageSource?, cameraDenied: Boolean, onBack: () -> Unit, onGallery: () -> Unit, onCamera: () -> Unit, onClear: () -> Unit, onAnalyze: () -> Unit, onVoice: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) { Text("‹", fontSize = 36.sp, color = Ink, modifier = Modifier.clickable(onClick = onBack)); Spacer(Modifier.width(8.dp)); Column(Modifier.weight(1f)) { Text("AI Crop Diagnosis", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Ink); Text(if (language == "English") "Identify crop problems from a photo" else "ফসলের ছবি দিয়ে সমস্যা শনাক্ত করুন",  fontSize = 12.sp, color = Muted) }; Text(language, fontSize = 12.sp, color = KrishiGreen, fontWeight = FontWeight.Bold) }
         Spacer(Modifier.height(18.dp))
@@ -240,14 +269,14 @@ private fun ImageSourceCard(modifier: Modifier, icon: String, title: String, sub
 private fun sourceLabel(source: ImageSource?): String = when (source) { ImageSource.CAMERA -> "ক্যামেরা থেকে নেওয়া ছবি"; ImageSource.GALLERY -> "গ্যালারি থেকে নির্বাচিত ছবি"; null -> "ছবি" }
 
 @Composable
-private fun ResultScreen(selectedImage: Bitmap?, result: AdvisoryResult?, error: String?, analyzing: Boolean, onBack: () -> Unit, onRetry: () -> Unit, onVoice: () -> Unit) {
+private fun ResultScreen(selectedImage: Bitmap?, selectedCrop: String, language: String, result: AdvisoryResult?, error: String?, analyzing: Boolean, onBack: () -> Unit, onRetry: () -> Unit, onVoice: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
         Text("‹", fontSize = 36.sp, color = Ink, modifier = Modifier.clickable(onClick = onBack)); Text("বিশ্লেষণের ফলাফল", fontSize = 23.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(14.dp))
         if (selectedImage != null) { Image(selectedImage.asImageBitmap(), "Crop", Modifier.fillMaxWidth().height(230.dp).clip(RoundedCornerShape(20.dp)), contentScale = ContentScale.Crop); Spacer(Modifier.height(14.dp)) }
         when {
             analyzing -> { Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) { CircularProgressIndicator(color = KrishiGreen); Spacer(Modifier.height(14.dp)); Text("OpenKrishi AI থেকে পরামর্শ আনা হচ্ছে…", color = Ink, fontWeight = FontWeight.Bold); Spacer(Modifier.height(6.dp)); Text("আপনার নির্বাচিত ভাষায় উত্তর প্রস্তুত হচ্ছে।", color = Muted, textAlign = TextAlign.Center, fontSize = 12.sp) } } }
             error != null -> { ResultCard("⚠️", "সংযোগ সমস্যা", "পরামর্শ আনা যায়নি: $error"); Button(onClick = onRetry, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(15.dp), colors = ButtonDefaults.buttonColors(KrishiGreen)) { Text("আবার চেষ্টা করুন") } }
-            result != null -> { ResultCard("🌾", "ফসল", "ধান"); if (result.observations.isNotEmpty()) ResultCard("👁️", "ছবিতে দেখা লক্ষণ", result.observations.joinToString("\n• ", prefix = "• ")); if (result.possibleCauses.isNotEmpty()) ResultCard("🔎", "সম্ভাব্য কারণ", result.possibleCauses.joinToString("\n• ", prefix = "• ")); ResultCard("💡", "AI পরামর্শ", result.answer); if (result.recommendations.isNotEmpty()) ResultCard("✓", "নিরাপদ পরবর্তী পদক্ষেপ", result.recommendations.joinToString("\n• ", prefix = "• ")); ResultCard("◉", "Confidence", result.confidence); ResultCard("✓", "Safety", result.safety) }
+            result != null -> { ResultCard("🌾", if(language=="English") "Crop" else "ফসল", cropLabel(selectedCrop, language)); if (result.observations.isNotEmpty()) ResultCard("👁️", "ছবিতে দেখা লক্ষণ", result.observations.joinToString("\n• ", prefix = "• ")); if (result.possibleCauses.isNotEmpty()) ResultCard("🔎", "সম্ভাব্য কারণ", result.possibleCauses.joinToString("\n• ", prefix = "• ")); ResultCard("💡", "AI পরামর্শ", result.answer); if (result.recommendations.isNotEmpty()) ResultCard("✓", "নিরাপদ পরবর্তী পদক্ষেপ", result.recommendations.joinToString("\n• ", prefix = "• ")); ResultCard("◉", "Confidence", result.confidence); ResultCard("✓", "Safety", result.safety) }
             else -> ResultCard("ℹ️", "অপেক্ষা করুন", "বিশ্লেষণ শুরু করা হয়নি।")
         }
         Spacer(Modifier.height(10.dp)); Button(onClick = onVoice, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(KrishiGreen)) { Text("🔊 পরামর্শ শুনুন", fontWeight = FontWeight.Bold) }
@@ -259,7 +288,7 @@ private fun ResultScreen(selectedImage: Bitmap?, result: AdvisoryResult?, error:
 private fun ResultCard(icon: String, title: String, body: String) { Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) { Row(Modifier.padding(14.dp), verticalAlignment = Alignment.Top) { Text(icon, fontSize = 22.sp); Spacer(Modifier.width(10.dp)); Column { Text(title, color = KrishiGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(4.dp)); Text(body, color = Ink, fontSize = 14.sp, lineHeight = 20.sp) } } } }
 
 @Composable
-private fun VoiceScreen(language: String, onBack: () -> Unit) {
+private fun VoiceScreen(language: String, selectedCrop: String, onCropChange: (String) -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
     var transcript by remember { mutableStateOf("") }
     var answer by remember { mutableStateOf("") }
@@ -277,7 +306,7 @@ private fun VoiceScreen(language: String, onBack: () -> Unit) {
             error = null
             Thread {
                 try {
-                    val r = OpenKrishiApi.getAdvisory(text, language, "rice")
+                    val r = OpenKrishiApi.getAdvisory(text, language, selectedCrop)
                     Handler(Looper.getMainLooper()).post {
                         answer = r.answer
                         loading = false
@@ -352,7 +381,7 @@ private fun WeatherScreen(language: String, weather: WeatherResult?, loading: Bo
 }
 
 @Composable
-private fun AdvisoryInputScreen(language:String, query:String, onQuery:(String)->Unit, onAsk:(String)->Unit, onBack:()->Unit) {
+private fun AdvisoryInputScreen(language:String, selectedCrop:String, onCropChange:(String)->Unit, query:String, onQuery:(String)->Unit, onAsk:(String)->Unit, onBack:()->Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
         TopBar(if(language=="English") "Crop advisory" else "ফসলের পরামর্শ", language, onBack)
         Spacer(Modifier.height(18.dp))
