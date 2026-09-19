@@ -43,11 +43,11 @@ private fun readResponse(connection: HttpURLConnection): String {
 }
 
 internal object OpenKrishiApi {
-    fun getAdvisory(query: String, language: String, cropCategory: String = "rice"): AdvisoryResult {
+    fun getAdvisory(query: String, language: String, cropCategory: String = "rice", cropName: String? = null): AdvisoryResult {
         val body = JSONObject().apply {
             put("query", query)
             put("language", languageCode(language))
-            put("crop_category", cropCategory)
+            put("crop_category", cropCategory)\n            if (!cropName.isNullOrBlank()) put("crop_name", cropName)
         }.toString()
         val connection = (URL("$OPENKRISHI_API_BASE/api/v1/advisory").openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
@@ -99,7 +99,7 @@ internal object OpenKrishiApi {
         } finally { connection.disconnect() }
     }
 
-    fun assessImage(bitmap: Bitmap, language: String, cropCategory: String = "rice", growthStage: String? = null): AdvisoryResult {
+    fun assessImage(bitmap: Bitmap, language: String, cropCategory: String = "rice", growthStage: String? = null, cropName: String? = null): AdvisoryResult {
         val output = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 88, output)
         val imageBytes = output.toByteArray()
@@ -122,7 +122,7 @@ internal object OpenKrishiApi {
                 }
                 field("crop_category", cropCategory)
                 field("language", languageCode(language))
-                if (!growthStage.isNullOrBlank()) field("growth_stage", growthStage)
+                if (!growthStage.isNullOrBlank()) field("growth_stage", growthStage)\n                if (!cropName.isNullOrBlank()) field("crop_name", cropName)
                 out.write("--$boundary\r\n".toByteArray())
                 out.write("Content-Disposition: form-data; name=\"file\"; filename=\"crop.jpg\"\r\n".toByteArray())
                 out.write("Content-Type: image/jpeg\r\n\r\n".toByteArray())
