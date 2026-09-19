@@ -166,9 +166,9 @@ fun OpenKrishiApp() {
                     containerColor = Color(0xFFF6FAF7),
                     bottomBar = {
                         NavigationBar(containerColor = Color.White, modifier = Modifier.navigationBarsPadding()) {
-                            NavigationBarItem(tab == AppTab.HOME, { tab = AppTab.HOME }, icon = { Text("⌂", fontSize = 24.sp) }, label = { Text("Home") })
-                            NavigationBarItem(tab == AppTab.HISTORY, { tab = AppTab.HISTORY }, icon = { Text("◷", fontSize = 22.sp) }, label = { Text("History") })
-                            NavigationBarItem(tab == AppTab.PROFILE, { tab = AppTab.PROFILE }, icon = { Text("○", fontSize = 24.sp) }, label = { Text("Profile") })
+                            NavigationBarItem(tab == AppTab.HOME, { tab = AppTab.HOME }, icon = { Text("⌂", fontSize = 24.sp) }, label = { Text(ui(language, "home")) })
+                            NavigationBarItem(tab == AppTab.HISTORY, { tab = AppTab.HISTORY }, icon = { Text("◷", fontSize = 22.sp) }, label = { Text(ui(language, "history")) })
+                            NavigationBarItem(tab == AppTab.PROFILE, { tab = AppTab.PROFILE }, icon = { Text("○", fontSize = 24.sp) }, label = { Text(ui(language, "profile")) })
                         }
                     }
                 ) { padding ->
@@ -205,8 +205,8 @@ private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String
         }
         Column(Modifier.padding(18.dp)) {
             Text(if (language == "English") "Quick help for you" else "আপনার জন্য দ্রুত সাহায্য",  color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "⌾", if (language == "English") "Crop diagnosis" else "রোগ শনাক্তকরণ", if (language == "English") "Take a photo to find the problem" else "ছবি তুলে সমস্যা জানুন", KrishiMint, KrishiGreen, onDiagnosis); FeatureCard(Modifier.weight(1f), "♩", if (language == "English") "Voice advisory" else "ভয়েস পরামর্শ", if (language == "English") "Speak and hear the answer" else "কথা বলুন, উত্তর শুনুন", KrishiPurple, Color(0xFF7046C8), onVoice) }
-            Spacer(Modifier.height(12.dp)); Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "☁", if (language == "English") "Weather update" else "আবহাওয়া আপডেট", if (language == "English") "Rain and alerts" else "বৃষ্টি ও সতর্কতা", KrishiSky, Color(0xFF2574C8), onWeather); FeatureCard(Modifier.weight(1f), "✦", if (language == "English") "Crop advisory" else "ফসলের পরামর্শ", if (language == "English") "Practical farming guidance" else "চাষের সঠিক গাইড", KrishiAmber, Color(0xFFC48200), onAdvice) }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "⌾", ui(language, "diagnosis"), if (language == "English") "Take a photo to find the problem" else "ছবি তুলে সমস্যা জানুন", KrishiMint, KrishiGreen, onDiagnosis); FeatureCard(Modifier.weight(1f), "♩", ui(language, "voice"), if (language == "English") "Speak and hear the answer" else "কথা বলুন, উত্তর শুনুন", KrishiPurple, Color(0xFF7046C8), onVoice) }
+            Spacer(Modifier.height(12.dp)); Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "☁", ui(language, "weather"), if (language == "English") "Rain and alerts" else "বৃষ্টি ও সতর্কতা", KrishiSky, Color(0xFF2574C8), onWeather); FeatureCard(Modifier.weight(1f), "✦", ui(language, "advisory"), if (language == "English") "Practical farming guidance" else "চাষের সঠিক গাইড", KrishiAmber, Color(0xFFC48200), onAdvice) }
             Spacer(Modifier.height(22.dp)); Text(if (language == "English") "Popular crops" else "জনপ্রিয় ফসল",  color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(10.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) { items(listOf("🌾\nধান", "🌿\nপাট", "🥜\nবাদাম", "🥬\nসবজি", "🌸\nফুল")) { crop -> Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.width(78.dp)) { Text(crop, Modifier.fillMaxWidth().padding(vertical = 12.dp), textAlign = TextAlign.Center, fontSize = 14.sp, lineHeight = 22.sp) } } }
             Spacer(Modifier.height(22.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(KrishiMint), modifier = Modifier.fillMaxWidth()) { Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Text("✓", color = KrishiGreen, fontSize = 24.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.width(10.dp)); Column { Text(if (language == "English") "In the farmer's language, by the farmer's side" else "কৃষকের ভাষায়, কৃষকের পাশে",  color = KrishiDeep, fontWeight = FontWeight.Bold, fontSize = 14.sp); Text(if (language == "English") "AI Vision • Voice • Weather • 6 languages" else "AI Vision • Voice • Weather • ৬টি ভাষা",  color = Muted, fontSize = 11.sp) } } }
@@ -248,6 +248,26 @@ private val FLOWER_CROPS = listOf(
     "Petunia", "Gomphrena", "Celosia", "Crossandra", "Anthurium",
     "Sunflower", "Calendula", "Portulaca", "Periwinkle", "Rajnigandha"
 )
+
+
+private fun ui(language: String, key: String): String = when (key) {
+    "home" -> mapOf("বাংলা" to "হোম", "हिन्दी" to "होम", "தமிழ்" to "முகப்பு", "ਪੰਜਾਬੀ" to "ਹੋਮ", "తెలుగు" to "హోమ్", "English" to "Home")[language] ?: "Home"
+    "history" -> mapOf("বাংলা" to "ইতিহাস", "हिन्दी" to "इतिहास", "தமிழ்" to "வரலாறு", "ਪੰਜਾਬੀ" to "ਇਤਿਹਾਸ", "తెలుగు" to "చరిత్ర", "English" to "History")[language] ?: "History"
+    "profile" -> mapOf("বাংলা" to "প্রোফাইল", "हिन्दी" to "प्रोफ़ाइल", "தமிழ்" to "சுயவிவரம்", "ਪੰਜਾਬੀ" to "ਪ੍ਰੋਫਾਈਲ", "తెలుగు" to "ప్రొఫైల్", "English" to "Profile")[language] ?: "Profile"
+    "greeting" -> mapOf("বাংলা" to "নমস্কার, কৃষক বন্ধু!", "हिन्दी" to "नमस्ते, किसान मित्र!", "தமிழ்" to "வணக்கம், விவசாயி நண்பரே!", "ਪੰਜਾਬੀ" to "ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਕਿਸਾਨ ਦੋਸਤ!", "తెలుగు" to "నమస్కారం, రైతు మిత్రమా!", "English" to "Hello, Farmer!")[language] ?: "Hello, Farmer!"
+    "quick_help" -> mapOf("বাংলা" to "আপনার জন্য দ্রুত সাহায্য", "हिन्दी" to "आपके लिए त्वरित सहायता", "தமிழ்" to "உங்களுக்கான விரைவு உதவி", "ਪੰਜਾਬੀ" to "ਤੁਹਾਡੇ ਲਈ ਤੁਰੰਤ ਮਦਦ", "తెలుగు" to "మీ కోసం త్వరిత సహాయం", "English" to "Quick help for you")[language] ?: "Quick help for you"
+    "diagnosis" -> mapOf("বাংলা" to "ফসল রোগ শনাক্তকরণ", "हिन्दी" to "फसल रोग पहचान", "தமிழ்" to "பயிர் நோய் கண்டறிதல்", "ਪੰਜਾਬੀ" to "ਫਸਲ ਰੋਗ ਪਛਾਣ", "తెలుగు" to "పంట వ్యాధి నిర్ధారణ", "English" to "Crop diagnosis")[language] ?: "Crop diagnosis"
+    "voice" -> mapOf("বাংলা" to "ভয়েস পরামর্শ", "हिन्दी" to "वॉइस सलाह", "தமிழ்" to "குரல் ஆலோசனை", "ਪੰਜਾਬੀ" to "ਵੌਇਸ ਸਲਾਹ", "తెలుగు" to "వాయిస్ సలహా", "English" to "Voice advisory")[language] ?: "Voice advisory"
+    "weather" -> mapOf("বাংলা" to "আবহাওয়া আপডেট", "हिन्दी" to "मौसम अपडेट", "தமிழ்" to "வானிலை புதுப்பிப்பு", "ਪੰਜਾਬੀ" to "ਮੌਸਮ ਅੱਪਡੇਟ", "తెలుగు" to "వాతావరణ నవీకరణ", "English" to "Weather update")[language] ?: "Weather update"
+    "advisory" -> mapOf("বাংলা" to "ফসলের পরামর্শ", "हिन्दी" to "फसल सलाह", "தமிழ்" to "பயிர் ஆலோசனை", "ਪੰਜਾਬੀ" to "ਫਸਲ ਸਲਾਹ", "తెలుగు" to "పంట సలహా", "English" to "Crop advisory")[language] ?: "Crop advisory"
+    "popular" -> mapOf("বাংলা" to "জনপ্রিয় ফসল", "हिन्दी" to "लोकप्रिय फसलें", "தமிழ்" to "பிரபலமான பயிர்கள்", "ਪੰਜਾਬੀ" to "ਪ੍ਰਸਿੱਧ ਫਸਲਾਂ", "తెలుగు" to "ప్రసిద్ధ పంటలు", "English" to "Popular crops")[language] ?: "Popular crops"
+    "profile_language" -> mapOf("বাংলা" to "ভাষা নির্বাচন করুন", "हिन्दी" to "भाषा चुनें", "தமிழ்" to "மொழியைத் தேர்ந்தெடுக்கவும்", "ਪੰਜਾਬੀ" to "ਭਾਸ਼ਾ ਚੁਣੋ", "తెలుగు" to "భాషను ఎంచుకోండి", "English" to "Choose language")[language] ?: "Choose language"
+    "farmer_profile" -> mapOf("বাংলা" to "🌾 কৃষক প্রোফাইল", "हिन्दी" to "🌾 किसान प्रोफ़ाइल", "தமிழ்" to "🌾 விவசாயி சுயவிவரம்", "ਪੰਜਾਬੀ" to "🌾 ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ", "తెలుగు" to "🌾 రైతు ప్రొఫైల్", "English" to "🌾 Farmer profile")[language] ?: "🌾 Farmer profile"
+    "no_history" -> mapOf("বাংলা" to "এখনও কোনও বিশ্লেষণ সংরক্ষিত নেই।", "हिन्दी" to "अभी कोई विश्लेषण सहेजा नहीं गया है।", "தமிழ்" to "இன்னும் பகுப்பாய்வுகள் சேமிக்கப்படவில்லை.", "ਪੰਜਾਬੀ" to "ਹਾਲੇ ਕੋਈ ਵਿਸ਼ਲੇਸ਼ਣ ਸੁਰੱਖਿਅਤ ਨਹੀਂ ਹੈ।", "తెలుగు" to "ఇంకా విశ్లేషణలు సేవ్ కాలేదు.", "English" to "No saved analyses yet.")[language] ?: "No saved analyses yet."
+    "history_desc" -> mapOf("বাংলা" to "আপনার আগের AI পরামর্শ এখানে দেখা যাবে।", "हिन्दी" to "आपकी पिछली AI सलाह यहाँ दिखाई देगी।", "தமிழ்" to "உங்கள் முந்தைய AI ஆலோசனைகள் இங்கே தோன்றும்.", "ਪੰਜਾਬੀ" to "ਤੁਹਾਡੀ ਪਿਛਲੀ AI ਸਲਾਹ ਇੱਥੇ ਦਿਖਾਈ ਦੇਵੇਗੀ।", "తెలుగు" to "మీ గత AI సలహాలు ఇక్కడ కనిపిస్తాయి.", "English" to "Your previous AI advice will appear here.")[language] ?: "Your previous AI advice will appear here."
+    "select_language" -> mapOf("বাংলা" to "ভাষা নির্বাচন করুন", "हिन्दी" to "भाषा चुनें", "தமிழ்" to "மொழியைத் தேர்ந்தெடுக்கவும்", "ਪੰਜਾਬੀ" to "ਭਾਸ਼ਾ ਚੁਣੋ", "తెలుగు" to "భాషను ఎంచుకోండి", "English" to "Choose language")[language] ?: "Choose language"
+    else -> key
+}
 
 private fun cropLabel(crop: String, language: String): String = when (crop) {
     "rice" -> when(language) { "বাংলা" -> "ধান"; "हिन्दी" -> "धान"; "தமிழ்" -> "நெல்"; "ਪੰਜਾਬੀ" -> "ਚੌਲ"; "తెలుగు" -> "వరి"; else -> "Rice" }
@@ -436,7 +456,7 @@ private fun VoiceScreen(language: String, selectedCrop: String, onCropChange: (S
         launcher.launch(intent)
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
-        TopBar(if (language == "English") "Voice advisory" else "ভয়েস পরামর্শ", language, onBack)
+        TopBar(ui(language, "voice"), language, onBack)
         Spacer(Modifier.height(20.dp))
         Card(shape=RoundedCornerShape(24.dp), colors=CardDefaults.cardColors(KrishiPurple), modifier=Modifier.fillMaxWidth()) {
             Column(Modifier.padding(25.dp), horizontalAlignment=Alignment.CenterHorizontally) {
