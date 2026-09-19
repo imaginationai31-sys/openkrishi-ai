@@ -386,3 +386,14 @@ private fun ProfileScreen(modifier: Modifier, language: String, onLanguage: (Str
         }
     }
 }
+
+
+@Composable
+private fun TopBar(title: String, language: String, onBack: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        Text("‹", fontSize = 36.sp, color = Ink, modifier = Modifier.clickable(onClick = onBack))
+        Spacer(Modifier.width(8.dp))
+        Text(title, color = Ink, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text(language, color = KrishiGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+    }
+}
