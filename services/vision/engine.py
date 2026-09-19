@@ -85,6 +85,7 @@ def assess_crop_image(
     crop_category: str | None = None,
     growth_stage: str | None = None,
     language: str = "en",
+    crop_name: str | None = None,
 ) -> dict[str, Any]:
     """Assess a crop image and generate all natural-language findings in the requested language."""
     normalized_type = _validate_image(image_bytes, content_type, crop_category)
