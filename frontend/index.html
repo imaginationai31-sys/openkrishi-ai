@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#166534">
 <title>OpenKrishi AI — Voice & Vision Advisory</title>
 <style>
-:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17251b;background:#f4f8f2}*{box-sizing:border-box}body{margin:0;min-height:100vh}.app{width:min(680px,100%);margin:auto;padding:20px 16px 40px}header{text-align:center;padding:20px 8px 16px}.logo{width:58px;height:58px;margin:0 auto 10px;border-radius:18px;display:grid;place-items:center;background:#166534;color:#fff;font-size:28px}h1{margin:0;font-size:28px}.tagline{margin:7px 0 0;color:#647067}.card{background:#fff;border:1px solid #dce7d9;border-radius:20px;padding:18px;box-shadow:0 5px 20px rgba(20,55,25,.06);margin-top:14px}label{display:block;font-weight:700;margin-bottom:7px}select{width:100%;padding:13px;border:1px solid #cbd8c8;border-radius:12px;background:#fff;font-size:16px;margin-bottom:14px}.photo-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px}.photo-button{border:1px solid #cbd8c8;background:#f8fbf7;color:#17251b;border-radius:12px;padding:12px 8px;font-size:14px;font-weight:800;cursor:pointer;min-height:56px}.photo-button.selected{border-color:#166534;background:#edf7ee}.hidden-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.selected-file{color:#647067;font-size:13px;margin:5px 0 12px;word-break:break-word}.record{width:150px;height:150px;border-radius:50%;border:0;background:#166534;color:#fff;display:grid;place-items:center;margin:14px auto;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 10px 25px rgba(22,101,52,.22);touch-action:none;user-select:none}.record.recording{background:#b91c1c;transform:scale(1.03)}.hint{text-align:center;color:#6b756d;font-size:14px}.status{text-align:center;min-height:24px;font-weight:700}.result{white-space:pre-wrap;line-height:1.6;font-size:17px}.safety{display:inline-block;margin-top:12px;padding:6px 10px;border-radius:999px;background:#fff7d6;color:#795b00;font-size:13px;font-weight:800}audio{width:100%;margin-top:14px}.small{color:#6b756d;font-size:12px;margin-top:12px}.error{color:#991b1b}.photo-preview{width:100%;max-height:240px;object-fit:contain;border-radius:14px;margin:2px 0 14px;border:1px solid #dce7d9}.weather-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.weather-title{margin:0;font-size:19px}.location-status{color:#647067;font-size:13px;margin-top:4px}.location-button{border:0;background:#166534;color:#fff;border-radius:10px;padding:10px 13px;font-weight:800;cursor:pointer}.location-button:disabled{opacity:.6;cursor:wait}.weather-main{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.weather-item{background:#f7faf6;border:1px solid #e0e9dd;border-radius:14px;padding:12px}.weather-label{color:#647067;font-size:12px;margin-bottom:4px}.weather-value{font-size:18px;font-weight:800}.weather-condition{font-size:15px;font-weight:700}.weather-alert{margin-top:12px;padding:13px;border-radius:14px;background:#fff8df;border:1px solid #f0df9c}.weather-alert strong{display:block;margin-bottom:5px}.weather-alert ul{margin:7px 0 0;padding-left:20px}.weather-alert li{margin:4px 0}.weather-loading{text-align:center;color:#647067;padding:12px 0}.weather-error{color:#991b1b;background:#fff4f4;border:1px solid #f0cccc;border-radius:12px;padding:12px;margin-top:10px}.forecast{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.forecast-day{background:#f7faf6;border:1px solid #e0e9dd;border-radius:12px;padding:10px;text-align:center;font-size:12px}.forecast-temp{font-weight:800;font-size:14px;margin-top:4px}@media(max-width:430px){.photo-actions{grid-template-columns:1fr}.weather-header{align-items:stretch;flex-direction:column}.location-button{width:100%}.forecast{grid-template-columns:1fr}}
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17251b;background:#f4f8f2}*{box-sizing:border-box}body{margin:0;min-height:100vh}.app{width:min(680px,100%);margin:auto;padding:20px 16px 40px}header{text-align:center;padding:20px 8px 16px}.logo{width:58px;height:58px;margin:0 auto 10px;border-radius:18px;display:grid;place-items:center;background:#166534;color:#fff;font-size:28px}h1{margin:0;font-size:28px}.tagline{margin:7px 0 0;color:#647067}.card{background:#fff;border:1px solid #dce7d9;border-radius:20px;padding:18px;box-shadow:0 5px 20px rgba(20,55,25,.06);margin-top:14px}label{display:block;font-weight:700;margin-bottom:7px}select{width:100%;padding:13px;border:1px solid #cbd8c8;border-radius:12px;background:#fff;font-size:16px;margin-bottom:14px}.photo-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:10px}.photo-button{border:1px solid #cbd8c8;background:#f8fbf7;color:#17251b;border-radius:12px;padding:12px 8px;font-size:14px;font-weight:800;cursor:pointer;min-height:56px}.photo-button.selected{border-color:#166534;background:#edf7ee}.hidden-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.selected-file{color:#647067;font-size:13px;margin:5px 0 12px;word-break:break-word}.record{width:150px;height:150px;border-radius:50%;border:0;background:#166534;color:#fff;display:grid;place-items:center;margin:14px auto;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 10px 25px rgba(22,101,52,.22);touch-action:none;user-select:none}.record.recording{background:#b91c1c;transform:scale(1.03)}.hint{text-align:center;color:#6b756d;font-size:14px}.status{text-align:center;min-height:24px;font-weight:700}.result{white-space:pre-wrap;line-height:1.6;font-size:17px}.safety{display:inline-block;margin-top:12px;padding:6px 10px;border-radius:999px;background:#fff7d6;color:#795b00;font-size:13px;font-weight:800}audio{width:100%;margin-top:14px}.small{color:#6b756d;font-size:12px;margin-top:12px}.error{color:#991b1b}.photo-preview{width:100%;max-height:240px;object-fit:contain;border-radius:14px;margin:2px 0 14px;border:1px solid #dce7d9}.weather-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.weather-title{margin:0;font-size:19px}.location-status{color:#647067;font-size:13px;margin-top:4px}.location-button{border:0;background:#166534;color:#fff;border-radius:10px;padding:10px 13px;font-weight:800;cursor:pointer}.location-button:disabled{opacity:.6;cursor:wait}.weather-main{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.weather-item{background:#f7faf6;border:1px solid #e0e9dd;border-radius:14px;padding:12px}.weather-label{color:#647067;font-size:12px;margin-bottom:4px}.weather-value{font-size:18px;font-weight:800}.weather-condition{font-size:15px;font-weight:700}.weather-alert{margin-top:12px;padding:13px;border-radius:14px;background:#fff8df;border:1px solid #f0df9c}.weather-alert strong{display:block;margin-bottom:5px}.weather-alert ul{margin:7px 0 0;padding-left:20px}.weather-alert li{margin:4px 0}.weather-loading{text-align:center;color:#647067;padding:12px 0}.weather-error{color:#991b1b;background:#fff4f4;border:1px solid #f0cccc;border-radius:12px;padding:12px;margin-top:10px}.forecast{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.forecast-day{background:#f7faf6;border:1px solid #e0e9dd;border-radius:12px;padding:10px;text-align:center;font-size:12px}.forecast-temp{font-weight:800;font-size:14px;margin-top:4px}@media(max-width:430px){.photo-actions{grid-template-columns:1fr}.weather-header{align-items:stretch;flex-direction:column}.location-button{width:100%}.forecast{grid-template-columns:1fr}}
 </style>
 </head>
 
@@ -96,12 +96,10 @@
 <div class="photo-actions">
 <button id="cameraButton" class="photo-button" type="button"></button>
 <button id="galleryButton" class="photo-button" type="button"></button>
-<button id="fileButton" class="photo-button" type="button"></button>
 </div>
 
 <input id="cameraInput" class="hidden-file" type="file" accept="image/*" capture="environment">
 <input id="galleryInput" class="hidden-file" type="file" accept="image/*">
-<input id="fileInput" class="hidden-file" type="file" accept="image/*,.jpg,.jpeg,.png,.webp">
 
 <div id="selectedFile" class="selected-file"></div>
 
@@ -136,10 +134,8 @@ const recordButton=document.getElementById('record'),
 statusEl=document.getElementById('status'),
 cameraButton=document.getElementById('cameraButton'),
 galleryButton=document.getElementById('galleryButton'),
-fileButton=document.getElementById('fileButton'),
 cameraInput=document.getElementById('cameraInput'),
 galleryInput=document.getElementById('galleryInput'),
-fileInput=document.getElementById('fileInput'),
 selectedFileEl=document.getElementById('selectedFile'),
 photoPreview=document.getElementById('photoPreview'),
 resultCard=document.getElementById('resultCard'),
@@ -199,12 +195,11 @@ crop:'Crop',
 photo:'Crop photo',
 camera:'📷 Direct Camera',
 gallery:'🖼️ Gallery',
-file:'📁 File Picker',
 noPhoto:'No photo selected.',
 hold:'🎙️<br>Hold to speak',
 release:'⏹️<br>Release to send',
 status:'Hold the microphone while speaking.',
-hint:'Use Direct Camera, Gallery, or File Picker to add a crop photo.',
+hint:'Use Direct Camera or Gallery to add a crop photo.',
 advice:'OpenKrishi Advisory',
 safety:'Safety',
 vision:'Image analysis',
@@ -256,12 +251,11 @@ crop:'ফসল',
 photo:'ফসলের ছবি',
 camera:'📷 সরাসরি ক্যামেরা',
 gallery:'🖼️ গ্যালারি',
-file:'📁 ফাইল নির্বাচন',
 noPhoto:'কোনও ছবি নির্বাচন করা হয়নি।',
 hold:'🎙️<br>কথা বলতে ধরে রাখুন',
 release:'⏹️<br>ছাড়লে পাঠানো হবে',
 status:'কথা বলার সময় মাইক্রোফোনটি ধরে রাখুন।',
-hint:'ফসলের ছবির জন্য সরাসরি ক্যামেরা, গ্যালারি বা ফাইল নির্বাচন করুন।',
+hint:'ফসলের ছবির জন্য সরাসরি ক্যামেরা বা গ্যালারি ব্যবহার করুন।',
 advice:'OpenKrishi পরামর্শ',
 safety:'নিরাপত্তা',
 vision:'ছবির বিশ্লেষণ',
@@ -313,12 +307,11 @@ crop:'फसल',
 photo:'फसल की फोटो',
 camera:'📷 सीधे कैमरा',
 gallery:'🖼️ गैलरी',
-file:'📁 फाइल चुनें',
 noPhoto:'कोई फोटो नहीं चुनी गई।',
 hold:'🎙️<br>बोलने के लिए दबाकर रखें',
 release:'⏹️<br>छोड़ने पर भेजें',
 status:'बोलते समय माइक्रोफोन को दबाकर रखें।',
-hint:'फसल की फोटो के लिए सीधे कैमरा, गैलरी या फाइल चुनें।',
+hint:'फसल की फोटो के लिए सीधे कैमरा या गैलरी चुनें।',
 advice:'OpenKrishi सलाह',
 safety:'सुरक्षा',
 vision:'फोटो विश्लेषण',
@@ -370,7 +363,6 @@ crop:'பயிர்',
 photo:'பயிர் புகைப்படம்',
 camera:'📷 நேரடி கேமரா',
 gallery:'🖼️ கேலரி',
-file:'📁 கோப்பு தேர்வு',
 noPhoto:'புகைப்படம் தேர்ந்தெடுக்கப்படவில்லை.',
 hold:'🎙️<br>பேச அழுத்திப் பிடிக்கவும்',
 release:'⏹️<br>விடும்போது அனுப்பவும்',
@@ -427,7 +419,6 @@ crop:'ਫਸਲ',
 photo:'ਫਸਲ ਦੀ ਫੋਟੋ',
 camera:'📷 ਸਿੱਧਾ ਕੈਮਰਾ',
 gallery:'🖼️ ਗੈਲਰੀ',
-file:'📁 ਫਾਈਲ ਚੁਣੋ',
 noPhoto:'ਕੋਈ ਫੋਟੋ ਨਹੀਂ ਚੁਣੀ ਗਈ।',
 hold:'🎙️<br>ਬੋਲਣ ਲਈ ਦਬਾ ਕੇ ਰੱਖੋ',
 release:'⏹️<br>ਛੱਡਣ ਤੇ ਭੇਜੋ',
@@ -484,7 +475,6 @@ crop:'పంట',
 photo:'పంట ఫోటో',
 camera:'📷 నేరుగా కెమెరా',
 gallery:'🖼️ గ్యాలరీ',
-file:'📁 ఫైల్ ఎంచుకోండి',
 noPhoto:'ఫోటో ఎంచుకోలేదు.',
 hold:'🎙️<br>మాట్లాడటానికి నొక్కి పట్టుకోండి',
 release:'⏹️<br>వదిలితే పంపండి',
@@ -659,7 +649,6 @@ setText('photoLabel','photo');
 
 cameraButton.innerHTML=t('camera');
 galleryButton.innerHTML=t('gallery');
-fileButton.innerHTML=t('file');
 
 localizeCropOptions();
 
@@ -703,7 +692,6 @@ i.click();
 
 cameraButton.onclick=()=>openPicker(cameraInput);
 galleryButton.onclick=()=>openPicker(galleryInput);
-fileButton.onclick=()=>openPicker(fileInput);
 
 function handleImageSelection(f,sourceKey){
 
@@ -724,18 +712,16 @@ photoPreview.hidden=false;
 
 selectedFileEl.textContent=`${t(sourceKey)}: ${f.name}`;
 
-[cameraButton,galleryButton,fileButton].forEach(b=>b.classList.remove('selected'));
+[cameraButton,galleryButton].forEach(b=>b.classList.remove('selected'));
 
 if(sourceKey==='camera')cameraButton.classList.add('selected');
 if(sourceKey==='gallery')galleryButton.classList.add('selected');
-if(sourceKey==='file')fileButton.classList.add('selected');
 
 setStatus(t('photoSelected'));
 }
 
 cameraInput.onchange=()=>handleImageSelection(cameraInput.files?.[0],'camera');
 galleryInput.onchange=()=>handleImageSelection(galleryInput.files?.[0],'gallery');
-fileInput.onchange=()=>handleImageSelection(fileInput.files?.[0],'file');
 
 function escapeHtml(v){
 return String(v)
@@ -1142,6 +1128,9 @@ form.append(
 'crop_category',
 cropEl.value
 );
+
+const cropName = cropEl.value === 'rice' ? 'Rice' : cropEl.value === 'peanut' ? 'Peanut' : cropEl.value === 'vegetables' ? 'Vegetables' : 'Flowers';
+form.append('crop_name', cropName);
 
 const image=selectedImage;
 
