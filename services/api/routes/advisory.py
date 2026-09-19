@@ -25,6 +25,7 @@ def advisory(request: AdvisoryRequest) -> dict[str, Any]:
         query=request.query,
         language=request.language,
         crop_category=request.crop_category,
+        crop_name=request.crop_name,
         growth_stage=request.growth_stage,
         location=request.location,
     )
