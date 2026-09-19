@@ -174,7 +174,7 @@ fun OpenKrishiApp() {
                 ) { padding ->
                     when (tab) {
                         AppTab.HOME -> HomeScreen(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" }, { screen = "weather"; loadWeather() }, { screen = "advisory" })
-                        AppTab.HISTORY -> HistoryScreen(Modifier.padding(padding))
+                        AppTab.HISTORY -> HistoryScreen(Modifier.padding(padding), language)
                         AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language, { language = it })
                     }
                 }
@@ -510,18 +510,18 @@ private fun AdvisoryInputScreen(language:String, selectedCrop:String, onCropChan
 }
 
 @Composable
-private fun HistoryScreen(modifier: Modifier) { Column(modifier.fillMaxSize().padding(18.dp)) { Text("History", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(8.dp)); Text("Your previous AI advice will appear here.", color = Muted, fontSize = 13.sp); Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Text("No saved analyses yet.", color = Muted, modifier = Modifier.padding(18.dp)) } } }
+private fun HistoryScreen(modifier: Modifier, language: String) { Column(modifier.fillMaxSize().padding(18.dp)) { Text(ui(language, "history"), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(8.dp)); Text(ui(language, "history_desc"), color = Muted, fontSize = 13.sp); Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Text(ui(language, "no_history"), color = Muted, modifier = Modifier.padding(18.dp)) } } }
 
 @Composable
 private fun ProfileScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
-        Text("Profile", fontSize=24.sp, fontWeight=FontWeight.Bold, color=Ink)
+        Text(ui(language, "profile"), fontSize=24.sp, fontWeight=FontWeight.Bold, color=Ink)
         Spacer(Modifier.height(18.dp))
         Card(shape=RoundedCornerShape(20.dp), colors=CardDefaults.cardColors(Color.White), modifier=Modifier.fillMaxWidth()) {
             Column(Modifier.padding(18.dp)) {
-                Text("🌾 Farmer profile", fontSize=18.sp, fontWeight=FontWeight.Bold, color=Ink)
-                Spacer(Modifier.height(8.dp)); Text("নির্বাচিত ভাষা: $language", color=Muted, fontSize=13.sp)
-                Spacer(Modifier.height(12.dp)); Text("ভাষা নির্বাচন করুন", color=Ink, fontWeight=FontWeight.Bold)
+                Text(ui(language, "farmer_profile"), fontSize=18.sp, fontWeight=FontWeight.Bold, color=Ink)
+                Spacer(Modifier.height(8.dp)); Text("${ui(language, "select_language")}: $language", color=Muted, fontSize=13.sp)
+                Spacer(Modifier.height(12.dp)); Text(ui(language, "select_language"), color=Ink, fontWeight=FontWeight.Bold)
                 LANG_OPTIONS.forEach { label ->
                     Row(Modifier.fillMaxWidth().clickable { onLanguage(label) }.padding(vertical=6.dp), verticalAlignment=Alignment.CenterVertically) {
                         RadioButton(selected=language==label, onClick={onLanguage(label)}); Text(label, color=Ink)
