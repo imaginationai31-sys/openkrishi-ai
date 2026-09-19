@@ -62,3 +62,29 @@ def test_vision_route_exposes_advisory_layer():
     assert vision_assess.__name__ == "vision_assess"
     assert "language" in vision_assess.__annotations__
     assert "location" in vision_assess.__annotations__
+
+
+@pytest.mark.parametrize("crop_category,crop_name", [
+    ("rice", "Swarna"),
+    ("rice", "Basmati"),
+    ("peanut", "JL 24"),
+    ("vegetables", "Potato"),
+    ("flowers", "Rose"),
+    ("flowers", "Marigold"),
+])
+def test_selected_crop_variety_is_carried_into_vision_prompt(monkeypatch, crop_category, crop_name):
+    captured = {}
+
+    class CaptureModels:
+        def generate_content(self, **kwargs):
+            captured["contents"] = kwargs["contents"]
+            return FakeResponse()
+
+    class CaptureClient:
+        models = CaptureModels()
+
+    monkeypatch.setattr("services.vision.engine.get_gemini_client", lambda: CaptureClient())
+    result = assess_crop_image(b"fake-image", "image/jpeg", crop_category, "tillering", "en", crop_name)
+    assert result["crop_category"] == crop_category
+    assert result["status"] == "assessed"
+    assert crop_name in captured["contents"][1]
