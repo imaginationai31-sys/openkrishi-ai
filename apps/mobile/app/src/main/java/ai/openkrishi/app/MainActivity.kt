@@ -193,21 +193,21 @@ private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String
                     Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("OpenKrishi AI", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold); Text("Smart farming • Better tomorrow", color = Color.White.copy(.78f), fontSize = 12.sp) }
                     Text(language, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
-                Spacer(Modifier.height(24.dp)); Text("নমস্কার, কৃষক বন্ধু!", color = Color.White, fontSize = 27.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(24.dp)); Text(if (language == "English") "Hello, Farmer!" else "নমস্কার, কৃষক বন্ধু!",  color = Color.White, fontSize = 27.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(12.dp)); LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { items(listOf("বাংলা","हिन्दी","தமிழ்","ਪੰਜਾਬੀ","తెలుగు","English")) { label -> FilterChip(selected = language == label, onClick = { onLanguage(label) }, label = { Text(label, fontSize = 10.sp) }) } }
                 Spacer(Modifier.height(7.dp)); Text("আপনার ফসলের সুস্থতা আমাদের লক্ষ্য।\nছবি তুলুন বা কথা বলুন — AI সাহায্য করবে।", color = Color.White.copy(.88f), fontSize = 15.sp, lineHeight = 22.sp)
                 Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White.copy(.97f)), modifier = Modifier.fillMaxWidth()) {
-                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Text("🌤️", fontSize = 35.sp); Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("28°C", color = Ink, fontSize = 24.sp, fontWeight = FontWeight.Bold); Text("Partly cloudy", color = Muted, fontSize = 12.sp) }; Column(horizontalAlignment = Alignment.End) { Text("⌖ Kolkata", color = Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold); Text("82% আর্দ্রতা", color = Muted, fontSize = 11.sp) } }
+                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Text("🌤️", fontSize = 35.sp); Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("28°C", color = Ink, fontSize = 24.sp, fontWeight = FontWeight.Bold); Text("Partly cloudy", color = Muted, fontSize = 12.sp) }; Column(horizontalAlignment = Alignment.End) { Text("⌖ Kolkata", color = Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold); Text(if (language == "English") "82% humidity" else "82% আর্দ্রতা",  color = Muted, fontSize = 11.sp) } }
                 }
             }
         }
         Column(Modifier.padding(18.dp)) {
-            Text("আপনার জন্য দ্রুত সাহায্য", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "⌾", "রোগ শনাক্তকরণ", "ছবি তুলে সমস্যা জানুন", KrishiMint, KrishiGreen, onDiagnosis); FeatureCard(Modifier.weight(1f), "♩", "ভয়েস পরামর্শ", "কথা বলুন, উত্তর শুনুন", KrishiPurple, Color(0xFF7046C8), onVoice) }
-            Spacer(Modifier.height(12.dp)); Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "☁", "আবহাওয়া আপডেট", "বৃষ্টি ও সতর্কতা", KrishiSky, Color(0xFF2574C8), onWeather); FeatureCard(Modifier.weight(1f), "✦", "ফসলের পরামর্শ", "চাষের সঠিক গাইড", KrishiAmber, Color(0xFFC48200), onAdvice) }
-            Spacer(Modifier.height(22.dp)); Text("জনপ্রিয় ফসল", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(10.dp))
+            Text(if (language == "English") "Quick help for you" else "আপনার জন্য দ্রুত সাহায্য",  color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "⌾", if (language == "English") "Crop diagnosis" else "রোগ শনাক্তকরণ", if (language == "English") "Take a photo to find the problem" else "ছবি তুলে সমস্যা জানুন", KrishiMint, KrishiGreen, onDiagnosis); FeatureCard(Modifier.weight(1f), "♩", if (language == "English") "Voice advisory" else "ভয়েস পরামর্শ", if (language == "English") "Speak and hear the answer" else "কথা বলুন, উত্তর শুনুন", KrishiPurple, Color(0xFF7046C8), onVoice) }
+            Spacer(Modifier.height(12.dp)); Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "☁", if (language == "English") "Weather update" else "আবহাওয়া আপডেট", if (language == "English") "Rain and alerts" else "বৃষ্টি ও সতর্কতা", KrishiSky, Color(0xFF2574C8), onWeather); FeatureCard(Modifier.weight(1f), "✦", if (language == "English") "Crop advisory" else "ফসলের পরামর্শ", if (language == "English") "Practical farming guidance" else "চাষের সঠিক গাইড", KrishiAmber, Color(0xFFC48200), onAdvice) }
+            Spacer(Modifier.height(22.dp)); Text(if (language == "English") "Popular crops" else "জনপ্রিয় ফসল",  color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(10.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) { items(listOf("🌾\nধান", "🌿\nপাট", "🥜\nবাদাম", "🥬\nসবজি", "🌸\nফুল")) { crop -> Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.width(78.dp)) { Text(crop, Modifier.fillMaxWidth().padding(vertical = 12.dp), textAlign = TextAlign.Center, fontSize = 14.sp, lineHeight = 22.sp) } } }
-            Spacer(Modifier.height(22.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(KrishiMint), modifier = Modifier.fillMaxWidth()) { Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Text("✓", color = KrishiGreen, fontSize = 24.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.width(10.dp)); Column { Text("কৃষকের ভাষায়, কৃষকের পাশে", color = KrishiDeep, fontWeight = FontWeight.Bold, fontSize = 14.sp); Text("AI Vision • Voice • Weather • ৬টি ভাষা", color = Muted, fontSize = 11.sp) } } }
+            Spacer(Modifier.height(22.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(KrishiMint), modifier = Modifier.fillMaxWidth()) { Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Text("✓", color = KrishiGreen, fontSize = 24.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.width(10.dp)); Column { Text(if (language == "English") "In the farmer's language, by the farmer's side" else "কৃষকের ভাষায়, কৃষকের পাশে",  color = KrishiDeep, fontWeight = FontWeight.Bold, fontSize = 14.sp); Text(if (language == "English") "AI Vision • Voice • Weather • 6 languages" else "AI Vision • Voice • Weather • ৬টি ভাষা",  color = Muted, fontSize = 11.sp) } } }
         }
     }
 }
@@ -220,18 +220,18 @@ private fun FeatureCard(modifier: Modifier, icon: String, title: String, subtitl
 @Composable
 private fun DiagnosisScreen(language: String, selectedImage: Bitmap?, imageSource: ImageSource?, cameraDenied: Boolean, onBack: () -> Unit, onGallery: () -> Unit, onCamera: () -> Unit, onClear: () -> Unit, onAnalyze: () -> Unit, onVoice: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) { Text("‹", fontSize = 36.sp, color = Ink, modifier = Modifier.clickable(onClick = onBack)); Spacer(Modifier.width(8.dp)); Column(Modifier.weight(1f)) { Text("AI Crop Diagnosis", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Ink); Text("ফসলের ছবি দিয়ে সমস্যা শনাক্ত করুন", fontSize = 12.sp, color = Muted) }; Text(language, fontSize = 12.sp, color = KrishiGreen, fontWeight = FontWeight.Bold) }
+        Row(verticalAlignment = Alignment.CenterVertically) { Text("‹", fontSize = 36.sp, color = Ink, modifier = Modifier.clickable(onClick = onBack)); Spacer(Modifier.width(8.dp)); Column(Modifier.weight(1f)) { Text("AI Crop Diagnosis", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Ink); Text(if (language == "English") "Identify crop problems from a photo" else "ফসলের ছবি দিয়ে সমস্যা শনাক্ত করুন",  fontSize = 12.sp, color = Muted) }; Text(language, fontSize = 12.sp, color = KrishiGreen, fontWeight = FontWeight.Bold) }
         Spacer(Modifier.height(18.dp))
         if (selectedImage == null) {
-            Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Column(Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) { Box(Modifier.size(78.dp).clip(RoundedCornerShape(22.dp)).background(KrishiMint), Alignment.Center) { Text("🌱", fontSize = 42.sp) }; Spacer(Modifier.height(12.dp)); Text("ফসলের একটি পরিষ্কার ছবি দিন", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(5.dp)); Text("পাতা, কান্ড বা আক্রান্ত অংশটি কাছ থেকে তুলুন", fontSize = 12.sp, color = Muted, textAlign = TextAlign.Center) } }
-            Spacer(Modifier.height(14.dp)); Text("ছবি বাছাই করুন", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(10.dp)); Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { ImageSourceCard(Modifier.weight(1f), "📷", "ক্যামেরা", "সরাসরি ছবি", KrishiMint, onCamera); ImageSourceCard(Modifier.weight(1f), "🖼️", "গ্যালারি", "ফোনের ছবি", KrishiSky, onGallery) }
+            Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Column(Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) { Box(Modifier.size(78.dp).clip(RoundedCornerShape(22.dp)).background(KrishiMint), Alignment.Center) { Text("🌱", fontSize = 42.sp) }; Spacer(Modifier.height(12.dp)); Text(if (language == "English") "Add a clear crop photo" else "ফসলের একটি পরিষ্কার ছবি দিন",  fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(5.dp)); Text(if (language == "English") "Capture the leaf, stem, or affected area up close" else "পাতা, কান্ড বা আক্রান্ত অংশটি কাছ থেকে তুলুন",  fontSize = 12.sp, color = Muted, textAlign = TextAlign.Center) } }
+            Spacer(Modifier.height(14.dp)); Text(if (language == "English") "Choose an image" else "ছবি বাছাই করুন",  fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(10.dp)); Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { ImageSourceCard(Modifier.weight(1f), "📷", if (language == "English") "Camera" else "ক্যামেরা", if (language == "English") "Take a photo" else "সরাসরি ছবি", KrishiMint, onCamera); ImageSourceCard(Modifier.weight(1f), "🖼️", if (language == "English") "Gallery" else "গ্যালারি", if (language == "English") "Choose from phone" else "ফোনের ছবি", KrishiSky, onGallery) }
             if (cameraDenied) { Spacer(Modifier.height(10.dp)); Text("ক্যামেরা অনুমতি দেওয়া হয়নি। গ্যালারি থেকেও ছবি বেছে নিতে পারেন।", color = Color(0xFF9A5B00), fontSize = 12.sp) }
         } else {
             Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Column(Modifier.padding(12.dp)) { Image(selectedImage.asImageBitmap(), "Selected crop image", Modifier.fillMaxWidth().height(300.dp).clip(RoundedCornerShape(16.dp)), contentScale = ContentScale.Crop); Spacer(Modifier.height(10.dp)); Row(verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("ছবি প্রস্তুত", color = KrishiGreen, fontWeight = FontWeight.Bold, fontSize = 15.sp); Text(sourceLabel(imageSource), color = Muted, fontSize = 11.sp) }; Text("পরিবর্তন করুন", color = KrishiGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable(onClick = onClear)) } } }
             Spacer(Modifier.height(14.dp)); Text("অন্য ছবি ব্যবহার করবেন?", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(9.dp)); Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { OutlinedButton(onClick = onCamera, modifier = Modifier.weight(1f).height(46.dp), shape = RoundedCornerShape(13.dp)) { Text("📷 ক্যামেরা", fontSize = 11.sp) }; OutlinedButton(onClick = onGallery, modifier = Modifier.weight(1f).height(46.dp), shape = RoundedCornerShape(13.dp)) { Text("🖼️ গ্যালারি", fontSize = 11.sp) } }
-            Spacer(Modifier.height(20.dp)); Button(onClick = onAnalyze, modifier = Modifier.fillMaxWidth().height(54.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(KrishiGreen)) { Text("AI দিয়ে বিশ্লেষণ করুন", fontSize = 16.sp, fontWeight = FontWeight.Bold) }; Spacer(Modifier.height(10.dp)); OutlinedButton(onClick = onVoice, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(16.dp)) { Text("🎙️ ভয়েসে পরামর্শ নিন") }
+            Spacer(Modifier.height(20.dp)); Button(onClick = onAnalyze, modifier = Modifier.fillMaxWidth().height(54.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(KrishiGreen)) { Text(if (language == "English") "Analyze with AI" else "AI দিয়ে বিশ্লেষণ করুন",  fontSize = 16.sp, fontWeight = FontWeight.Bold) }; Spacer(Modifier.height(10.dp)); OutlinedButton(onClick = onVoice, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(16.dp)) { Text(if (language == "English") "🎙️ Get voice advisory" else "🎙️ ভয়েসে পরামর্শ নিন") }
         }
-        Spacer(Modifier.height(20.dp)); Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(KrishiMint), modifier = Modifier.fillMaxWidth()) { Text("টিপস: ভালো আলোতে পাতার আক্রান্ত অংশটি কাছ থেকে তুললে AI বিশ্লেষণ আরও পরিষ্কার হতে পারে।", color = KrishiDeep, fontSize = 12.sp, lineHeight = 18.sp, modifier = Modifier.padding(14.dp)) }
+        Spacer(Modifier.height(20.dp)); Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(KrishiMint), modifier = Modifier.fillMaxWidth()) { Text(if (language == "English") "Tip: Take a close, well-lit photo of the affected area for clearer AI analysis." else "টিপস: ভালো আলোতে পাতার আক্রান্ত অংশটি কাছ থেকে তুললে AI বিশ্লেষণ আরও পরিষ্কার হতে পারে।", color = KrishiDeep, fontSize = 12.sp, lineHeight = 18.sp, modifier = Modifier.padding(14.dp)) }
     }
 }
 
@@ -315,16 +315,16 @@ private fun VoiceScreen(language: String, onBack: () -> Unit) {
         launcher.launch(intent)
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
-        TopBar("ভয়েস পরামর্শ", language, onBack)
+        TopBar(if (language == "English") "Voice advisory" else "ভয়েস পরামর্শ", language, onBack)
         Spacer(Modifier.height(20.dp))
         Card(shape=RoundedCornerShape(24.dp), colors=CardDefaults.cardColors(KrishiPurple), modifier=Modifier.fillMaxWidth()) {
             Column(Modifier.padding(25.dp), horizontalAlignment=Alignment.CenterHorizontally) {
                 Text("🎙️", fontSize=55.sp)
                 Spacer(Modifier.height(10.dp))
-                Text(if(listening) "শুনছি…" else "আপনার ফসলের সমস্যা বলুন", fontSize=20.sp, fontWeight=FontWeight.Bold, color=Ink)
+                Text(if(listening) { if (language == "English") "Listening…" else "শুনছি…" } else { if (language == "English") "Describe your crop problem" else "আপনার ফসলের সমস্যা বলুন" }, fontSize=20.sp, fontWeight=FontWeight.Bold, color=Ink)
                 Spacer(Modifier.height(14.dp))
                 Button(onClick=::startListening, enabled=!listening && !loading, colors=ButtonDefaults.buttonColors(KrishiGreen)) {
-                    Text(if(listening) "● শুনছি" else "🎙️ কথা বলা শুরু করুন")
+                    Text(if(listening) { if (language == "English") "● Listening" else "● শুনছি" } else { if (language == "English") "🎙️ Start speaking" else "🎙️ কথা বলা শুরু করুন" })
                 }
             }
         }
@@ -332,7 +332,7 @@ private fun VoiceScreen(language: String, onBack: () -> Unit) {
         if (transcript.isNotBlank()) { Spacer(Modifier.height(15.dp)); ResultCard("📝","আপনি বলেছেন",transcript) }
         if (answer.isNotBlank()) { ResultCard("💡","AI পরামর্শ",answer); OutlinedButton(onClick={ tts.speak(answer, TextToSpeech.QUEUE_FLUSH, null, "openkrishi-advisory") }, modifier=Modifier.fillMaxWidth()){ Text("🔊 আবার শুনুন") } }
         error?.let { Spacer(Modifier.height(10.dp)); Text(it,color=Color(0xFF9A5B00),fontSize=12.sp) }
-        Spacer(Modifier.height(12.dp)); Text("ভয়েস ইনপুট আপনার নির্বাচিত ভাষায় নেওয়া হবে এবং AI পরামর্শ একই ভাষায় দেওয়া হবে।",color=Muted,fontSize=11.sp,textAlign=TextAlign.Center,modifier=Modifier.fillMaxWidth())
+        Spacer(Modifier.height(12.dp)); Text(if (language == "English") "Voice input uses your selected language, and AI advice is returned in the same language." else "ভয়েস ইনপুট আপনার নির্বাচিত ভাষায় নেওয়া হবে এবং AI পরামর্শ একই ভাষায় দেওয়া হবে।",color=Muted,fontSize=11.sp,textAlign=TextAlign.Center,modifier=Modifier.fillMaxWidth())
     }
 }
 
@@ -365,16 +365,16 @@ private fun AdvisoryInputScreen(language:String, query:String, onQuery:(String)-
 }
 
 @Composable
-private fun HistoryScreen(modifier: Modifier) { Column(modifier.fillMaxSize().padding(18.dp)) { Text("ইতিহাস", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(8.dp)); Text("আপনার আগের AI পরামর্শ এখানে দেখা যাবে।", color = Muted, fontSize = 13.sp); Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Text("এখনও কোনো বিশ্লেষণ সংরক্ষিত নেই।", color = Muted, modifier = Modifier.padding(18.dp)) } } }
+private fun HistoryScreen(modifier: Modifier) { Column(modifier.fillMaxSize().padding(18.dp)) { Text("History", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(8.dp)); Text("Your previous AI advice will appear here.", color = Muted, fontSize = 13.sp); Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Text("No saved analyses yet.", color = Muted, modifier = Modifier.padding(18.dp)) } } }
 
 @Composable
 private fun ProfileScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
-        Text("প্রোফাইল", fontSize=24.sp, fontWeight=FontWeight.Bold, color=Ink)
+        Text("Profile", fontSize=24.sp, fontWeight=FontWeight.Bold, color=Ink)
         Spacer(Modifier.height(18.dp))
         Card(shape=RoundedCornerShape(20.dp), colors=CardDefaults.cardColors(Color.White), modifier=Modifier.fillMaxWidth()) {
             Column(Modifier.padding(18.dp)) {
-                Text("🌾 কৃষক প্রোফাইল", fontSize=18.sp, fontWeight=FontWeight.Bold, color=Ink)
+                Text("🌾 Farmer profile", fontSize=18.sp, fontWeight=FontWeight.Bold, color=Ink)
                 Spacer(Modifier.height(8.dp)); Text("নির্বাচিত ভাষা: $language", color=Muted, fontSize=13.sp)
                 Spacer(Modifier.height(12.dp)); Text("ভাষা নির্বাচন করুন", color=Ink, fontWeight=FontWeight.Bold)
                 LANG_OPTIONS.forEach { label ->
