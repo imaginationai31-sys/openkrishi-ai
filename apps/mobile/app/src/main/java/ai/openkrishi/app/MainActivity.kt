@@ -232,7 +232,7 @@ private val RICE_VARIETIES = listOf(
 )
 private val PEANUT_VARIETIES = listOf(
     "JL 24", "GG 20", "TMV 2", "TAG 24", "Kadiri 6", "Kadiri 9", "Kadiri 2",
-    "TAG 24", "ICGS 11", "ICGS 44", "Dharani", "Kadiri Harithandhra", "TMV 7", "VRI 2"
+    "ICGS 11", "ICGS 44", "Dharani", "Kadiri Harithandhra", "TMV 7", "VRI 2"
 )
 private val VEGETABLE_CROPS = listOf(
     "Potato", "Tomato", "Brinjal", "Chilli", "Okra", "Cabbage", "Cauliflower", "Onion",
@@ -245,7 +245,7 @@ private val VEGETABLE_CROPS = listOf(
 private val FLOWER_CROPS = listOf(
     "Rose", "Marigold", "Chrysanthemum", "Jasmine", "Tuberose", "Hibiscus", "Gerbera",
     "Gladiolus", "Lily", "Orchid", "Carnation", "Dahlia", "Aster", "Zinnia",
-    "Petunia", "Gomphrena", "Celosia", "Crossandra", "Anthurium", "Chrysanthemum",
+    "Petunia", "Gomphrena", "Celosia", "Crossandra", "Anthurium",
     "Sunflower", "Calendula", "Portulaca", "Periwinkle", "Rajnigandha"
 )
 
