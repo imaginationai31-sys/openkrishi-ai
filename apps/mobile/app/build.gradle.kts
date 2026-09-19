@@ -19,10 +19,20 @@ android {
     buildFeatures {
         compose = true
     }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2026.08.00")
+    // Compose 1.9.x remains compatible with this project's AGP/compileSdk setup.
+    val composeBom = platform("androidx.compose:compose-bom:2025.11.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
