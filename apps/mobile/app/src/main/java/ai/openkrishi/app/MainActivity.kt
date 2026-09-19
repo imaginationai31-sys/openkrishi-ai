@@ -224,10 +224,30 @@ private val CROP_ITEMS = listOf(
     CropItem("flowers", "Flowers")
 )
 
-private val RICE_VARIETIES = listOf("Basmati", "Sona Masuri", "IR64", "Swarna", "Gobindobhog", "Ponni", "HMT")
-private val PEANUT_VARIETIES = listOf("JL 24", "GG 20", "TMV 2", "TAG 24", "Kadiri 6")
-private val VEGETABLE_CROPS = listOf("Potato", "Tomato", "Brinjal", "Chilli", "Okra", "Cabbage", "Cauliflower", "Onion", "Cucumber", "Pumpkin", "Bitter Gourd", "Bottle Gourd", "Beans", "Peas", "Carrot", "Radish", "Spinach")
-private val FLOWER_CROPS = listOf("Rose", "Marigold", "Chrysanthemum", "Jasmine", "Tuberose", "Hibiscus", "Gerbera", "Gladiolus", "Lily", "Orchid")
+private val RICE_VARIETIES = listOf(
+    "Basmati", "Pusa Basmati 1121", "Pusa Basmati 1509", "Pusa Basmati 1718", "Sona Masuri",
+    "IR64", "Swarna", "Gobindobhog", "Ponni", "HMT", "MTU 1010", "MTU 7029",
+    "Samba Mahsuri", "BPT 5204", "PR 106", "PR 114", "ADT 36", "ADT 43", "ADT 45",
+    "CR 1009", "CR 1009 Sub1", "Jaya", "Jyothi", "Uma", "Kalanamak", "Kala Namak"
+)
+private val PEANUT_VARIETIES = listOf(
+    "JL 24", "GG 20", "TMV 2", "TAG 24", "Kadiri 6", "Kadiri 9", "Kadiri 2",
+    "TAG 24", "ICGS 11", "ICGS 44", "Dharani", "Kadiri Harithandhra", "TMV 7", "VRI 2"
+)
+private val VEGETABLE_CROPS = listOf(
+    "Potato", "Tomato", "Brinjal", "Chilli", "Okra", "Cabbage", "Cauliflower", "Onion",
+    "Cucumber", "Pumpkin", "Bitter Gourd", "Bottle Gourd", "Beans", "Peas", "Carrot",
+    "Radish", "Spinach", "Amaranth", "Beetroot", "Turnip", "Broccoli", "Capsicum",
+    "French Bean", "Cluster Bean", "Drumstick", "Ivy Gourd", "Ridge Gourd", "Snake Gourd",
+    "Ash Gourd", "Pointed Gourd", "Coriander", "Fenugreek", "Sweet Potato", "Yam",
+    "Colocasia", "Garlic", "Ginger", "Green Peas", "Sweet Corn", "Mushroom"
+)
+private val FLOWER_CROPS = listOf(
+    "Rose", "Marigold", "Chrysanthemum", "Jasmine", "Tuberose", "Hibiscus", "Gerbera",
+    "Gladiolus", "Lily", "Orchid", "Carnation", "Dahlia", "Aster", "Zinnia",
+    "Petunia", "Gomphrena", "Celosia", "Crossandra", "Anthurium", "Chrysanthemum",
+    "Sunflower", "Calendula", "Portulaca", "Periwinkle", "Rajnigandha"
+)
 
 private fun cropLabel(crop: String, language: String): String = when (crop) {
     "rice" -> when(language) { "বাংলা" -> "ধান"; "हिन्दी" -> "धान"; "தமிழ்" -> "நெல்"; "ਪੰਜਾਬੀ" -> "ਚੌਲ"; "తెలుగు" -> "వరి"; else -> "Rice" }
