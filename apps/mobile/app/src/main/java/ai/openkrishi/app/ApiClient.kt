@@ -47,7 +47,8 @@ internal object OpenKrishiApi {
         val body = JSONObject().apply {
             put("query", query)
             put("language", languageCode(language))
-            put("crop_category", cropCategory)\n            if (!cropName.isNullOrBlank()) put("crop_name", cropName)
+            put("crop_category", cropCategory)
+            if (!cropName.isNullOrBlank()) put("crop_name", cropName)
         }.toString()
         val connection = (URL("$OPENKRISHI_API_BASE/api/v1/advisory").openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
@@ -122,7 +123,8 @@ internal object OpenKrishiApi {
                 }
                 field("crop_category", cropCategory)
                 field("language", languageCode(language))
-                if (!growthStage.isNullOrBlank()) field("growth_stage", growthStage)\n                if (!cropName.isNullOrBlank()) field("crop_name", cropName)
+                if (!growthStage.isNullOrBlank()) field("growth_stage", growthStage)
+                if (!cropName.isNullOrBlank()) field("crop_name", cropName)
                 out.write("--$boundary\r\n".toByteArray())
                 out.write("Content-Disposition: form-data; name=\"file\"; filename=\"crop.jpg\"\r\n".toByteArray())
                 out.write("Content-Type: image/jpeg\r\n\r\n".toByteArray())
