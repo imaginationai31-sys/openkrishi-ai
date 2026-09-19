@@ -32,6 +32,7 @@ async def vision_assess(
             crop_category=crop_category,
             growth_stage=growth_stage,
             language=language,
+            crop_name=crop_name,
         )
         visual = localize_visual(visual, language)
 
@@ -44,6 +45,7 @@ async def vision_assess(
             query=advisory_query,
             language=language,
             crop_category=crop_category,
+            crop_name=crop_name,
             growth_stage=growth_stage,
             location=location,
         )
