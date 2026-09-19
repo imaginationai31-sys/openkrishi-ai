@@ -61,15 +61,15 @@ def _localize_list(items: list[str], language: str) -> list[str]:
     return [table.get(item, item) for item in items]
 
 
-def generate_advisory(query: str, language: str, crop_category: str | None = None, growth_stage: str | None = None, location: str | None = None) -> dict[str, Any]:
+def generate_advisory(query: str, language: str, crop_category: str | None = None, crop_name: str | None = None, growth_stage: str | None = None, location: str | None = None) -> dict[str, Any]:
     if language not in SUPPORTED_LANGUAGES:
         language = "en"
 
-    crop_label = CROP_LABELS.get(crop_category or "", {}).get(language)
+    crop_label = CROP_LABELS.get(crop_category or "", {}).get(language)\n    crop_display = f"{crop_label} ({crop_name})" if crop_label and crop_name else crop_label
     location_value = location.strip() if location else None
     location_value = location_value or None
 
-    knowledge = get_knowledge(query, crop_category, growth_stage)
+    knowledge_query = f"{crop_name}: {query}" if crop_name else query\n    knowledge = get_knowledge(knowledge_query, crop_category, growth_stage)
     recommendations = _localize_list(list(knowledge["recommendations"]), language)
     uncertainties = _localize_list(list(knowledge["uncertainties"]), language)
     observations = _localize_list(list(knowledge["observations"]), language)
@@ -108,12 +108,12 @@ def generate_advisory(query: str, language: str, crop_category: str | None = Non
 
     if crop_label:
         answer = {
-            "en": f"I understand your question about {crop_label}. I found a possible symptom match and can provide conservative checks based on the information supplied.",
-            "bn": f"{crop_label} নিয়ে আপনার প্রশ্নটি বুঝেছি। দেওয়া তথ্যের ভিত্তিতে একটি সম্ভাব্য উপসর্গের মিল পাওয়া গেছে। নিচে নিরাপদভাবে পরীক্ষা করার কিছু পরামর্শ দেওয়া হলো।",
-            "hi": f"मैंने {crop_label} से जुड़े आपके सवाल को समझ लिया है। दी गई जानकारी के आधार पर एक संभावित लक्षण मिला है। नीचे सुरक्षित जाँच और अगले कदम दिए गए हैं।",
-            "ta": f"{crop_label} பற்றிய உங்கள் கேள்வியைப் புரிந்துகொண்டேன். கொடுக்கப்பட்ட தகவலின் அடிப்படையில் ஒரு சாத்தியமான அறிகுறி காணப்படுகிறது. கீழே பாதுகாப்பான பரிசோதனைகள் மற்றும் அடுத்தடுத்த நடவடிக்கைகள் கொடுக்கப்பட்டுள்ளன.",
-            "pa": f"ਮੈਂ {crop_label} ਬਾਰੇ ਤੁਹਾਡਾ ਸਵਾਲ ਸਮਝ ਲਿਆ ਹੈ। ਦਿੱਤੀ ਜਾਣਕਾਰੀ ਦੇ ਆਧਾਰ 'ਤੇ ਇੱਕ ਸੰਭਾਵੀ ਲੱਛਣ ਮਿਲਦਾ ਹੈ। ਹੇਠਾਂ ਸੁਰੱਖਿਅਤ ਜਾਂਚਾਂ ਅਤੇ ਅਗਲੇ ਕਦਮ ਦਿੱਤੇ ਗਏ ਹਨ।",
-            "te": f"{crop_label} గురించి మీ ప్రశ్నను అర్థం చేసుకున్నాను. ఇచ్చిన సమాచారంలో ఒక సంభావ్య లక్షణం కనిపిస్తోంది. కింద సురక్షితమైన తనిఖీలు మరియు తదుపరి చర్యలు ఇవ్వబడ్డాయి."
+            "en": f"I understand your question about {crop_display}." I found a possible symptom match and can provide conservative checks based on the information supplied.",
+            "bn": f"{crop_display} নিয়ে আপনার প্রশ্নটি বুঝেছি।" দেওয়া তথ্যের ভিত্তিতে একটি সম্ভাব্য উপসর্গের মিল পাওয়া গেছে। নিচে নিরাপদভাবে পরীক্ষা করার কিছু পরামর্শ দেওয়া হলো।",
+            "hi": f"मैंने {crop_display} से जुड़े आपके सवाल को समझ लिया है।" दी गई जानकारी के आधार पर एक संभावित लक्षण मिला है। नीचे सुरक्षित जाँच और अगले कदम दिए गए हैं।",
+            "ta": f"{crop_display} பற்றிய உங்கள் கேள்வியைப் புரிந்துகொண்டேன்." கொடுக்கப்பட்ட தகவலின் அடிப்படையில் ஒரு சாத்தியமான அறிகுறி காணப்படுகிறது. கீழே பாதுகாப்பான பரிசோதனைகள் மற்றும் அடுத்தடுத்த நடவடிக்கைகள் கொடுக்கப்பட்டுள்ளன.",
+            "pa": f"ਮੈਂ {crop_display} ਬਾਰੇ ਤੁਹਾਡਾ ਸਵਾਲ ਸਮਝ ਲਿਆ ਹੈ।" ਦਿੱਤੀ ਜਾਣਕਾਰੀ ਦੇ ਆਧਾਰ 'ਤੇ ਇੱਕ ਸੰਭਾਵੀ ਲੱਛਣ ਮਿਲਦਾ ਹੈ। ਹੇਠਾਂ ਸੁਰੱਖਿਅਤ ਜਾਂਚਾਂ ਅਤੇ ਅਗਲੇ ਕਦਮ ਦਿੱਤੇ ਗਏ ਹਨ।",
+            "te": f"{crop_display} గురించి మీ ప్రశ్నను అర్థం చేసుకున్నాను." ఇచ్చిన సమాచారంలో ఒక సంభావ్య లక్షణం కనిపిస్తోంది. కింద సురక్షితమైన తనిఖీలు మరియు తదుపరి చర్యలు ఇవ్వబడ్డాయి."
         }[language]
     else:
         answer = {
