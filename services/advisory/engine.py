@@ -147,4 +147,6 @@ def generate_advisory(
         "uncertainties": uncertainties,
         "source_references": [],
         "location": location_value,
+        "crop_category": crop_category,
+        "crop_name": crop_name,
     }
