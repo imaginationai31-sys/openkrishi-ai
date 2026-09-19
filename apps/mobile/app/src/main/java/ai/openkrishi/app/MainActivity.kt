@@ -214,7 +214,35 @@ private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String
 }
 
 
-private val CROP_OPTIONS = listOf("rice", "peanut", "vegetables", "flowers")
+private data class CropItem(val id: String, val label: String)
+
+private val CROP_ITEMS = listOf(
+    CropItem("rice", "Rice"),
+    CropItem("peanut", "Peanut"),
+    CropItem("vegetables", "Vegetables"),
+    CropItem("flowers", "Flowers")
+)
+
+private val RICE_VARIETIES = listOf("Basmati", "Sona Masuri", "IR64", "Swarna", "Gobindobhog", "Ponni", "HMT")
+private val PEANUT_VARIETIES = listOf("JL 24", "GG 20", "TMV 2", "TAG 24", "Kadiri 6")
+private val VEGETABLE_CROPS = listOf("Potato", "Tomato", "Brinjal", "Chilli", "Okra", "Cabbage", "Cauliflower", "Onion", "Cucumber", "Pumpkin", "Bitter Gourd", "Bottle Gourd", "Beans", "Peas", "Carrot", "Radish", "Spinach")
+private val FLOWER_CROPS = listOf("Rose", "Marigold", "Chrysanthemum", "Jasmine", "Tuberose", "Hibiscus", "Gerbera", "Gladiolus", "Lily", "Orchid")
+
+private fun cropLabel(crop: String, language: String): String = when (crop) {
+    "rice" -> when(language) { "বাংলা" -> "ধান"; "हिन्दी" -> "धान"; "தமிழ்" -> "நெல்"; "ਪੰਜਾਬੀ" -> "ਚੌਲ"; "తెలుగు" -> "వరి"; else -> "Rice" }
+    "peanut" -> when(language) { "বাংলা" -> "বাদাম"; "हिन्दी" -> "मूंगफली"; "தமிழ்" -> "நிலக்கடலை"; "ਪੰਜਾਬੀ" -> "ਮੂੰਗਫਲੀ"; "తెలుగు" -> "వేరుశెనగ"; else -> "Peanut" }
+    "vegetables" -> when(language) { "বাংলা" -> "সবজি"; "हिन्दी" -> "सब्ज़ियाँ"; "தமிழ்" -> "காய்கறிகள்"; "ਪੰਜਾਬੀ" -> "ਸਬਜ਼ੀਆਂ"; "తెలుగు" -> "కూరగాయలు"; else -> "Vegetables" }
+    "flowers" -> when(language) { "বাংলা" -> "ফুল"; "हिन्दी" -> "फूल"; "தமிழ்" -> "மலர்கள்"; "ਪੰਜਾਬੀ" -> "ਫੁੱਲ"; "తెలుగు" -> "పూలు"; else -> "Flowers" }
+    else -> crop
+}
+
+private fun cropSearchItems(category: String): List<String> = when(category) {
+    "rice" -> RICE_VARIETIES
+    "peanut" -> PEANUT_VARIETIES
+    "vegetables" -> VEGETABLE_CROPS
+    "flowers" -> FLOWER_CROPS
+    else -> emptyList()
+}
 
 private fun cropLabel(crop: String, language: String): String = when (crop) {
     "rice" -> when(language) { "বাংলা" -> "ধান"; "हिन्दी" -> "धान"; "தமிழ்" -> "நெல்"; "ਪੰਜਾਬੀ" -> "ਚੌਲ"; "తెలుగు" -> "వరి"; else -> "Rice" }
@@ -226,16 +254,34 @@ private fun cropLabel(crop: String, language: String): String = when (crop) {
 
 @Composable
 private fun CropSelector(language: String, selectedCrop: String, onCropChange: (String) -> Unit) {
+    var search by remember { mutableStateOf("") }
+    val items = cropSearchItems(selectedCrop)
+    val filtered = items.filter { it.contains(search.trim(), ignoreCase = true) }
+
     Column {
-        Text(if(language=="English") "Select crop category" else "ফসলের বিভাগ নির্বাচন করুন", color=Ink, fontSize=16.sp, fontWeight=FontWeight.Bold)
+        Text(if(language=="English") "Select crop and variety" else "ফসল ও জাত নির্বাচন করুন", color=Ink, fontSize=16.sp, fontWeight=FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         LazyRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-            items(CROP_OPTIONS) { crop ->
+            items(CROP_ITEMS) { item ->
                 FilterChip(
-                    selected = selectedCrop == crop,
-                    onClick = { onCropChange(crop) },
-                    label = { Text(cropLabel(crop, language), fontSize=12.sp) }
+                    selected = selectedCrop == item.id,
+                    onClick = { onCropChange(item.id); search = "" },
+                    label = { Text(cropLabel(item.id, language), fontSize=12.sp) }
                 )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(
+            value=search,
+            onValueChange={ search = it },
+            modifier=Modifier.fillMaxWidth(),
+            singleLine=true,
+            placeholder={ Text(if(language=="English") "Search variety / crop" else "জাত / ফসল খুঁজুন") }
+        )
+        Spacer(Modifier.height(8.dp))
+        LazyRow(horizontalArrangement=Arrangement.spacedBy(7.dp)) {
+            items(filtered) { item ->
+                AssistChip(onClick={ search = item }, label={ Text(item, fontSize=11.sp) })
             }
         }
     }
