@@ -272,8 +272,33 @@ private fun CropSelector(language: String, selectedCrop: String, onCropChange: (
     val items = cropSearchItems(selectedCrop)
     val filtered = items.filter { it.contains(search.trim(), ignoreCase = true) }
 
+    val title = when (language) {
+        "বাংলা" -> "ফসল ও জাত নির্বাচন করুন"
+        "हिन्दी" -> "फसल और किस्म चुनें"
+        "தமிழ்" -> "பயிர் மற்றும் ரகத்தைத் தேர்ந்தெடுக்கவும்"
+        "ਪੰਜਾਬੀ" -> "ਫਸਲ ਅਤੇ ਕਿਸਮ ਚੁਣੋ"
+        "తెలుగు" -> "పంట మరియు రకాన్ని ఎంచుకోండి"
+        else -> "Select crop and variety"
+    }
+    val placeholder = when (language) {
+        "বাংলা" -> "জাত / ফসল খুঁজুন"
+        "हिन्दी" -> "किस्म / फसल खोजें"
+        "தமிழ்" -> "ரகம் / பயிரைத் தேடுங்கள்"
+        "ਪੰਜਾਬੀ" -> "ਕਿਸਮ / ਫਸਲ ਖੋਜੋ"
+        "తెలుగు" -> "రకం / పంటను వెతకండి"
+        else -> "Search variety / crop"
+    }
+    val noResults = when (language) {
+        "বাংলা" -> "কোনও ফল পাওয়া যায়নি"
+        "हिन्दी" -> "कोई परिणाम नहीं मिला"
+        "தமிழ்" -> "முடிவுகள் எதுவும் இல்லை"
+        "ਪੰਜਾਬੀ" -> "ਕੋਈ ਨਤੀਜਾ ਨਹੀਂ ਮਿਲਿਆ"
+        "తెలుగు" -> "ఫలితాలు ఏవీ లేవు"
+        else -> "No matching crop or variety"
+    }
+
     Column {
-        Text(if(language=="English") "Select crop and variety" else "ফসল ও জাত নির্বাচন করুন", color=Ink, fontSize=16.sp, fontWeight=FontWeight.Bold)
+        Text(title, color=Ink, fontSize=16.sp, fontWeight=FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         LazyRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             items(CROP_ITEMS) { item ->
@@ -290,12 +315,19 @@ private fun CropSelector(language: String, selectedCrop: String, onCropChange: (
             onValueChange={ search = it },
             modifier=Modifier.fillMaxWidth(),
             singleLine=true,
-            placeholder={ Text(if(language=="English") "Search variety / crop" else "জাত / ফসল খুঁজুন") }
+            placeholder={ Text(placeholder) }
         )
         Spacer(Modifier.height(8.dp))
-        LazyRow(horizontalArrangement=Arrangement.spacedBy(7.dp)) {
-            items(filtered) { item ->
-                AssistChip(onClick={ search = item; onCropNameChange(item) }, label={ Text(if(selectedCropName==item) "✓ $item" else item, fontSize=11.sp) })
+        if (filtered.isEmpty()) {
+            Text(noResults, color=Muted, fontSize=12.sp, modifier=Modifier.padding(vertical=8.dp))
+        } else {
+            LazyRow(horizontalArrangement=Arrangement.spacedBy(7.dp)) {
+                items(filtered) { item ->
+                    AssistChip(
+                        onClick={ search = item; onCropNameChange(item) },
+                        label={ Text(if(selectedCropName==item) "✓ $item" else item, fontSize=11.sp) }
+                    )
+                }
             }
         }
     }
