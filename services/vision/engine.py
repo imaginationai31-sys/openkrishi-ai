@@ -93,7 +93,7 @@ def assess_crop_image(
 
     client = get_gemini_client()
     language_name = LANGUAGE_NAMES[language]
-    context = f"Crop category: {crop_category or 'unknown'}; growth stage: {growth_stage or 'unknown'}."
+    context = f"Crop category: {crop_category or 'unknown'}; specific crop/variety: {crop_name or 'not specified'}; growth stage: {growth_stage or 'unknown'}."
     prompt = f"""You are a conservative agricultural image-assessment assistant.
 Assess only what is visibly supported by the crop photo.
 Do not claim a definitive disease, pest, nutrient deficiency, or treatment.
