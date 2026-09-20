@@ -1,9 +1,12 @@
 """Conservative multilingual advisory engine with a small crop-knowledge layer."""
 
+import json
+import os
 from typing import Any
 
 from .knowledge import get_knowledge
 from .safety import enforce_advisory_safety
+from services.gemini.client import get_gemini_client, get_model, output_text
 
 SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
 
@@ -65,7 +68,186 @@ def _localize_list(items: list[str], language: str) -> list[str]:
     return [table.get(replacements.get(item, ""), item) for item in items]
 
 
+GEMINI_ADVISORY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "answer": {"type": "string"},
+        "observations": {"type": "array", "items": {"type": "string"}},
+        "recommendations": {"type": "array", "items": {"type": "string"}},
+        "uncertainties": {"type": "array", "items": {"type": "string"}},
+        "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
+    },
+    "required": ["answer", "observations", "recommendations", "uncertainties", "confidence"],
+    "additionalProperties": False,
+}
+
+
+def _generate_gemini_advisory(
+    query: str,
+    language: str,
+    crop_category: str | None = None,
+    crop_name: str | None = None,
+    growth_stage: str | None = None,
+    location: str | None = None,
+) -> dict[str, Any]:
+    """Generate the farmer-facing advisory with Gemini when GEMINI_API_KEY is configured."""
+    language_names = {
+        "en": "English",
+        "bn": "Bengali",
+        "hi": "Hindi",
+        "ta": "Tamil",
+        "pa": "Punjabi",
+        "te": "Telugu",
+    }
+    language_name = language_names[language]
+    crop_label = CROP_LABELS.get(crop_category or "", {}).get("en") or crop_category or "unspecified crop"
+    location_text = location.strip() if location else "not provided"
+    growth_text = growth_stage.strip() if growth_stage else "not provided"
+    crop_text = crop_name.strip() if crop_name else "not specified"
+
+    prompt = f"""You are OpenKrishi AI, a cautious agricultural advisory assistant for Indian farmers.
+
+Answer the farmer's question using the supplied context. This is advisory guidance, not a definitive diagnosis.
+
+FARMER QUERY:
+{query}
+
+CROP CATEGORY: {crop_label}
+SPECIFIC CROP OR VARIETY: {crop_text}
+GROWTH STAGE: {growth_text}
+LOCATION: {location_text}
+
+STRICT SAFETY RULES:
+- Do not claim a disease, pest, nutrient deficiency, or other diagnosis as certain.
+- Describe possible causes only when supported by the farmer's information.
+- Do not prescribe pesticides, insecticides, fungicides, herbicides, chemical sprays, chemical names, application rates, or large fertilizer doses.
+- Give practical low-risk checks and next steps.
+- If important information is missing, state exactly what should be checked or provided.
+- If growth stage is missing, explicitly mention that the growth stage is needed for more specific guidance.
+- If location is provided, acknowledge it but do not invent local weather, soil, pest alerts, or government guidance.
+- If location is not provided, state that local conditions cannot be considered.
+- Keep confidence conservative; use low unless the information is unusually clear.
+- Return ONLY JSON matching the supplied response schema.
+- Every natural-language field MUST be fully written in {language_name}. Do not mix languages.
+- Keep crop and variety names recognizable to farmers.
+
+Return concise but useful observations, safe recommendations, and uncertainties."""
+
+    from google.genai import types
+
+    try:
+        client = get_gemini_client()
+        response = client.models.generate_content(
+            model=get_model(),
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=GEMINI_ADVISORY_SCHEMA,
+                temperature=0.2,
+                max_output_tokens=1200,
+            ),
+        )
+        raw = getattr(response, "text", None) or output_text(response)
+        payload = json.loads(raw)
+        if not isinstance(payload, dict):
+            raise RuntimeError("Gemini returned an invalid advisory format.")
+    except Exception as exc:
+        raise RuntimeError("Gemini advisory provider is temporarily unavailable.") from exc
+
+    answer = str(payload.get("answer") or "").strip()
+    observations = [str(x).strip() for x in payload.get("observations", []) if str(x).strip()][:8]
+    recommendations = [str(x).strip() for x in payload.get("recommendations", []) if str(x).strip()][:8]
+    uncertainties = [str(x).strip() for x in payload.get("uncertainties", []) if str(x).strip()][:8]
+    confidence = payload.get("confidence") if payload.get("confidence") in {"low", "medium", "high"} else "low"
+
+    if not answer:
+        raise RuntimeError("Gemini returned an empty advisory.")
+
+    if location:
+        location_note = {
+            "en": f"Use the supplied location ({location.strip()}) when checking local agricultural extension or agronomy guidance; no local conditions are assumed here.",
+            "bn": f"স্থানীয় কৃষি দপ্তর বা কৃষিবিদদের পরামর্শ দেখার সময় দেওয়া অবস্থান ({location.strip()}) ব্যবহার করুন; এখানে কোনো স্থানীয় পরিস্থিতি ধরে নেওয়া হয়নি।",
+            "hi": f"स्थानीय कृषि विभाग या कृषि विशेषज्ञ की सलाह देखते समय दिए गए स्थान ({location.strip()}) का उपयोग करें; यहाँ स्थानीय परिस्थितियाँ मानकर नहीं चली गई हैं।",
+            "ta": f"உள்ளூர் வேளாண்மை துறை அல்லது வேளாண் நிபுணர் ஆலோசனையைப் பார்க்கும்போது வழங்கப்பட்ட இடத்தை ({location.strip()}) பயன்படுத்தவும்; இங்கு உள்ளூர் நிலைமைகள் கருதப்படவில்லை.",
+            "pa": f"ਸਥਾਨਕ ਖੇਤੀਬਾੜੀ ਵਿਭਾਗ ਜਾਂ ਖੇਤੀ ਮਾਹਿਰ ਦੀ ਸਲਾਹ ਵੇਖਦੇ ਸਮੇਂ ਦਿੱਤੀ ਥਾਂ ({location.strip()}) ਦੀ ਵਰਤੋਂ ਕਰੋ; ਇੱਥੇ ਸਥਾਨਕ ਹਾਲਾਤ ਨਹੀਂ ਮੰਨੇ ਗਏ।",
+            "te": f"స్థానిక వ్యవసాయ శాఖ లేదా వ్యవసాయ నిపుణుల సలహాను పరిశీలించేటప్పుడు ఇచ్చిన ప్రదేశాన్ని ({location.strip()}) ఉపయోగించండి; ఇక్కడ స్థానిక పరిస్థితులను ఊహించలేదు.",
+        }[language]
+        if not any(location.strip().lower() in item.lower() for item in recommendations):
+            recommendations.insert(0, location_note)
+        uncertainties.append({
+            "en": "This advisory does not retrieve live local weather, soil, pest alerts, or region-specific agronomy data.",
+            "bn": "এই পরামর্শে স্থানীয় আবহাওয়া, মাটি, পোকামাকড়ের সতর্কতা বা অঞ্চলভিত্তিক কৃষি তথ্যের লাইভ তথ্য ব্যবহার করা হয়নি।",
+            "hi": "इस सलाह में स्थानीय मौसम, मिट्टी, कीट चेतावनी या क्षेत्र-विशिष्ट कृषि जानकारी का लाइव डेटा उपयोग नहीं किया गया है।",
+            "ta": "இந்த ஆலோசனையில் உள்ளூர் வானிலை, மண், பூச்சி எச்சரிக்கைகள் அல்லது பகுதி சார்ந்த வேளாண்மைத் தகவலின் நேரடி தரவு பயன்படுத்தப்படவில்லை.",
+            "pa": "ਇਸ ਸਲਾਹ ਵਿੱਚ ਸਥਾਨਕ ਮੌਸਮ, ਮਿੱਟੀ, ਕੀੜਿਆਂ ਦੀ ਚੇਤਾਵਨੀ ਜਾਂ ਖੇਤਰ-ਵਿਸ਼ੇਸ਼ ਖੇਤੀਬਾੜੀ ਜਾਣਕਾਰੀ ਦਾ ਲਾਈਵ ਡਾਟਾ ਨਹੀਂ ਵਰਤਿਆ ਗਿਆ।",
+            "te": "ఈ సలహాలో స్థానిక వాతావరణం, నేల, పురుగు హెచ్చరికలు లేదా ప్రాంతానికి సంబంధించిన వ్యవసాయ సమాచారపు ప్రత్యక్ష డేటాను ఉపయోగించలేదు.",
+        }[language])
+    else:
+        uncertainties.append({
+            "en": "Location was not provided; local weather, soil, pest pressure, and regional agronomy guidance cannot be considered.",
+            "bn": "অবস্থান দেওয়া হয়নি; স্থানীয় আবহাওয়া, মাটি, পোকার চাপ এবং অঞ্চলভিত্তিক কৃষি পরামর্শ বিবেচনা করা যাচ্ছে না।",
+            "hi": "स्थान नहीं दिया गया है; इसलिए स्थानीय मौसम, मिट्टी, कीट दबाव और क्षेत्रीय कृषि सलाह पर विचार नहीं किया जा सकता।",
+            "ta": "இடம் வழங்கப்படவில்லை; எனவே உள்ளூர் வானிலை, மண், பூச்சி தாக்கம் மற்றும் பகுதி சார்ந்த வேளாண்மை ஆலோசனையை கருத்தில் கொள்ள முடியாது.",
+            "pa": "ਥਾਂ ਨਹੀਂ ਦਿੱਤੀ ਗਈ; ਇਸ ਲਈ ਸਥਾਨਕ ਮੌਸਮ, ਮਿੱਟੀ, ਕੀੜਿਆਂ ਦੇ ਦਬਾਅ ਅਤੇ ਖੇਤਰੀ ਖੇਤੀਬਾੜੀ ਸਲਾਹ ਨੂੰ ਧਿਆਨ ਵਿੱਚ ਨਹੀਂ ਰੱਖਿਆ ਜਾ ਸਕਦਾ।",
+            "te": "ప్రదేశం ఇవ్వలేదు; కాబట్టి స్థానిక వాతావరణం, నేల, పురుగు ప్రభావం మరియు ప్రాంతీయ వ్యవసాయ సలహాను పరిగణనలోకి తీసుకోలేము.",
+        }[language])
+
+    recommendations, uncertainties, safety = enforce_advisory_safety(
+        recommendations, uncertainties, confidence=confidence
+    )
+
+    return {
+        "answer": answer,
+        "language": language,
+        "confidence": "low" if safety["status"] == "caution" else confidence,
+        "safety": safety,
+        "observations": observations,
+        "recommendations": recommendations,
+        "uncertainties": uncertainties,
+        "source_references": [],
+        "location": location.strip() if location else None,
+        "crop_category": crop_category,
+        "crop_name": crop_name,
+    }
+
+
 def generate_advisory(
+    query: str,
+    language: str,
+    crop_category: str | None = None,
+    crop_name: str | None = None,
+    growth_stage: str | None = None,
+    location: str | None = None,
+) -> dict[str, Any]:
+    """Use Gemini for production advisories, with deterministic fallback before a key is configured."""
+    if language not in SUPPORTED_LANGUAGES:
+        language = "en"
+
+    if os.getenv("GEMINI_API_KEY"):
+        try:
+            return _generate_gemini_advisory(
+                query=query,
+                language=language,
+                crop_category=crop_category,
+                crop_name=crop_name,
+                growth_stage=growth_stage,
+                location=location,
+            )
+        except RuntimeError:
+            if os.getenv("GEMINI_FALLBACK_TO_RULES", "false").lower() != "true":
+                raise
+
+    return _generate_rule_based_advisory(
+        query=query,
+        language=language,
+        crop_category=crop_category,
+        crop_name=crop_name,
+        growth_stage=growth_stage,
+        location=location,
+    )
+
+
+def _generate_rule_based_advisory(
     query: str,
     language: str,
     crop_category: str | None = None,
