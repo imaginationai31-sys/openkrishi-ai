@@ -139,9 +139,11 @@ Return concise but useful observations, safe recommendations, and uncertainties.
 
     client = get_gemini_client()
     models = [get_model()]
-    fallback_model = os.getenv("GEMINI_ADVISORY_FALLBACK_MODEL", "gemini-3.7-flash").strip()
-    if fallback_model and fallback_model not in models:
-        models.append(fallback_model)
+    fallback_model = os.getenv("GEMINI_ADVISORY_FALLBACK_MODEL", "gemini-3.6-flash").strip()
+    fallback_models = [fallback_model, "gemini-3.6-flash", "gemini-3.5-flash-lite"]
+    for candidate_model in fallback_models:
+        if candidate_model and candidate_model not in models:
+            models.append(candidate_model)
 
     last_exc: Exception | None = None
     payload: dict[str, Any] | None = None
@@ -153,7 +155,7 @@ Return concise but useful observations, safe recommendations, and uncertainties.
                     contents=prompt,
                     config=types.GenerateContentConfig(
                         response_mime_type="application/json",
-                        max_output_tokens=1200,
+                        max_output_tokens=2200,
                     ),
                 )
                 raw = getattr(response, "text", None) or output_text(response)
@@ -175,8 +177,8 @@ Return concise but useful observations, safe recommendations, and uncertainties.
 
     if payload is None:
         logger.error(
-            "Gemini advisory unavailable after model retries: primary=%s fallback=%s error=%s",
-            get_model(), fallback_model, last_exc,
+            "Gemini advisory unavailable after model retries: primary=%s fallback_models=%s error=%s",
+            get_model(), models[1:], last_exc,
         )
         raise RuntimeError("Gemini advisory provider is temporarily unavailable.") from last_exc
 
