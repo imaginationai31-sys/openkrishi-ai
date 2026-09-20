@@ -34,3 +34,20 @@ def test_invalid_language_is_rejected() -> None:
         json={"query": "test", "language": "xx"},
     )
     assert response.status_code == 422
+
+
+def test_advisory_selected_crop_variety():
+    response = client.post(
+        "/api/v1/advisory",
+        json={
+            "query": "My plants have yellow leaves.",
+            "language": "en",
+            "crop_category": "rice",
+            "crop_name": "Swarna",
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["crop_category"] == "rice"
+    assert body["crop_name"] == "Swarna"
+    assert "Swarna" in body["answer"]

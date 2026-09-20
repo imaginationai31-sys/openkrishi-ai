@@ -18,6 +18,7 @@ async def vision_assess(
     growth_stage: str | None = Form(default=None),
     language: str = Form(default="en"),
     location: str | None = Form(default=None),
+    crop_name: str | None = Form(default=None),
 ) -> dict[str, Any]:
     """Assess a crop photo and return all farmer-facing text in the selected language."""
     if language not in SUPPORTED_LANGUAGES:
@@ -31,6 +32,7 @@ async def vision_assess(
             crop_category=crop_category,
             growth_stage=growth_stage,
             language=language,
+            crop_name=crop_name,
         )
         visual = localize_visual(visual, language)
 
@@ -43,6 +45,7 @@ async def vision_assess(
             query=advisory_query,
             language=language,
             crop_category=crop_category,
+            crop_name=crop_name,
             growth_stage=growth_stage,
             location=location,
         )
@@ -52,6 +55,7 @@ async def vision_assess(
             "status": visual["status"],
             "image": visual["image"],
             "crop_category": crop_category,
+            "crop_name": crop_name,
             "growth_stage": growth_stage,
             "vision": {
                 "language": language,
