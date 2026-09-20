@@ -761,6 +761,25 @@ weatherError.hidden=true;
 weatherError.textContent='';
 }
 
+function updateHomeWeather(data){
+  const current=data?.current||{};
+  const temp=document.getElementById('homeTemp');
+  const condition=document.getElementById('homeCondition');
+  const place=document.getElementById('homePlace');
+  if(temp){
+    temp.textContent=Number.isFinite(current.temperature_2m)?`${current.temperature_2m} °C`:'—';
+  }
+  if(condition){
+    condition.textContent=getWeatherDescription(current.weather_code);
+  }
+  if(place){
+    const span=place.querySelector('span');
+    if(span) span.textContent=(lastLatitude!==null&&lastLongitude!==null)
+      ? `${Number(lastLatitude).toFixed(4)}, ${Number(lastLongitude).toFixed(4)}`
+      : t('locationNone');
+  }
+}
+
 function renderWeather(data){
 
 const current=data.current||{};
@@ -789,6 +808,7 @@ Number.isFinite(current.wind_speed_10m)
 :'—';
 
 weatherCondition.textContent=getWeatherDescription(current.weather_code);
+updateHomeWeather(data);
 
 const alerts=Array.isArray(data.farm_alerts)
 ?data.farm_alerts
@@ -888,6 +908,7 @@ renderWeather(d);
 
 locationStatus.textContent=
 `📍 ${Number(lat).toFixed(4)}, ${Number(lon).toFixed(4)}`;
+updateHomeWeather(data);
 
 }catch(e){
 
@@ -1307,6 +1328,9 @@ function setWebLanguage(code){
 document.addEventListener('DOMContentLoaded',()=>{
   renderLanguageChips();
   syncHomeUi();
+  setTimeout(()=>{
+    if(lastLatitude===null && typeof getCurrentLocation==='function') getCurrentLocation();
+  },300);
 });
 languageEl?.addEventListener('change',()=>{
   applyLanguage();
