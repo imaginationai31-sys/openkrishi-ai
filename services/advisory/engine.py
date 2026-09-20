@@ -2,11 +2,14 @@
 
 import json
 import os
+import logging
 from typing import Any
 
 from .knowledge import get_knowledge
 from .safety import enforce_advisory_safety
 from services.gemini.client import get_gemini_client, get_model, output_text
+
+logger = logging.getLogger(__name__)
 
 SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
 
@@ -78,7 +81,6 @@ GEMINI_ADVISORY_SCHEMA = {
         "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
     },
     "required": ["answer", "observations", "recommendations", "uncertainties", "confidence"],
-    "additionalProperties": False,
 }
 
 
@@ -152,6 +154,7 @@ Return concise but useful observations, safe recommendations, and uncertainties.
         if not isinstance(payload, dict):
             raise RuntimeError("Gemini returned an invalid advisory format.")
     except Exception as exc:
+        logger.exception("Gemini advisory request failed: model=%s language=%s crop=%s error_type=%s error=%s", get_model(), language, crop_category, type(exc).__name__, exc)
         raise RuntimeError("Gemini advisory provider is temporarily unavailable.") from exc
 
     answer = str(payload.get("answer") or "").strip()
