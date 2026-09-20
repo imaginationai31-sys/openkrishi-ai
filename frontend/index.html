@@ -1256,15 +1256,62 @@ ta:{tag:'உங்கள் பயிர் பிரச்சினையைப
 pa:{tag:'ਆਪਣੀ ਫਸਲ ਦੀ ਸਮੱਸਿਆ ਦੱਸੋ ਅਤੇ ਚਾਹੋ ਤਾਂ ਫੋਟੋ ਜੋੜੋ',hello:'ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਕਿਸਾਨ ਮਿੱਤਰ!',quick:'ਤੁਹਾਡੇ ਲਈ ਤੁਰੰਤ ਮਦਦ',diag:'ਰੋਗ ਜਾਂਚ',diagD:'ਫੋਟੋ ਲੈ ਕੇ ਸਮੱਸਿਆ ਜਾਣੋ',voice:'ਵੌਇਸ',voiceD:'ਬੋਲੋ ਅਤੇ ਜਵਾਬ ਸੁਣੋ',weather:'ਮੌਸਮ',weatherD:'ਮੀਂਹ ਅਤੇ ਚੇਤਾਵਨੀਆਂ',advice:'ਸਲਾਹ',adviceD:'ਖੇਤੀ ਲਈ ਵਰਤੋਂਯੋਗ ਮਾਰਗਦਰਸ਼ਨ',popular:'ਪ੍ਰਸਿੱਧ ਫਸਲਾਂ',farmer:'ਕਿਸਾਨ ਦੀ ਭਾਸ਼ਾ ਵਿੱਚ, ਕਿਸਾਨ ਦੇ ਨਾਲ',farmerSub:'AI Vision • Voice • Weather • 6 ਭਾਸ਼ਾਵਾਂ',home:'ਹੋਮ',history:'ਇਤਿਹਾਸ',profile:'ਪ੍ਰੋਫਾਈਲ'},
 te:{tag:'మీ పంట సమస్యను చెప్పండి; కావాలంటే ఫోటో జోడించండి',hello:'నమస్కారం, రైతు మిత్రమా!',quick:'మీ కోసం త్వరిత సహాయం',diag:'వ్యాధి నిర్ధారణ',diagD:'ఫోటో తీసి సమస్యను తెలుసుకోండి',voice:'వాయిస్',voiceD:'మాట్లాడి సమాధానం వినండి',weather:'వాతావరణం',weatherD:'వర్షం మరియు హెచ్చరికలు',advice:'సలహా',adviceD:'వ్యవసాయానికి ఉపయోగకరమైన మార్గదర్శకం',popular:'ప్రసిద్ధ పంటలు',farmer:'రైతు భాషలో, రైతు పక్కన',farmerSub:'AI Vision • Voice • Weather • 6 భాషలు',home:'హోమ్',history:'చరిత్ర',profile:'ప్రొఫైల్'}
 };
-function syncHomeUi(){
-const l=languageEl?.value||'en',x=homeText[l]||homeText.en;
-const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
-set('tagline',x.tag);set('greeting',x.hello);set('quickDiagnosis',x.diag);set('quickDiagnosisDesc',x.diagD);set('quickVoice',x.voice);set('quickVoiceDesc',x.voiceD);set('quickWeather',x.weather);set('quickWeatherDesc',x.weatherD);set('quickAdvice',x.advice);set('quickAdviceDesc',x.adviceD);set('farmerTitle',x.farmer);set('farmerSub',x.farmerSub);set('languageName',l==='en'?'English':languageEl.options[languageEl.selectedIndex]?.text||l);
-document.querySelector('.content .section-title').textContent=x.quick;
-const titles=document.querySelectorAll('.content .section-title');if(titles[1])titles[1].textContent=x.popular;
-const ns={navHome:x.home,navHistory:x.history,navProfile:x.profile};Object.entries(ns).forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.lastChild.textContent=v});
+const LANGUAGE_OPTIONS=[
+  ['en','English'],
+  ['bn','বাংলা'],
+  ['hi','हिन्दी'],
+  ['ta','தமிழ்'],
+  ['pa','ਪੰਜਾਬੀ'],
+  ['te','తెలుగు']
+];
+
+function renderLanguageChips(){
+  const wrap=document.getElementById('langChips');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  LANGUAGE_OPTIONS.forEach(([code,label])=>{
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='lang-chip'+(languageEl.value===code?' active':'');
+    b.textContent=label;
+    b.dataset.language=code;
+    b.onclick=()=>{
+      languageEl.value=code;
+      languageEl.dispatchEvent(new Event('change',{bubbles:true}));
+    };
+    wrap.appendChild(b);
+  });
 }
-document.addEventListener('DOMContentLoaded',()=>{setTimeout(syncHomeUi,0);languageEl?.addEventListener('change',()=>setTimeout(syncHomeUi,0));});
+
+function syncHomeUi(){
+  const l=languageEl?.value||'en',x=homeText[l]||homeText.en;
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  set('tagline',x.tag);set('greeting',x.hello);set('quickDiagnosis',x.diag);set('quickDiagnosisDesc',x.diagD);
+  set('quickVoice',x.voice);set('quickVoiceDesc',x.voiceD);set('quickWeather',x.weather);set('quickWeatherDesc',x.weatherD);
+  set('quickAdvice',x.advice);set('quickAdviceDesc',x.adviceD);set('farmerTitle',x.farmer);set('farmerSub',x.farmerSub);
+  set('languageName',l==='en'?'English':languageEl.options[languageEl.selectedIndex]?.text||l);
+  const titles=document.querySelectorAll('.content .section-title');
+  if(titles[0])titles[0].textContent=x.quick;
+  if(titles[1])titles[1].textContent=x.popular;
+  const ns={navHome:x.home,navHistory:x.history,navProfile:x.profile};
+  Object.entries(ns).forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.lastChild.textContent=v});
+  document.querySelectorAll('.lang-chip').forEach(b=>b.classList.toggle('active',b.dataset.language===l));
+}
+
+function setWebLanguage(code){
+  if(!LANGUAGE_OPTIONS.some(([c])=>c===code))return;
+  languageEl.value=code;
+  languageEl.dispatchEvent(new Event('change',{bubbles:true}));
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  renderLanguageChips();
+  syncHomeUi();
+});
+languageEl?.addEventListener('change',()=>{
+  applyLanguage();
+  syncHomeUi();
+});
 </script>
 </body>
 </html>
