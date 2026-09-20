@@ -18,6 +18,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,6 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -187,29 +190,285 @@ private fun Context.contentResolverBitmap(uri: android.net.Uri): Bitmap? = runCa
 
 @Composable
 private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit, onDiagnosis: () -> Unit, onVoice: () -> Unit, onWeather: () -> Unit, onAdvice: () -> Unit) {
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Box(Modifier.fillMaxWidth().height(305.dp).background(Brush.verticalGradient(listOf(KrishiDeep, Color(0xFF0B6B45), Color(0xFF65B76B))))) {
-            Column(Modifier.padding(22.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(.15f)), Alignment.Center) { Text("🌿", fontSize = 24.sp) }
-                    Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("OpenKrishi AI", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold); Text(tx(language, "Smart farming • Better tomorrow", "স্মার্ট কৃষি • উন্নত আগামীকাল", "स्मार्ट खेती • बेहतर कल", "ஸ்மார்ட் விவசாயம் • சிறந்த நாளை", "ਸਮਾਰਟ ਖੇਤੀ • ਬਿਹਤਰ ਕੱਲ੍ਹ", "స్మార్ట్ వ్యవసాయం • మంచి రేపు"), color = Color.White.copy(.78f), fontSize = 12.sp) }
-                    Text(language, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).background(Color(0xFFF7FBF8))) {
+        // Light, landscape-inspired header matching the web reference.
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color.White, Color(0xFFF3FAF6), Color(0xFFDFF2E3))
+                    )
+                )
+                .padding(horizontal = 18.dp, vertical = 16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(52.dp), Alignment.Center) { Text("🌱", fontSize = 42.sp) }
+                Spacer(Modifier.width(8.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "OpenKrishi AI",
+                        color = Color(0xFF103F31),
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = (-0.8).sp
+                    )
+                    Text(
+                        "Smart Advice • Healthy Crops • Prosperous Farmers",
+                        color = Color(0xFF5B7068),
+                        fontSize = 11.sp
+                    )
                 }
-                Spacer(Modifier.height(24.dp)); Text(tx(language, "Hello, Farmer!", "নমস্কার, কৃষক বন্ধু!", "नमस्ते, किसान मित्र!", "வணக்கம், விவசாயி நண்பரே!", "ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਕਿਸਾਨ ਮਿੱਤਰ!", "నమస్కారం, రైతు మిత్రమా!"),  color = Color.White, fontSize = 27.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(12.dp)); LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { items(listOf("বাংলা","हिन्दी","தமிழ்","ਪੰਜਾਬੀ","తెలుగు","English")) { label -> FilterChip(selected = language == label, onClick = { onLanguage(label) }, label = { Text(label, fontSize = 10.sp) }) } }
-                Spacer(Modifier.height(7.dp)); Text("আপনার ফসলের সুস্থতা আমাদের লক্ষ্য।\nছবি তুলুন বা কথা বলুন — AI সাহায্য করবে।", color = Color.White.copy(.88f), fontSize = 15.sp, lineHeight = 22.sp)
-                Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White.copy(.97f)), modifier = Modifier.fillMaxWidth()) {
-                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Text("🌤️", fontSize = 35.sp); Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("28°C", color = Ink, fontSize = 24.sp, fontWeight = FontWeight.Bold); Text(tx(language, "Partly cloudy", "আংশিক মেঘলা", "आंशिक बादल", "ஓரளவு மேகமூட்டம்", "ਅੰਸ਼ਿਕ ਬੱਦਲ", "పాక్షికంగా మేఘావృతం"), color = Muted, fontSize = 12.sp) }; Column(horizontalAlignment = Alignment.End) { Text(tx(language, "⌖ Kolkata", "⌖ কলকাতা", "⌖ कोलकाता", "⌖ கொல்கத்தா", "⌖ ਕੋਲਕਾਤਾ", "⌖ కోల్‌కతా"), color = Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold); Text(if (language == "English") "82% humidity" else "82% আর্দ্রতা",  color = Muted, fontSize = 11.sp) } }
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = Color.White,
+                    tonalElevation = 2.dp,
+                    shadowElevation = 2.dp
+                ) {
+                    Text(
+                        "🌐 $language⌄",
+                        color = Color(0xFF187A66),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.White.copy(alpha = .82f))
+                    .padding(11.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("📍", fontSize = 27.sp)
+                Spacer(Modifier.width(8.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Kolkata, West Bengal", color = Color(0xFF177A68), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("22.6011° N, 88.3176° E", color = Muted, fontSize = 10.sp)
+                }
+                Text("🌤️", fontSize = 29.sp)
+                Spacer(Modifier.width(7.dp))
+                Column {
+                    Text("28°C", color = Ink, fontSize = 19.sp, fontWeight = FontWeight.Black)
+                    Text(
+                        tx(language, "Partly Cloudy", "আংশিক মেঘলা", "आंशिक बादल", "ஓரளவு மேகமூட்டம்", "ਅੰਸ਼ਿਕ ਬੱਦਲ", "పాక్షికంగా మేఘావృతం"),
+                        color = Muted,
+                        fontSize = 10.sp
+                    )
                 }
             }
         }
-        Column(Modifier.padding(18.dp)) {
-            Text(if (language == "English") "Quick help for you" else "আপনার জন্য দ্রুত সাহায্য",  color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "⌾", ui(language, "diagnosis"), if (language == "English") "Take a photo to find the problem" else "ছবি তুলে সমস্যা জানুন", KrishiMint, KrishiGreen, onDiagnosis); FeatureCard(Modifier.weight(1f), "♩", ui(language, "voice"), if (language == "English") "Speak and hear the answer" else "কথা বলুন, উত্তর শুনুন", KrishiPurple, Color(0xFF7046C8), onVoice) }
-            Spacer(Modifier.height(12.dp)); Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { FeatureCard(Modifier.weight(1f), "☁", ui(language, "weather"), if (language == "English") "Rain and alerts" else "বৃষ্টি ও সতর্কতা", KrishiSky, Color(0xFF2574C8), onWeather); FeatureCard(Modifier.weight(1f), "✦", ui(language, "advisory"), if (language == "English") "Practical farming guidance" else "চাষের সঠিক গাইড", KrishiAmber, Color(0xFFC48200), onAdvice) }
-            Spacer(Modifier.height(22.dp)); Text(if (language == "English") "Popular crops" else "জনপ্রিয় ফসল",  color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.height(10.dp))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) { items(listOf("🌾\nধান", "🌿\nপাট", "🥜\nবাদাম", "🥬\nসবজি", "🌸\nফুল")) { crop -> Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.width(78.dp)) { Text(crop, Modifier.fillMaxWidth().padding(vertical = 12.dp), textAlign = TextAlign.Center, fontSize = 14.sp, lineHeight = 22.sp) } } }
-            Spacer(Modifier.height(22.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(KrishiMint), modifier = Modifier.fillMaxWidth()) { Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Text("✓", color = KrishiGreen, fontSize = 24.sp, fontWeight = FontWeight.Bold); Spacer(Modifier.width(10.dp)); Column { Text(if (language == "English") "In the farmer's language, by the farmer's side" else "কৃষকের ভাষায়, কৃষকের পাশে",  color = KrishiDeep, fontWeight = FontWeight.Bold, fontSize = 14.sp); Text(if (language == "English") "AI Vision • Voice • Weather • 6 languages" else "AI Vision • Voice • Weather • ৬টি ভাষা",  color = Muted, fontSize = 11.sp) } } }
+
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 14.dp)) {
+            Text(
+                ui(language, "quick_help"),
+                color = Color(0xFF0C6348),
+                fontSize = 21.sp,
+                fontWeight = FontWeight.Black
+            )
+            Spacer(Modifier.height(10.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                FeatureCard(Modifier.weight(1f), FeatureKind.DIAGNOSIS, ui(language, "diagnosis"),
+                    if (language == "English") "Take a photo to find the problem" else "ছবি তুলে সমস্যা জানুন", onDiagnosis)
+                FeatureCard(Modifier.weight(1f), FeatureKind.VOICE, ui(language, "voice"),
+                    if (language == "English") "Speak and hear the answer" else "কথা বলুন, উত্তর শুনুন", onVoice)
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                FeatureCard(Modifier.weight(1f), FeatureKind.WEATHER, ui(language, "weather"),
+                    if (language == "English") "Rain and alerts" else "বৃষ্টি ও সতর্কতা", onWeather)
+                FeatureCard(Modifier.weight(1f), FeatureKind.ADVISORY, ui(language, "advisory"),
+                    if (language == "English") "Practical farming guidance" else "চাষের সঠিক গাইড", onAdvice)
+            }
+
+            Spacer(Modifier.height(18.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(ui(language, "popular"), color = Color(0xFF0C6348), fontSize = 21.sp, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
+                Text("View all crops  →", color = Color(0xFF13745B), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(9.dp))
+
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                items(
+                    listOf(
+                        Triple("🌾", cropLabel("rice", language), Color(0xFFE5F6E9)),
+                        Triple("🥜", cropLabel("peanut", language), Color(0xFFFFF0CE)),
+                        Triple("🥬", cropLabel("vegetables", language), Color(0xFFE6F6D2)),
+                        Triple("🌸", cropLabel("flowers", language), Color(0xFFF1E1FF))
+                    )
+                ) { crop ->
+                    CropVisualCard(
+                        modifier = Modifier.width(150.dp),
+                        emoji = crop.first,
+                        name = crop.second,
+                        background = crop.third
+                    )
+                }
+            }
+        }
+    }
+}
+
+private enum class FeatureKind { DIAGNOSIS, VOICE, WEATHER, ADVISORY }
+
+@Composable
+private fun FeatureCard(
+    modifier: Modifier,
+    kind: FeatureKind,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    val colors = when (kind) {
+        FeatureKind.DIAGNOSIS -> listOf(Color(0xFF69DC2C), Color(0xFF087344))
+        FeatureKind.VOICE -> listOf(Color(0xFFBE62FA), Color(0xFF5430DF))
+        FeatureKind.WEATHER -> listOf(Color(0xFF18BDE9), Color(0xFF087CE5))
+        FeatureKind.ADVISORY -> listOf(Color(0xFFFFC51B), Color(0xFFFF7415))
+    }
+
+    Card(
+        modifier = modifier
+            .height(226.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+    ) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Brush.linearGradient(colors))
+                .padding(13.dp)
+        ) {
+            Column(Modifier.fillMaxSize()) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(124.dp)
+                        .clip(RoundedCornerShape(17.dp))
+                        .background(Color.White.copy(alpha = .09f)),
+                    Alignment.Center
+                ) {
+                    FeatureIllustration(kind)
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(2.dp))
+                Text(subtitle, color = Color.White.copy(.96f), fontSize = 11.sp, lineHeight = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2)
+            }
+            Box(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(Color.White.copy(.22f)),
+                Alignment.Center
+            ) { Text("→", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Light) }
+        }
+    }
+}
+
+@Composable
+private fun FeatureIllustration(kind: FeatureKind) {
+    Canvas(Modifier.fillMaxSize().padding(12.dp)) {
+        val w = size.width
+        val h = size.height
+        when (kind) {
+            FeatureKind.DIAGNOSIS -> {
+                // Camera body + lens + leaf with a disease spot, echoing the reference artwork.
+                drawRoundRect(Color(0xFF1E293B), androidx.compose.ui.geometry.CornerRadius(18f), androidx.compose.ui.geometry.CornerRadius(18f),
+                    topLeft = androidx.compose.ui.geometry.Offset(w*.17f,h*.25f), size = androidx.compose.ui.geometry.Size(w*.66f,h*.48f))
+                drawRoundRect(Color(0xFF0F172A), androidx.compose.ui.geometry.CornerRadius(10f), androidx.compose.ui.geometry.CornerRadius(10f),
+                    topLeft = androidx.compose.ui.geometry.Offset(w*.39f,h*.18f), size = androidx.compose.ui.geometry.Size(w*.22f,h*.12f))
+                drawCircle(Color(0xFF38BDF8), w*.13f, androidx.compose.ui.geometry.Offset(w*.50f,h*.49f))
+                drawCircle(Color(0xFF082F49), w*.075f, androidx.compose.ui.geometry.Offset(w*.50f,h*.49f))
+                drawCircle(Color(0xFF7DD3FC), w*.025f, androidx.compose.ui.geometry.Offset(w*.46f,h*.45f))
+                drawOval(Color(0xFF4ADE80), androidx.compose.ui.geometry.Offset(w*.68f,h*.30f), androidx.compose.ui.geometry.Size(w*.20f,h*.34f))
+                drawCircle(Color(0xFFEAB308), w*.025f, androidx.compose.ui.geometry.Offset(w*.74f,h*.40f))
+                drawCircle(Color(0xFFEAB308), w*.018f, androidx.compose.ui.geometry.Offset(w*.79f,h*.47f))
+            }
+            FeatureKind.VOICE -> {
+                drawCircle(Color.White.copy(.20f), w*.30f, androidx.compose.ui.geometry.Offset(w*.50f,h*.47f))
+                drawRoundRect(Color.White, androidx.compose.ui.geometry.CornerRadius(28f), androidx.compose.ui.geometry.CornerRadius(28f),
+                    topLeft = androidx.compose.ui.geometry.Offset(w*.43f,h*.22f), size = androidx.compose.ui.geometry.Size(w*.14f,h*.47f))
+                val stroke = 6f
+                drawLine(Color.White, androidx.compose.ui.geometry.Offset(w*.50f,h*.69f), androidx.compose.ui.geometry.Offset(w*.50f,h*.83f), strokeWidth=stroke, cap=StrokeCap.Round)
+                drawLine(Color.White, androidx.compose.ui.geometry.Offset(w*.39f,h*.84f), androidx.compose.ui.geometry.Offset(w*.61f,h*.84f), strokeWidth=stroke, cap=StrokeCap.Round)
+                for (i in 0..3) {
+                    val x = w*(.22f + i*.06f)
+                    val hh = h*(.15f + i*.04f)
+                    drawLine(Color.White.copy(.95f), androidx.compose.ui.geometry.Offset(x,h*.52f-hh/2), androidx.compose.ui.geometry.Offset(x,h*.52f+hh/2), strokeWidth=5f, cap=StrokeCap.Round)
+                    val xr = w*(.78f - i*.06f)
+                    drawLine(Color.White.copy(.95f), androidx.compose.ui.geometry.Offset(xr,h*.52f-hh/2), androidx.compose.ui.geometry.Offset(xr,h*.52f+hh/2), strokeWidth=5f, cap=StrokeCap.Round)
+                }
+            }
+            FeatureKind.WEATHER -> {
+                drawCircle(Color(0xFFFFC928), w*.22f, androidx.compose.ui.geometry.Offset(w*.38f,h*.38f))
+                for (i in 0..7) {
+                    val a = Math.toRadians((i*45).toDouble())
+                    val x1=w*.38f+Math.cos(a).toFloat()*w*.29f; val y1=h*.38f+Math.sin(a).toFloat()*h*.29f
+                    val x2=w*.38f+Math.cos(a).toFloat()*w*.38f; val y2=h*.38f+Math.sin(a).toFloat()*h*.38f
+                    drawLine(Color(0xFFFFE15B), androidx.compose.ui.geometry.Offset(x1,y1), androidx.compose.ui.geometry.Offset(x2,y2), strokeWidth=5f, cap=StrokeCap.Round)
+                }
+                drawCircle(Color(0xFFE8F4FF), w*.19f, androidx.compose.ui.geometry.Offset(w*.58f,h*.52f))
+                drawCircle(Color(0xFFF3FAFF), w*.22f, androidx.compose.ui.geometry.Offset(w*.72f,h*.54f))
+                drawRoundRect(Color(0xFFEAF7FF), androidx.compose.ui.geometry.CornerRadius(30f), androidx.compose.ui.geometry.CornerRadius(30f),
+                    topLeft=androidx.compose.ui.geometry.Offset(w*.45f,h*.48f), size=androidx.compose.ui.geometry.Size(w*.40f,h*.22f))
+                for (x in listOf(.55f,.68f,.81f)) {
+                    drawOval(Color(0xFF33D2FF), androidx.compose.ui.geometry.Offset(w*x,h*.74f), androidx.compose.ui.geometry.Size(w*.045f,h*.13f))
+                }
+            }
+            FeatureKind.ADVISORY -> {
+                drawCircle(Color(0xFFFFF4A3), w*.29f, androidx.compose.ui.geometry.Offset(w*.50f,h*.38f))
+                drawCircle(Color(0xFFFFFDE7), w*.24f, androidx.compose.ui.geometry.Offset(w*.50f,h*.38f))
+                drawRoundRect(Color(0xFF374151), androidx.compose.ui.geometry.CornerRadius(8f), androidx.compose.ui.geometry.CornerRadius(8f),
+                    topLeft=androidx.compose.ui.geometry.Offset(w*.43f,h*.55f), size=androidx.compose.ui.geometry.Size(w*.14f,h*.20f))
+                drawLine(Color(0xFF166534), androidx.compose.ui.geometry.Offset(w*.50f,h*.57f), androidx.compose.ui.geometry.Offset(w*.50f,h*.36f), strokeWidth=8f, cap=StrokeCap.Round)
+                drawOval(Color(0xFF39B54A), androidx.compose.ui.geometry.Offset(w*.39f,h*.39f), androidx.compose.ui.geometry.Size(w*.18f,h*.10f))
+                drawOval(Color(0xFF2FA43E), androidx.compose.ui.geometry.Offset(w*.51f,h*.34f), androidx.compose.ui.geometry.Size(w*.18f,h*.10f))
+                drawArc(Color.White, 200f, 140f, false, androidx.compose.ui.geometry.Offset(w*.10f,h*.65f), androidx.compose.ui.geometry.Size(w*.80f,h*.30f), style=androidx.compose.ui.graphics.drawscope.Stroke(width=7f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun CropVisualCard(modifier: Modifier, emoji: String, name: String, background: Color) {
+    Card(
+        modifier = modifier.height(178.dp),
+        shape = RoundedCornerShape(19.dp),
+        colors = CardDefaults.cardColors(background)
+    ) {
+        Column(Modifier.fillMaxSize()) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(126.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.White.copy(.35f), background)
+                        )
+                    ),
+                Alignment.Center
+            ) {
+                Text(emoji, fontSize = 72.sp)
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(name, color = if (name.contains("Flower", true) || name.contains("ফুল")) Color(0xFF6424B2) else Color(0xFF15583E),
+                    fontSize = 17.sp, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f), maxLines=1, overflow=TextOverflow.Ellipsis)
+                Box(Modifier.size(34.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(.35f)), Alignment.Center) {
+                    Text("→", fontSize=21.sp, color=Ink)
+                }
+            }
         }
     }
 }
