@@ -15,6 +15,6 @@ services:
       - key: GEMINI_TTS_MODEL
         value: gemini-3.1-flash-tts-preview
       - key: GEMINI_FALLBACK_TO_RULES
-        value: "false"
+        value: "true"
       - key: GEMINI_ADVISORY_FALLBACK_MODEL
         value: gemini-3.6-flash
