@@ -137,24 +137,48 @@ Return concise but useful observations, safe recommendations, and uncertainties.
 
     from google.genai import types
 
-    try:
-        client = get_gemini_client()
-        response = client.models.generate_content(
-            model=get_model(),
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.2,
-                max_output_tokens=1200,
-            ),
+    client = get_gemini_client()
+    models = [get_model()]
+    fallback_model = os.getenv("GEMINI_ADVISORY_FALLBACK_MODEL", "gemini-3.7-flash").strip()
+    if fallback_model and fallback_model not in models:
+        models.append(fallback_model)
+
+    last_exc: Exception | None = None
+    payload: dict[str, Any] | None = None
+    for model_name in models:
+        for attempt in range(2):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        max_output_tokens=1200,
+                    ),
+                )
+                raw = getattr(response, "text", None) or output_text(response)
+                candidate = json.loads(raw)
+                if not isinstance(candidate, dict):
+                    raise RuntimeError("Gemini returned an invalid advisory format.")
+                payload = candidate
+                break
+            except Exception as exc:
+                last_exc = exc
+                logger.warning(
+                    "Gemini advisory attempt failed: model=%s attempt=%s error_type=%s error=%s",
+                    model_name, attempt + 1, type(exc).__name__, exc,
+                )
+                if attempt == 0 and "503" not in str(exc) and "UNAVAILABLE" not in str(exc):
+                    break
+        if payload is not None:
+            break
+
+    if payload is None:
+        logger.error(
+            "Gemini advisory unavailable after model retries: primary=%s fallback=%s error=%s",
+            get_model(), fallback_model, last_exc,
         )
-        raw = getattr(response, "text", None) or output_text(response)
-        payload = json.loads(raw)
-        if not isinstance(payload, dict):
-            raise RuntimeError("Gemini returned an invalid advisory format.")
-    except Exception as exc:
-        logger.exception("Gemini advisory request failed: model=%s language=%s crop=%s error_type=%s error=%s", get_model(), language, crop_category, type(exc).__name__, exc)
-        raise RuntimeError("Gemini advisory provider is temporarily unavailable.") from exc
+        raise RuntimeError("Gemini advisory provider is temporarily unavailable.") from last_exc
 
     answer = str(payload.get("answer") or "").strip()
     observations = [str(x).strip() for x in payload.get("observations", []) if str(x).strip()][:8]
