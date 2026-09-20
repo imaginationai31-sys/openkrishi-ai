@@ -17,4 +17,4 @@ services:
       - key: GEMINI_FALLBACK_TO_RULES
         value: "false"
       - key: GEMINI_ADVISORY_FALLBACK_MODEL
-        value: gemini-3.7-flash
+        value: gemini-3.6-flash
