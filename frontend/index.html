@@ -144,15 +144,43 @@ lastLatitude=null,
 lastLongitude=null;
 
 const CROP_CATALOG={rice:["Basmati","Pusa Basmati 1121","Pusa Basmati 1509","Pusa Basmati 1718","Sona Masuri","IR64","Swarna","Gobindobhog","Ponni","HMT","MTU 1010","MTU 7029","Samba Mahsuri","BPT 5204","PR 106","PR 114","ADT 36","ADT 43","ADT 45","CR 1009","CR 1009 Sub1","Jaya","Jyothi","Uma","Kalanamak","Kala Namak"],peanut:["JL 24","GG 20","TMV 2","TAG 24","Kadiri 6","Kadiri 9","Kadiri 2","ICGS 11","ICGS 44","Dharani","Kadiri Harithandhra","TMV 7","VRI 2"],vegetables:["Potato","Tomato","Brinjal","Chilli","Okra","Cabbage","Cauliflower","Onion","Cucumber","Pumpkin","Bitter Gourd","Bottle Gourd","Beans","Peas","Carrot","Radish","Spinach","Amaranth","Beetroot","Turnip","Broccoli","Capsicum","French Bean","Cluster Bean","Drumstick","Ivy Gourd","Ridge Gourd","Snake Gourd","Ash Gourd","Pointed Gourd","Coriander","Fenugreek","Sweet Potato","Yam","Colocasia","Garlic","Ginger","Green Peas","Sweet Corn","Mushroom"],flowers:["Rose","Marigold","Chrysanthemum","Jasmine","Tuberose","Hibiscus","Gerbera","Gladiolus","Lily","Orchid","Carnation","Dahlia","Aster","Zinnia","Petunia","Gomphrena","Celosia","Crossandra","Anthurium","Sunflower","Calendula","Portulaca","Periwinkle","Rajnigandha"]};
-function populateCropNames(){if(!cropNameEl)return;const list=CROP_CATALOG[cropEl.value]||[];cropNameEl.innerHTML='<option value="">Select crop</option>'+list.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');cropNameEl.value=cropNameEl.dataset.selected||'';}
-cropEl.addEventListener('change',()=>{cropNameEl.dataset.selected='';populateCropNames();
-const cropHomeEl=document.getElementById('cropHome'), cropHomeNameEl=document.getElementById('cropHomeName');
-function populateHomeCropNames(){if(!cropHomeNameEl)return;const list=CROP_CATALOG[cropHomeEl.value]||[];cropHomeNameEl.innerHTML='<option value="">Select crop</option>'+list.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');}
-function syncHomeCrop(){if(cropHomeEl)cropHomeEl.value=cropEl.value;populateHomeCropNames();if(cropHomeNameEl)cropHomeNameEl.value=cropNameEl.value||'';}
-cropHomeEl?.addEventListener('change',()=>{cropEl.value=cropHomeEl.value;cropEl.dispatchEvent(new Event('change'));populateHomeCropNames();});
-cropHomeNameEl?.addEventListener('change',()=>{cropNameEl.value=cropHomeNameEl.value;cropNameEl.dataset.selected=cropHomeNameEl.value;});
-populateHomeCropNames();});
+function populateCropNames(){
+  if(!cropNameEl)return;
+  const list=CROP_CATALOG[cropEl.value]||[];
+  cropNameEl.innerHTML='<option value="">Select crop</option>'+list.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');
+  cropNameEl.value=cropNameEl.dataset.selected||'';
+}
+const cropHomeEl=document.getElementById('cropHome');
+const cropHomeNameEl=document.getElementById('cropHomeName');
+function populateHomeCropNames(){
+  if(!cropHomeEl||!cropHomeNameEl)return;
+  const list=CROP_CATALOG[cropHomeEl.value]||[];
+  cropHomeNameEl.innerHTML='<option value="">Select crop</option>'+list.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');
+}
+cropEl.addEventListener('change',()=>{
+  cropNameEl.dataset.selected='';
+  populateCropNames();
+  if(cropHomeEl){
+    cropHomeEl.value=cropEl.value;
+    populateHomeCropNames();
+  }
+});
+cropNameEl.addEventListener('change',()=>{
+  cropNameEl.dataset.selected=cropNameEl.value;
+  if(cropHomeNameEl) cropHomeNameEl.value=cropNameEl.value;
+});
+cropHomeEl?.addEventListener('change',()=>{
+  cropEl.value=cropHomeEl.value;
+  populateCropNames();
+  populateHomeCropNames();
+});
+cropHomeNameEl?.addEventListener('change',()=>{
+  cropNameEl.value=cropHomeNameEl.value;
+  cropNameEl.dataset.selected=cropHomeNameEl.value;
+});
 populateCropNames();
+populateHomeCropNames();
+
 const locationButton=document.getElementById('locationButton'),
 locationStatus=document.getElementById('locationStatus'),
 weatherLoading=document.getElementById('weatherLoading'),
