@@ -261,8 +261,12 @@ def generate_advisory(
                 growth_stage=growth_stage,
                 location=location,
             )
-        except RuntimeError:
-            if os.getenv("GEMINI_FALLBACK_TO_RULES", "false").lower() != "true":
+        except RuntimeError as exc:
+            # Keep the API available when Gemini is temporarily capacity-limited (for example 503 UNAVAILABLE).
+            # Gemini remains the primary provider; rules are only an availability fallback.
+            temporary_unavailable = "temporarily unavailable" in str(exc).lower()
+            rules_enabled = os.getenv("GEMINI_FALLBACK_TO_RULES", "true").lower() == "true"
+            if not (rules_enabled or temporary_unavailable):
                 raise
 
     return _generate_rule_based_advisory(
