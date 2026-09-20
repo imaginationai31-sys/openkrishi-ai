@@ -90,6 +90,15 @@ label{display:block;font-weight:700;margin:0 0 7px}select{width:100%;padding:13p
   .crop-info{height:42px;padding:0 8px;font-size:15px;gap:4px}
   .crop-info span{font-size:17px}
 }
+
+/* Remove legacy crop pseudo-art so the real vector artwork occupies the image area cleanly. */
+.crop-card:before{display:none!important;content:none!important}
+.crop-card:after{display:grid!important;content:"→"}
+.crop-art{flex:1 1 auto;min-height:0}
+@media(max-width:760px){
+  .crop-art{height:105px;flex:0 0 105px}
+  .crop-info{height:42px;flex:0 0 42px}
+}
 </style>
 </head>
 
