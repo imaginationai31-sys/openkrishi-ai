@@ -144,7 +144,6 @@ Return concise but useful observations, safe recommendations, and uncertainties.
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
-                response_schema=GEMINI_ADVISORY_SCHEMA,
                 temperature=0.2,
                 max_output_tokens=1200,
             ),
