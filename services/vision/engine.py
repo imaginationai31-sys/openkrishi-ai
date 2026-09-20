@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
 
 from services.gemini.client import get_gemini_client, get_model, output_text
+
+logger = logging.getLogger(__name__)
 
 SUPPORTED_CROPS = {"rice", "peanut", "vegetables", "flowers"}
 SUPPORTED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
@@ -30,7 +33,6 @@ VISION_RESPONSE_SCHEMA = {
         "recommendations": {"type": "array", "items": {"type": "string"}, "description": "Safe next-step checks only."},
     },
     "required": ["observations", "possible_causes", "confidence", "uncertainties", "recommendations"],
-    "additionalProperties": False,
 }
 
 
@@ -109,9 +111,6 @@ Context:
 Analyze the attached crop image. Return only the JSON object matching the response schema."""
 
     try:
-        # Use generateContent for image input. The Gemini Python SDK supports raw
-        # image bytes through Part.from_bytes; this avoids the invalid Interactions
-        # API image-data shape that caused the generic provider-unavailable error.
         from google.genai import types
 
         response = client.models.generate_content(
@@ -120,16 +119,22 @@ Analyze the attached crop image. Return only the JSON object matching the respon
                 types.Part.from_bytes(data=image_bytes, mime_type=normalized_type),
                 prompt,
             ],
-            config={
-                "response_format": {
-                    "text": {
-                        "mime_type": "application/json",
-                        "schema": VISION_RESPONSE_SCHEMA,
-                    }
-                }
-            },
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=VISION_RESPONSE_SCHEMA,
+            ),
         )
     except Exception as exc:
+        logger.exception(
+            "Gemini vision request failed: model=%s mime_type=%s size_bytes=%d crop=%s language=%s error_type=%s error=%s",
+            get_model(),
+            normalized_type,
+            len(image_bytes),
+            crop_category,
+            language,
+            type(exc).__name__,
+            exc,
+        )
         raise RuntimeError("Vision provider is temporarily unavailable.") from exc
 
     raw_text = getattr(response, "text", None) or output_text(response)
