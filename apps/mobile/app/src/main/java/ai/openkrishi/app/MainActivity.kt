@@ -382,10 +382,8 @@ private fun FeatureIllustration(kind: FeatureKind) {
         when (kind) {
             FeatureKind.DIAGNOSIS -> {
                 // Camera body + lens + leaf with a disease spot, echoing the reference artwork.
-                drawRoundRect(Color(0xFF1E293B), androidx.compose.ui.geometry.CornerRadius(18f), androidx.compose.ui.geometry.CornerRadius(18f),
-                    topLeft = androidx.compose.ui.geometry.Offset(w*.17f,h*.25f), size = androidx.compose.ui.geometry.Size(w*.66f,h*.48f))
-                drawRoundRect(Color(0xFF0F172A), androidx.compose.ui.geometry.CornerRadius(10f), androidx.compose.ui.geometry.CornerRadius(10f),
-                    topLeft = androidx.compose.ui.geometry.Offset(w*.39f,h*.18f), size = androidx.compose.ui.geometry.Size(w*.22f,h*.12f))
+                drawRoundRect(color = Color(0xFF1E293B), cornerRadius = androidx.compose.ui.geometry.CornerRadius(18f,18f), topLeft = androidx.compose.ui.geometry.Offset(w*.17f,h*.25f), size = androidx.compose.ui.geometry.Size(w*.66f,h*.48f))
+                drawRoundRect(color = Color(0xFF0F172A), cornerRadius = androidx.compose.ui.geometry.CornerRadius(10f,10f), topLeft = androidx.compose.ui.geometry.Offset(w*.39f,h*.18f), size = androidx.compose.ui.geometry.Size(w*.22f,h*.12f))
                 drawCircle(Color(0xFF38BDF8), w*.13f, androidx.compose.ui.geometry.Offset(w*.50f,h*.49f))
                 drawCircle(Color(0xFF082F49), w*.075f, androidx.compose.ui.geometry.Offset(w*.50f,h*.49f))
                 drawCircle(Color(0xFF7DD3FC), w*.025f, androidx.compose.ui.geometry.Offset(w*.46f,h*.45f))
@@ -395,8 +393,7 @@ private fun FeatureIllustration(kind: FeatureKind) {
             }
             FeatureKind.VOICE -> {
                 drawCircle(Color.White.copy(.20f), w*.30f, androidx.compose.ui.geometry.Offset(w*.50f,h*.47f))
-                drawRoundRect(Color.White, androidx.compose.ui.geometry.CornerRadius(28f), androidx.compose.ui.geometry.CornerRadius(28f),
-                    topLeft = androidx.compose.ui.geometry.Offset(w*.43f,h*.22f), size = androidx.compose.ui.geometry.Size(w*.14f,h*.47f))
+                drawRoundRect(color = Color.White, cornerRadius = androidx.compose.ui.geometry.CornerRadius(28f,28f), topLeft = androidx.compose.ui.geometry.Offset(w*.43f,h*.22f), size = androidx.compose.ui.geometry.Size(w*.14f,h*.47f))
                 val stroke = 6f
                 drawLine(Color.White, androidx.compose.ui.geometry.Offset(w*.50f,h*.69f), androidx.compose.ui.geometry.Offset(w*.50f,h*.83f), strokeWidth=stroke, cap=StrokeCap.Round)
                 drawLine(Color.White, androidx.compose.ui.geometry.Offset(w*.39f,h*.84f), androidx.compose.ui.geometry.Offset(w*.61f,h*.84f), strokeWidth=stroke, cap=StrokeCap.Round)
@@ -418,8 +415,7 @@ private fun FeatureIllustration(kind: FeatureKind) {
                 }
                 drawCircle(Color(0xFFE8F4FF), w*.19f, androidx.compose.ui.geometry.Offset(w*.58f,h*.52f))
                 drawCircle(Color(0xFFF3FAFF), w*.22f, androidx.compose.ui.geometry.Offset(w*.72f,h*.54f))
-                drawRoundRect(Color(0xFFEAF7FF), androidx.compose.ui.geometry.CornerRadius(30f), androidx.compose.ui.geometry.CornerRadius(30f),
-                    topLeft=androidx.compose.ui.geometry.Offset(w*.45f,h*.48f), size=androidx.compose.ui.geometry.Size(w*.40f,h*.22f))
+                drawRoundRect(color = Color(0xFFEAF7FF), cornerRadius = androidx.compose.ui.geometry.CornerRadius(30f,30f), topLeft=androidx.compose.ui.geometry.Offset(w*.45f,h*.48f), size=androidx.compose.ui.geometry.Size(w*.40f,h*.22f))
                 for (x in listOf(.55f,.68f,.81f)) {
                     drawOval(Color(0xFF33D2FF), androidx.compose.ui.geometry.Offset(w*x,h*.74f), androidx.compose.ui.geometry.Size(w*.045f,h*.13f))
                 }
@@ -427,8 +423,7 @@ private fun FeatureIllustration(kind: FeatureKind) {
             FeatureKind.ADVISORY -> {
                 drawCircle(Color(0xFFFFF4A3), w*.29f, androidx.compose.ui.geometry.Offset(w*.50f,h*.38f))
                 drawCircle(Color(0xFFFFFDE7), w*.24f, androidx.compose.ui.geometry.Offset(w*.50f,h*.38f))
-                drawRoundRect(Color(0xFF374151), androidx.compose.ui.geometry.CornerRadius(8f), androidx.compose.ui.geometry.CornerRadius(8f),
-                    topLeft=androidx.compose.ui.geometry.Offset(w*.43f,h*.55f), size=androidx.compose.ui.geometry.Size(w*.14f,h*.20f))
+                drawRoundRect(color = Color(0xFF374151), cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f,8f), topLeft=androidx.compose.ui.geometry.Offset(w*.43f,h*.55f), size=androidx.compose.ui.geometry.Size(w*.14f,h*.20f))
                 drawLine(Color(0xFF166534), androidx.compose.ui.geometry.Offset(w*.50f,h*.57f), androidx.compose.ui.geometry.Offset(w*.50f,h*.36f), strokeWidth=8f, cap=StrokeCap.Round)
                 drawOval(Color(0xFF39B54A), androidx.compose.ui.geometry.Offset(w*.39f,h*.39f), androidx.compose.ui.geometry.Size(w*.18f,h*.10f))
                 drawOval(Color(0xFF2FA43E), androidx.compose.ui.geometry.Offset(w*.51f,h*.34f), androidx.compose.ui.geometry.Size(w*.18f,h*.10f))
