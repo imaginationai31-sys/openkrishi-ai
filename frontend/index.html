@@ -1247,5 +1247,24 @@ stopRecording
 applyLanguage();
 
 </script>
+<script>
+const homeText={
+en:{tag:'Describe your crop problem and optionally add a photo',hello:'Hello, Farmer!',quick:'Quick help for you',diag:'Diagnosis',diagD:'Take a photo to find the problem',voice:'Voice',voiceD:'Speak and hear the answer',weather:'Weather',weatherD:'Rain and alerts',advice:'Advisory',adviceD:'Practical farming guidance',popular:'Popular crops',farmer:"In the farmer's language, by the farmer's side",farmerSub:'AI Vision • Voice • Weather • 6 languages',home:'Home',history:'History',profile:'Profile'},
+bn:{tag:'আপনার ফসলের সমস্যা বলুন এবং চাইলে ছবি যোগ করুন',hello:'নমস্কার, কৃষক বন্ধু!',quick:'আপনার জন্য দ্রুত সাহায্য',diag:'রোগ নির্ণয়',diagD:'ছবি তুলে সমস্যা জানুন',voice:'ভয়েস',voiceD:'কথা বলুন, উত্তর শুনুন',weather:'আবহাওয়া',weatherD:'বৃষ্টি ও সতর্কতা',advice:'পরামর্শ',adviceD:'চাষের সঠিক গাইড',popular:'জনপ্রিয় ফসল',farmer:'কৃষকের ভাষায়, কৃষকের পাশে',farmerSub:'AI Vision • Voice • Weather • ৬টি ভাষা',home:'হোম',history:'ইতিহাস',profile:'প্রোফাইল'},
+hi:{tag:'अपनी फसल की समस्या बताएं और चाहें तो फोटो जोड़ें',hello:'नमस्ते, किसान मित्र!',quick:'आपके लिए त्वरित सहायता',diag:'रोग पहचान',diagD:'फोटो लेकर समस्या जानें',voice:'वॉइस',voiceD:'बोलें और उत्तर सुनें',weather:'मौसम',weatherD:'बारिश और चेतावनी',advice:'सलाह',adviceD:'खेती की उपयोगी सलाह',popular:'लोकप्रिय फसलें',farmer:'किसान की भाषा में, किसान के साथ',farmerSub:'AI Vision • Voice • Weather • ६ भाषाएँ',home:'होम',history:'इतिहास',profile:'प्रोफ़ाइल'},
+ta:{tag:'உங்கள் பயிர் பிரச்சினையைப் பேசுங்கள்; விரும்பினால் புகைப்படம் சேர்க்கவும்',hello:'வணக்கம், விவசாயி நண்பரே!',quick:'உங்களுக்கான விரைவு உதவி',diag:'நோய் கண்டறிதல்',diagD:'புகைப்படம் எடுத்து பிரச்சினையை அறியவும்',voice:'குரல்',voiceD:'பேசி பதிலை கேளுங்கள்',weather:'வானிலை',weatherD:'மழை மற்றும் எச்சரிக்கைகள்',advice:'ஆலோசனை',adviceD:'நடைமுறை விவசாய வழிகாட்டி',popular:'பிரபலமான பயிர்கள்',farmer:'விவசாயியின் மொழியில், விவசாயியின் পাশে',farmerSub:'AI Vision • Voice • Weather • 6 மொழிகள்',home:'முகப்பு',history:'வரலாறு',profile:'சுயவிவரம்'},
+pa:{tag:'ਆਪਣੀ ਫਸਲ ਦੀ ਸਮੱਸਿਆ ਦੱਸੋ ਅਤੇ ਚਾਹੋ ਤਾਂ ਫੋਟੋ ਜੋੜੋ',hello:'ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਕਿਸਾਨ ਮਿੱਤਰ!',quick:'ਤੁਹਾਡੇ ਲਈ ਤੁਰੰਤ ਮਦਦ',diag:'ਰੋਗ ਜਾਂਚ',diagD:'ਫੋਟੋ ਲੈ ਕੇ ਸਮੱਸਿਆ ਜਾਣੋ',voice:'ਵੌਇਸ',voiceD:'ਬੋਲੋ ਅਤੇ ਜਵਾਬ ਸੁਣੋ',weather:'ਮੌਸਮ',weatherD:'ਮੀਂਹ ਅਤੇ ਚੇਤਾਵਨੀਆਂ',advice:'ਸਲਾਹ',adviceD:'ਖੇਤੀ ਲਈ ਵਰਤੋਂਯੋਗ ਮਾਰਗਦਰਸ਼ਨ',popular:'ਪ੍ਰਸਿੱਧ ਫਸਲਾਂ',farmer:'ਕਿਸਾਨ ਦੀ ਭਾਸ਼ਾ ਵਿੱਚ, ਕਿਸਾਨ ਦੇ ਨਾਲ',farmerSub:'AI Vision • Voice • Weather • 6 ਭਾਸ਼ਾਵਾਂ',home:'ਹੋਮ',history:'ਇਤਿਹਾਸ',profile:'ਪ੍ਰੋਫਾਈਲ'},
+te:{tag:'మీ పంట సమస్యను చెప్పండి; కావాలంటే ఫోటో జోడించండి',hello:'నమస్కారం, రైతు మిత్రమా!',quick:'మీ కోసం త్వరిత సహాయం',diag:'వ్యాధి నిర్ధారణ',diagD:'ఫోటో తీసి సమస్యను తెలుసుకోండి',voice:'వాయిస్',voiceD:'మాట్లాడి సమాధానం వినండి',weather:'వాతావరణం',weatherD:'వర్షం మరియు హెచ్చరికలు',advice:'సలహా',adviceD:'వ్యవసాయానికి ఉపయోగకరమైన మార్గదర్శకం',popular:'ప్రసిద్ధ పంటలు',farmer:'రైతు భాషలో, రైతు పక్కన',farmerSub:'AI Vision • Voice • Weather • 6 భాషలు',home:'హోమ్',history:'చరిత్ర',profile:'ప్రొఫైల్'}
+};
+function syncHomeUi(){
+const l=languageEl?.value||'en',x=homeText[l]||homeText.en;
+const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+set('tagline',x.tag);set('greeting',x.hello);set('quickDiagnosis',x.diag);set('quickDiagnosisDesc',x.diagD);set('quickVoice',x.voice);set('quickVoiceDesc',x.voiceD);set('quickWeather',x.weather);set('quickWeatherDesc',x.weatherD);set('quickAdvice',x.advice);set('quickAdviceDesc',x.adviceD);set('farmerTitle',x.farmer);set('farmerSub',x.farmerSub);set('languageName',l==='en'?'English':languageEl.options[languageEl.selectedIndex]?.text||l);
+document.querySelector('.content .section-title').textContent=x.quick;
+const titles=document.querySelectorAll('.content .section-title');if(titles[1])titles[1].textContent=x.popular;
+const ns={navHome:x.home,navHistory:x.history,navProfile:x.profile};Object.entries(ns).forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.lastChild.textContent=v});
+}
+document.addEventListener('DOMContentLoaded',()=>{setTimeout(syncHomeUi,0);languageEl?.addEventListener('change',()=>setTimeout(syncHomeUi,0));});
+</script>
 </body>
 </html>
