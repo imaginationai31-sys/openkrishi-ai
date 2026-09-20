@@ -42,6 +42,7 @@ label{display:block;font-weight:700;margin:0 0 7px}select{width:100%;padding:13p
     </div>
   </div>
   <div class="content">
+    <div class="panel" style="margin-bottom:18px"><h2 class="section-title" style="margin-bottom:8px" id="homeCropTitle">Choose your crop</h2><label id="homeCropCategoryLabel" for="cropHome">Crop category</label><select id="cropHome"><option value="rice">🌾 Rice</option><option value="peanut">🥜 Peanut</option><option value="vegetables">🥬 Vegetables</option><option value="flowers">🌸 Flowers</option></select><label id="homeCropNameLabel" for="cropHomeName">Specific crop</label><select id="cropHomeName"><option value="">Select crop</option></select></div>
     <h2 class="section-title">Quick help for you</h2>
     <div class="grid2">
       <button class="feature green" onclick="showPage('diagnosis')"><div class="icon">⌾</div><strong id="quickDiagnosis">Diagnosis</strong><span id="quickDiagnosisDesc">Take a photo to find the problem</span></button>
@@ -144,7 +145,13 @@ lastLongitude=null;
 
 const CROP_CATALOG={rice:["Basmati","Pusa Basmati 1121","Pusa Basmati 1509","Pusa Basmati 1718","Sona Masuri","IR64","Swarna","Gobindobhog","Ponni","HMT","MTU 1010","MTU 7029","Samba Mahsuri","BPT 5204","PR 106","PR 114","ADT 36","ADT 43","ADT 45","CR 1009","CR 1009 Sub1","Jaya","Jyothi","Uma","Kalanamak","Kala Namak"],peanut:["JL 24","GG 20","TMV 2","TAG 24","Kadiri 6","Kadiri 9","Kadiri 2","ICGS 11","ICGS 44","Dharani","Kadiri Harithandhra","TMV 7","VRI 2"],vegetables:["Potato","Tomato","Brinjal","Chilli","Okra","Cabbage","Cauliflower","Onion","Cucumber","Pumpkin","Bitter Gourd","Bottle Gourd","Beans","Peas","Carrot","Radish","Spinach","Amaranth","Beetroot","Turnip","Broccoli","Capsicum","French Bean","Cluster Bean","Drumstick","Ivy Gourd","Ridge Gourd","Snake Gourd","Ash Gourd","Pointed Gourd","Coriander","Fenugreek","Sweet Potato","Yam","Colocasia","Garlic","Ginger","Green Peas","Sweet Corn","Mushroom"],flowers:["Rose","Marigold","Chrysanthemum","Jasmine","Tuberose","Hibiscus","Gerbera","Gladiolus","Lily","Orchid","Carnation","Dahlia","Aster","Zinnia","Petunia","Gomphrena","Celosia","Crossandra","Anthurium","Sunflower","Calendula","Portulaca","Periwinkle","Rajnigandha"]};
 function populateCropNames(){if(!cropNameEl)return;const list=CROP_CATALOG[cropEl.value]||[];cropNameEl.innerHTML='<option value="">Select crop</option>'+list.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');cropNameEl.value=cropNameEl.dataset.selected||'';}
-cropEl.addEventListener('change',()=>{cropNameEl.dataset.selected='';populateCropNames();});
+cropEl.addEventListener('change',()=>{cropNameEl.dataset.selected='';populateCropNames();
+const cropHomeEl=document.getElementById('cropHome'), cropHomeNameEl=document.getElementById('cropHomeName');
+function populateHomeCropNames(){if(!cropHomeNameEl)return;const list=CROP_CATALOG[cropHomeEl.value]||[];cropHomeNameEl.innerHTML='<option value="">Select crop</option>'+list.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');}
+function syncHomeCrop(){if(cropHomeEl)cropHomeEl.value=cropEl.value;populateHomeCropNames();if(cropHomeNameEl)cropHomeNameEl.value=cropNameEl.value||'';}
+cropHomeEl?.addEventListener('change',()=>{cropEl.value=cropHomeEl.value;cropEl.dispatchEvent(new Event('change'));populateHomeCropNames();});
+cropHomeNameEl?.addEventListener('change',()=>{cropNameEl.value=cropHomeNameEl.value;cropNameEl.dataset.selected=cropHomeNameEl.value;});
+populateHomeCropNames();});
 populateCropNames();
 const locationButton=document.getElementById('locationButton'),
 locationStatus=document.getElementById('locationStatus'),
@@ -1315,7 +1322,7 @@ function syncHomeUi(){
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
   set('tagline',x.tag);set('greeting',x.hello);set('quickDiagnosis',x.diag);set('quickDiagnosisDesc',x.diagD);
   set('quickVoice',x.voice);set('quickVoiceDesc',x.voiceD);set('quickWeather',x.weather);set('quickWeatherDesc',x.weatherD);
-  set('quickAdvice',x.advice);set('quickAdviceDesc',x.adviceD);set('farmerTitle',x.farmer);set('farmerSub',x.farmerSub);
+  set('quickAdvice',x.advice);set('quickAdviceDesc',x.adviceD);set('homeCropTitle',({en:'Choose your crop',bn:'ফসল নির্বাচন করুন',hi:'अपनी फसल चुनें',ta:'உங்கள் பயிரைத் தேர்ந்தெடுக்கவும்',pa:'ਆਪਣੀ ਫਸਲ ਚੁਣੋ',te:'మీ పంటను ఎంచుకోండి'})[l]);set('homeCropCategoryLabel',({en:'Crop category',bn:'ফসলের বিভাগ',hi:'फसल की श्रেণী',ta:'பயிர் வகை',pa:'ਫਸਲ ਦੀ ਸ਼੍ਰੇਣੀ',te:'పంట వర్గం'})[l]);set('homeCropNameLabel',({en:'Specific crop',bn:'নির্দিষ্ট ফসল',hi:'विशिष्ट फसल',ta:'குறிப்பிட்ட பயிர்',pa:'ਖਾਸ ਫਸਲ',te:'నిర్దిష్ట పంట'})[l]);set('farmerTitle',x.farmer);set('farmerSub',x.farmerSub);
   set('languageName',l==='en'?'English':languageEl.options[languageEl.selectedIndex]?.text||l);
   const titles=document.querySelectorAll('.content .section-title');
   if(titles[0])titles[0].textContent=x.quick;
