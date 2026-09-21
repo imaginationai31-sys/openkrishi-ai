@@ -176,7 +176,7 @@ fun OpenKrishiApp() {
                     }
                 ) { padding ->
                     when (tab) {
-                        AppTab.HOME -> HomeScreen(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" }, { screen = "weather"; loadWeather() }, { screen = "advisory" })
+                        AppTab.HOME -> HomeDashboard(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" }, { screen = "weather"; loadWeather() }, { screen = "advisory" })
                         AppTab.HISTORY -> HistoryScreen(Modifier.padding(padding), language)
                         AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language, { language = it })
                     }
