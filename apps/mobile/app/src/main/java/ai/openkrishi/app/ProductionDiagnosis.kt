@@ -26,7 +26,7 @@ private fun dText(language:String, en:String, bn:String, hi:String, ta:String, p
 }
 
 @Composable
-fun ProductionDiagnosisScreen(
+internal fun ProductionDiagnosisScreen(
     language:String, selectedCrop:String, onCropChange:(String)->Unit,
     selectedCropName:String, onCropNameChange:(String)->Unit,
     selectedImage:Bitmap?, imageSource:ImageSource?, cameraDenied:Boolean,
@@ -100,7 +100,7 @@ private fun DiagnosisSourceCard(modifier:Modifier,icon:String,title:String,subti
 }
 
 @Composable
-fun ProductionResultScreen(selectedImage:Bitmap?,selectedCrop:String,selectedCropName:String,language:String,result:AdvisoryResult?,error:String?,analyzing:Boolean,onBack:()->Unit,onRetry:()->Unit,onVoice:()->Unit){
+internal fun ProductionResultScreen(selectedImage:Bitmap?,selectedCrop:String,selectedCropName:String,language:String,result:AdvisoryResult?,error:String?,analyzing:Boolean,onBack:()->Unit,onRetry:()->Unit,onVoice:()->Unit){
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).background(Color(0xFFF6FAF7)).padding(18.dp)){
         Row(verticalAlignment=Alignment.CenterVertically){Text("‹",fontSize=36.sp,color=Ink,modifier=Modifier.clickable(onClick=onBack));Spacer(Modifier.width(8.dp));Text(dText(language,"Diagnosis result","বিশ্লেষণের ফলাফল","विश्लेषण परिणाम","பகுப்பாய்வு முடிவு","ਵਿਸ਼ਲੇਸ਼ਣ ਨਤੀਜਾ","విశ్లేషణ ఫలితం"),fontSize=23.sp,fontWeight=FontWeight.Black,color=KrishiDeep)}
         Spacer(Modifier.height(14.dp))
