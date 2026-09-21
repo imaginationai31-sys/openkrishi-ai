@@ -8,7 +8,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper\nimport org.json.JSONArray\nimport org.json.JSONObject
+import android.os.Looper
+import org.json.JSONArray
+import org.json.JSONObject
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -123,7 +125,9 @@ fun OpenKrishiApp() {
                 Thread {
                     try {
                         val result = OpenKrishiApi.assessImage(selectedImage ?: throw IllegalStateException("No crop image selected."), language, selectedCrop, cropName = selectedCropName)
-                        Handler(Looper.getMainLooper()).post {\n                            advisoryResult = result\n                            historyEntries = addHistory(context, historyEntries, selectedCrop, selectedCropName, "AI advice", result.answer)\n                            analyzing = false\n                        }
+                        Handler(Looper.getMainLooper()).post {
+                            advisoryResult = result
+                            historyEntries = addHistory(context, historyEntries, selectedCrop, selectedCropName, "Crop diagnosis", result.answer)\n                            analyzing = false\n                        }
                     } catch (e: Exception) {
                         Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "OpenKrishi AI से कनेक्ट नहीं हो सका।"; analyzing = false }
                     }
@@ -139,7 +143,9 @@ fun OpenKrishiApp() {
                 Thread {
                     try {
                         val result = OpenKrishiApi.getAdvisory(query, language, selectedCrop, selectedCropName)
-                        Handler(Looper.getMainLooper()).post {\n                            advisoryResult = result\n                            historyEntries = addHistory(context, historyEntries, selectedCrop, selectedCropName, "Crop diagnosis", result.answer)\n                            analyzing = false\n                        }
+                        Handler(Looper.getMainLooper()).post {
+                            advisoryResult = result
+                            historyEntries = addHistory(context, historyEntries, selectedCrop, selectedCropName, "AI advice", result.answer)\n                            analyzing = false\n                        }
                     } catch (e: Exception) {
                         Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "OpenKrishi AI is unavailable."; analyzing = false }
                     }
@@ -770,24 +776,53 @@ private fun HistoryScreen(modifier: Modifier, language: String) { Column(modifie
 
 @Composable
 private fun ProfileScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit) {
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
-        Text(ui(language, "profile"), fontSize=24.sp, fontWeight=FontWeight.Bold, color=Ink)
+    val english = language == "English"
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
+        Text(if(english) "Profile & Settings" else tx(language,"Profile & Settings","প্রোফাইল ও সেটিংস","प्रोफ़ाइल और सेटिंग्स","சுயவிவரம் மற்றும் அமைப்புகள்","ਪ੍ਰੋਫਾਈਲ ਅਤੇ ਸੈਟਿੰਗਾਂ","ప్రొఫైల్ మరియు సెట్టింగ్స్"), color=Ink, fontSize=27.sp, fontWeight=FontWeight.Black)
+        Text(if(english) "Personalize OpenKrishi AI for your farm." else tx(language,"Personalize OpenKrishi AI for your farm.","আপনার খামারের জন্য OpenKrishi AI ব্যক্তিগতভাবে সাজান।","अपने खेत के लिए OpenKrishi AI को अनुकूलित करें।","உங்கள் வயலுக்காக OpenKrishi AI-ஐ தனிப்பயனாக்குங்கள்.","ਤੁਹਾਡੇ ਖੇਤ ਲਈ OpenKrishi AI ਨੂੰ ਨਿੱਜੀ ਬਣਾਓ.","మీ పొలం కోసం OpenKrishi AIని వ్యక్తిగతీకరించండి."), color=Muted, fontSize=12.sp)
         Spacer(Modifier.height(18.dp))
+        Card(shape=RoundedCornerShape(24.dp), colors=CardDefaults.cardColors(Color.White), modifier=Modifier.fillMaxWidth()) {
+            Row(Modifier.padding(18.dp), verticalAlignment=Alignment.CenterVertically) {
+                Box(Modifier.size(62.dp).background(KrishiMint, RoundedCornerShape(20.dp)), Alignment.Center) { Text("👨‍🌾", fontSize=34.sp) }
+                Spacer(Modifier.width(14.dp))
+                Column {
+                    Text(if(english) "Farmer profile" else tx(language,"Farmer profile","কৃষক প্রোফাইল","किसान प्रोफ़ाइल","விவசாயி சுயவிவரம்","ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ","రైతు ప్రొఫైల్"), color=Ink, fontSize=18.sp, fontWeight=FontWeight.Black)
+                    Text(if(english) "Language: $language" else "$language", color=KrishiGreen, fontSize=12.sp, fontWeight=FontWeight.Bold)
+                }
+            }
+        }
+        Spacer(Modifier.height(14.dp))
+        Text(if(english) "App language" else tx(language,"App language","অ্যাপের ভাষা","ऐप की भाषा","பயன்பாட்டு மொழி","ਐਪ ਦੀ ਭਾਸ਼ਾ","యాప్ భాష"), color=Ink, fontSize=18.sp, fontWeight=FontWeight.Black)
+        Spacer(Modifier.height(8.dp))
         Card(shape=RoundedCornerShape(20.dp), colors=CardDefaults.cardColors(Color.White), modifier=Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(18.dp)) {
-                Text(ui(language, "farmer_profile"), fontSize=18.sp, fontWeight=FontWeight.Bold, color=Ink)
-                Spacer(Modifier.height(8.dp)); Text("${ui(language, "select_language")}: $language", color=Muted, fontSize=13.sp)
-                Spacer(Modifier.height(12.dp)); Text(ui(language, "select_language"), color=Ink, fontWeight=FontWeight.Bold)
+            Column(Modifier.padding(12.dp)) {
                 LANG_OPTIONS.forEach { label ->
-                    Row(Modifier.fillMaxWidth().clickable { onLanguage(label) }.padding(vertical=6.dp), verticalAlignment=Alignment.CenterVertically) {
-                        RadioButton(selected=language==label, onClick={onLanguage(label)}); Text(label, color=Ink)
+                    Row(Modifier.fillMaxWidth().clickable { onLanguage(label) }.padding(vertical=5.dp), verticalAlignment=Alignment.CenterVertically) {
+                        RadioButton(selected=language==label, onClick={onLanguage(label)})
+                        Text(label, color=Ink, fontSize=14.sp)
                     }
                 }
             }
         }
+        Spacer(Modifier.height(16.dp))
+        Text(if(english) "Your crop focus" else tx(language,"Your crop focus","আপনার ফসলের বিভাগ","आपकी फसल का फोकस","உங்கள் பயிர் கவனம்","ਤੁਹਾਡੀ ਫਸਲ ਦਾ ਫੋਕਸ","మీ పంట ఫోకస్"), color=Ink, fontSize=18.sp, fontWeight=FontWeight.Black)
+        Spacer(Modifier.height(8.dp))
+        Card(shape=RoundedCornerShape(20.dp), colors=CardDefaults.cardColors(KrishiMint), modifier=Modifier.fillMaxWidth()) {
+            Text(if(english) "Rice • Peanut • Vegetables • Flowers" else tx(language,"Rice • Peanut • Vegetables • Flowers","ধান • চিনাবাদাম • সবজি • ফুল","धान • मूंगफली • सब्जियां • फूल","நெல் • நிலக்கடலை • காய்கறிகள் • மலர்கள்","ਝੋਨਾ • ਮੂੰਗਫਲੀ • ਸਬਜ਼ੀਆਂ • ਫੁੱਲ","వరి • వేరుశెనగ • కూరగాయలు • పూలు"), color=KrishiDeep, fontSize=14.sp, fontWeight=FontWeight.Bold, modifier=Modifier.padding(16.dp))
+        }
+        Spacer(Modifier.height(16.dp))
+        Text(if(english) "Safety & privacy" else tx(language,"Safety & privacy","নিরাপত্তা ও গোপনীয়তা","सुरक्षा और गोपनीयता","பாதுகாப்பு மற்றும் தனியுரிமை","ਸੁਰੱਖਿਆ ਅਤੇ ਪਰਦੇਦਾਰੀ","భద్రత మరియు గోప్యత"), color=Ink, fontSize=18.sp, fontWeight=FontWeight.Black)
+        Spacer(Modifier.height(8.dp))
+        Card(shape=RoundedCornerShape(20.dp), colors=CardDefaults.cardColors(Color.White), modifier=Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp)) {
+                Text(if(english) "AI advice is guidance, not a confirmed diagnosis. Verify important crop-treatment decisions with local agricultural experts." else tx(language,"AI advice is guidance, not a confirmed diagnosis. Verify important crop-treatment decisions with local agricultural experts.","AI পরামর্শ নির্দেশনা মাত্র, নিশ্চিত রোগ নির্ণয় নয়। গুরুত্বপূর্ণ সিদ্ধান্ত স্থানীয় কৃষি বিশেষজ্ঞের সঙ্গে যাচাই করুন।","AI सलाह मार्गदर्शन है, निश्चित निदान नहीं। महत्वपूर्ण निर्णय स्थानीय कृषि विशेषज्ञ से सत्यापित करें।","AI ஆலோசனை வழிகாட்டுதல் மட்டுமே; உறுதியான நோயறிதல் அல்ல. முக்கிய முடிவுகளை உள்ளூர் வேளாண் நிபுணர்களுடன் சரிபார்க்கவும்.","AI ਸਲਾਹ ਮਾਰਗਦਰਸ਼ਨ ਹੈ, ਪੱਕੀ ਬਿਮਾਰੀ ਦੀ ਪਛਾਣ ਨਹੀਂ। ਮਹੱਤਵਪੂਰਨ ਫੈਸਲੇ ਸਥਾਨਕ ਖੇਤੀ ਮਾਹਿਰ ਨਾਲ ਜਾਂਚੋ.","AI సలహా మార్గదర్శకం మాత్రమే, నిర్ధారిత రోగ నిర్ధారణ కాదు. ముఖ్యమైన పంట నిర్ణయాలను స్థానిక వ్యవసాయ నిపుణులతో నిర్ధారించండి."), color=Muted, fontSize=12.sp, lineHeight=18.sp)
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        Text(if(english) "OpenKrishi AI" else "OpenKrishi AI", color=KrishiGreen, fontSize=15.sp, fontWeight=FontWeight.Bold)
+        Text("Vernacular AI Agronomy & Voice Advisory • v0.1.0", color=Muted, fontSize=11.sp)
     }
 }
-
 
 @Composable
 private fun TopBar(title: String, language: String, onBack: () -> Unit) {
