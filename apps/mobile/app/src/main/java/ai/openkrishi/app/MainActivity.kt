@@ -8,7 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper
+import android.os.Looper\nimport org.json.JSONArray\nimport org.json.JSONObject
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -86,6 +86,7 @@ fun OpenKrishiApp() {
             var weatherLoading by remember { mutableStateOf(false) }
             var selectedCrop by remember { mutableStateOf("rice") }
             var selectedCropName by remember { mutableStateOf("") }
+            var historyEntries by remember { mutableStateOf(loadHistory(context)) }
 
             val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
                 if (uri != null) {
@@ -122,7 +123,7 @@ fun OpenKrishiApp() {
                 Thread {
                     try {
                         val result = OpenKrishiApi.assessImage(selectedImage ?: throw IllegalStateException("No crop image selected."), language, selectedCrop, cropName = selectedCropName)
-                        Handler(Looper.getMainLooper()).post { advisoryResult = result; analyzing = false }
+                        Handler(Looper.getMainLooper()).post {\n                            advisoryResult = result\n                            historyEntries = addHistory(context, historyEntries, selectedCrop, selectedCropName, "AI advice", result.answer)\n                            analyzing = false\n                        }
                     } catch (e: Exception) {
                         Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "OpenKrishi AI से कनेक्ट नहीं हो सका।"; analyzing = false }
                     }
@@ -138,7 +139,7 @@ fun OpenKrishiApp() {
                 Thread {
                     try {
                         val result = OpenKrishiApi.getAdvisory(query, language, selectedCrop, selectedCropName)
-                        Handler(Looper.getMainLooper()).post { advisoryResult = result; analyzing = false }
+                        Handler(Looper.getMainLooper()).post {\n                            advisoryResult = result\n                            historyEntries = addHistory(context, historyEntries, selectedCrop, selectedCropName, "Crop diagnosis", result.answer)\n                            analyzing = false\n                        }
                     } catch (e: Exception) {
                         Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "OpenKrishi AI is unavailable."; analyzing = false }
                     }
@@ -177,7 +178,7 @@ fun OpenKrishiApp() {
                 ) { padding ->
                     when (tab) {
                         AppTab.HOME -> HomeDashboard(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" }, { screen = "weather"; loadWeather() }, { screen = "advisory" })
-                        AppTab.HISTORY -> HistoryScreen(Modifier.padding(padding), language)
+                        AppTab.HISTORY -> ProductionHistoryScreen(Modifier.padding(padding), language, historyEntries, { historyEntries = emptyList(); saveHistory(context, historyEntries) })
                         AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language, { language = it })
                     }
                 }
