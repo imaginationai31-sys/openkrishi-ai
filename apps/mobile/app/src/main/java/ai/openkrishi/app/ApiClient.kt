@@ -64,10 +64,17 @@ internal object OpenKrishiApi {
             val text = readResponse(connection)
             if (code !in 200..299) throw IllegalStateException("API request failed ($code)")
             val json = JSONObject(text)
+            fun list(key: String): List<String> {
+                val array = json.optJSONArray(key) ?: return emptyList()
+                return (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) }
+            }
             AdvisoryResult(
                 answer = json.optString("answer", "No advisory was returned."),
                 confidence = json.optString("confidence", "unknown"),
                 safety = json.optString("safety", "unknown"),
+                observations = list("observations"),
+                possibleCauses = list("possible_causes"),
+                recommendations = list("recommendations"),
                 cropCategory = json.optString("crop_category", cropCategory)
             )
         } finally {
