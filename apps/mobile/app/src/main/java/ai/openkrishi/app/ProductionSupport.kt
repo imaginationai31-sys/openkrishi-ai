@@ -95,3 +95,11 @@ fun addHistory(context: Context, current: List<HistoryEntry>, crop: String, crop
     saveHistory(context, result)
     return result
 }
+
+
+fun ui(language: String, key: String): String = when (key) {
+    "home" -> tx(language, "Home", "হোম", "होम", "முகப்பு", "ਹੋਮ", "హోమ్")
+    "history" -> tx(language, "History", "ইতিহাস", "इतिहास", "வரலாறு", "ਇਤਿਹਾਸ", "చరిత్ర")
+    "profile" -> tx(language, "Profile", "প্রোফাইল", "प्रोफ़ाइल", "சுயவிவரம்", "ਪ੍ਰੋਫਾਈਲ", "ప్రొఫైల్")
+    else -> key
+}
