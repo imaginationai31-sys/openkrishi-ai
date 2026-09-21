@@ -163,7 +163,7 @@ fun OpenKrishiApp() {
                 }, ::analyze, { screen = "voice" })
                 "result" -> ProductionResultScreen(selectedImage, selectedCrop, selectedCropName, language, advisoryResult, advisoryError, analyzing, { screen = "diagnosis" }, ::analyze, { screen = "voice" })
                 "advisory" -> if (advisoryResult == null && !analyzing) AdvisoryInputScreen(language, selectedCrop, { selectedCrop = it; selectedCropName = "" }, selectedCropName, { selectedCropName = it }, advisoryQuery, { advisoryQuery = it }, ::askAdvisory) { screen = "home" } else ResultScreen(null, selectedCrop, selectedCropName, language, advisoryResult, advisoryError, analyzing, { screen = "home" }, { askAdvisory(advisoryQuery) }, { screen = "voice" })
-                "weather" -> WeatherScreen(language, weather, weatherLoading, ::loadWeather) { screen = "home" }
+                "weather" -> ProductionWeatherScreen(language, weather, weatherLoading, ::loadWeather) { screen = "home" }
                 "voice" -> ProductionVoiceScreen(language, selectedCrop, selectedCropName) { screen = "home" }
                 else -> Scaffold(
                     containerColor = Color(0xFFF6FAF7),
