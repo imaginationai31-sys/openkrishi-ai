@@ -158,10 +158,10 @@ fun OpenKrishiApp() {
             }
 
             when (screen) {
-                "diagnosis" -> DiagnosisScreen(language, selectedCrop, { selectedCrop = it; selectedCropName = "" }, selectedCropName, { selectedCropName = it }, selectedImage, imageSource, cameraDenied, { screen = "home" }, { galleryLauncher.launch("image/*") }, ::openCamera, {
+                "diagnosis" -> ProductionDiagnosisScreen(language, selectedCrop, { selectedCrop = it; selectedCropName = "" }, selectedCropName, { selectedCropName = it }, selectedImage, imageSource, cameraDenied, { screen = "home" }, { galleryLauncher.launch("image/*") }, ::openCamera, {
                     selectedImage = null; imageSource = null; advisoryResult = null; advisoryError = null
                 }, ::analyze, { screen = "voice" })
-                "result" -> ResultScreen(selectedImage, selectedCrop, selectedCropName, language, advisoryResult, advisoryError, analyzing, { screen = "diagnosis" }, ::analyze, { screen = "voice" })
+                "result" -> ProductionResultScreen(selectedImage, selectedCrop, selectedCropName, language, advisoryResult, advisoryError, analyzing, { screen = "diagnosis" }, ::analyze, { screen = "voice" })
                 "advisory" -> if (advisoryResult == null && !analyzing) AdvisoryInputScreen(language, selectedCrop, { selectedCrop = it; selectedCropName = "" }, selectedCropName, { selectedCropName = it }, advisoryQuery, { advisoryQuery = it }, ::askAdvisory) { screen = "home" } else ResultScreen(null, selectedCrop, selectedCropName, language, advisoryResult, advisoryError, analyzing, { screen = "home" }, { askAdvisory(advisoryQuery) }, { screen = "voice" })
                 "weather" -> WeatherScreen(language, weather, weatherLoading, ::loadWeather) { screen = "home" }
                 "voice" -> VoiceScreen(language, selectedCrop, { selectedCrop = it; selectedCropName = "" }, selectedCropName, { selectedCropName = it }) { screen = "home" }
