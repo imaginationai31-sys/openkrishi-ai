@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-internal internal fun ProductionWeatherScreen(language: String, weather: WeatherResult?, loading: Boolean, onRefresh: () -> Unit, onBack: () -> Unit) {
+internal fun ProductionWeatherScreen(language: String, weather: WeatherResult?, loading: Boolean, onRefresh: () -> Unit, onBack: () -> Unit) {
     val english = language == "English"
     val title = if (english) "Weather & Farm Alerts" else tx(language, "Weather & Farm Alerts", "আবহাওয়া ও কৃষি সতর্কতা", "मौसम और कृषि चेतावनी", "வானிலை மற்றும் விவசாய எச்சரிக்கைகள்", "ਮੌਸਮ ਅਤੇ ਖੇਤੀ ਚੇਤਾਵਨੀਆਂ", "వాతావరణం మరియు వ్యవసాయ హెచ్చరికలు")
     Column(Modifier.fillMaxSize().background(Color(0xFFF6FAF7)).verticalScroll(rememberScrollState()).padding(16.dp)) {
