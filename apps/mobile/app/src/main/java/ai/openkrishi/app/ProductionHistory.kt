@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun ProductionHistoryScreen(
+internal fun ProductionHistoryScreen(
     modifier: Modifier,
     language: String,
     entries: List<HistoryEntry>,
