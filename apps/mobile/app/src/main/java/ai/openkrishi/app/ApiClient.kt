@@ -20,12 +20,22 @@ internal data class AdvisoryResult(
 )
 
 
+internal data class DailyForecast(
+    val date: String,
+    val maxTemp: String,
+    val minTemp: String,
+    val rainProbability: String,
+    val rainMm: String,
+    val windKmh: String
+)
+
 internal data class WeatherResult(
     val temperature: String,
     val description: String,
     val humidity: String,
     val location: String,
-    val alert: String
+    val alert: String,
+    val forecast: List<DailyForecast> = emptyList()
 )
 
 private fun languageCode(language: String): String = when (language) {
@@ -95,7 +105,20 @@ internal object OpenKrishiApi {
                 description = current.optString("weather_description", "Weather unavailable"),
                 humidity = current.optString("relative_humidity_2m", "--") + "%",
                 location = String.format(Locale.US, "%.3f, %.3f", location.optDouble("latitude", latitude), location.optDouble("longitude", longitude)),
-                alert = json.optString("farm_alert", "No major farm alert.")
+                alert = json.optString("farm_alert", "No major farm alert."),
+                forecast = (json.optJSONArray("forecast") ?: org.json.JSONArray()).let { arr ->
+                    (0 until arr.length()).mapNotNull { i ->
+                        val d = arr.optJSONObject(i) ?: return@mapNotNull null
+                        DailyForecast(
+                            date = d.optString("date", "--"),
+                            maxTemp = d.optString("temperature_max_c", "--") + "°C",
+                            minTemp = d.optString("temperature_min_c", "--") + "°C",
+                            rainProbability = d.optString("precipitation_probability_max_pct", "--") + "%",
+                            rainMm = d.optString("precipitation_sum_mm", "--") + " mm",
+                            windKmh = d.optString("wind_speed_max_kmh", "--") + " km/h"
+                        )
+                    }
+                }
             )
         } finally { connection.disconnect() }
     }

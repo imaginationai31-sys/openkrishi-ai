@@ -49,14 +49,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 
-private val KrishiGreen = Color(0xFF087443)
-private val KrishiDeep = Color(0xFF063D2A)
-private val KrishiMint = Color(0xFFE6F6EC)
-private val KrishiSky = Color(0xFFEAF5FF)
-private val KrishiPurple = Color(0xFFF1EAFF)
-private val KrishiAmber = Color(0xFFFFF4D8)
-private val Ink = Color(0xFF13231B)
-private val Muted = Color(0xFF66736B)
+val KrishiGreen = Color(0xFF087443)
+val KrishiDeep = Color(0xFF063D2A)
+val KrishiMint = Color(0xFFE6F6EC)
+val KrishiSky = Color(0xFFEAF5FF)
+val KrishiPurple = Color(0xFFF1EAFF)
+val KrishiAmber = Color(0xFFFFF4D8)
+val Ink = Color(0xFF13231B)
+val Muted = Color(0xFF66736B)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -511,7 +511,7 @@ private val FLOWER_CROPS = listOf(
 )
 
 
-private fun tx(language: String, en: String, bn: String, hi: String, ta: String, pa: String, te: String): String = when (language) {
+fun tx(language: String, en: String, bn: String, hi: String, ta: String, pa: String, te: String): String = when (language) {
     "বাংলা" -> bn; "हिन्दी" -> hi; "தமிழ்" -> ta; "ਪੰਜਾਬੀ" -> pa; "తెలుగు" -> te; else -> en
 }
 
@@ -825,7 +825,7 @@ private fun ProfileScreen(modifier: Modifier, language: String, onLanguage: (Str
 }
 
 @Composable
-private fun TopBar(title: String, language: String, onBack: () -> Unit) {
+fun TopBar(title: String, language: String, onBack: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         Text("‹", fontSize = 36.sp, color = Ink, modifier = Modifier.clickable(onClick = onBack))
         Spacer(Modifier.width(8.dp))
