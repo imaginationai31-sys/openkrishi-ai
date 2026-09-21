@@ -27,7 +27,7 @@ val KrishiAmber = Color(0xFFFFF4D8)
 val Ink = Color(0xFF13231B)
 val Muted = Color(0xFF66736B)
 
-internal enum class ImageSource { CAMERA, GALLERY }
+enum class ImageSource { CAMERA, GALLERY }
 
 fun tx(language: String, en: String, bn: String, hi: String, ta: String, pa: String, te: String): String = when (language) {
     "বাংলা" -> bn
@@ -56,7 +56,7 @@ fun TopBar(title: String, language: String, onBack: () -> Unit) {
     }
 }
 
-internal data class HistoryEntry(
+data class HistoryEntry(
     val crop: String,
     val cropName: String,
     val type: String,
