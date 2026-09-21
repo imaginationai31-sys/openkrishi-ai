@@ -244,8 +244,10 @@ private fun OpenKrishiApp() {
                 }
             ) { padding ->
                 when (tab) {
-                    AppTab.HOME -> HomeScreen(Modifier.padding(padding), language, { language = it }, {
-                        selectedCrop = "rice"; selectedCropName = "Basmati"; screen = Screen.DIAGNOSIS
+                    AppTab.HOME -> HomeScreen(Modifier.padding(padding), language, { language = it }, { crop ->
+                        selectedCrop = crop
+                        selectedCropName = cropOptions(crop).firstOrNull().orEmpty()
+                        screen = Screen.DIAGNOSIS
                     }, { screen = Screen.VOICE }, ::loadWeather, { screen = Screen.ADVISORY })
                     AppTab.HISTORY -> HistoryScreen(Modifier.padding(padding), language, history)
                     AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language, { language = it })
@@ -294,9 +296,9 @@ private fun OnboardingScreen(language: String, onLanguage: (String) -> Unit, onC
                 items(LANG_OPTIONS) { option -> FilterChip(selected = language == option, onClick = { onLanguage(option) }, label = { Text(option, fontSize = 11.sp) }) }
             }
             Spacer(Modifier.height(22.dp))
-            FeatureLine("📷", "Photo diagnosis")
-            FeatureLine("🎙️", "Voice advice")
-            FeatureLine("☀️", "Weather alerts")
+            FeatureLine("📷", tx(language, "Photo diagnosis", "ছবি দিয়ে বিশ্লেষণ", "फोटो से विश्लेषण", "புகைப்பட ஆய்வு", "ਤਸਵੀਰ ਨਾਲ ਵਿਸ਼ਲੇਸ਼ਣ", "ఫోటో విశ్లేషణ"))
+            FeatureLine("🎙️", tx(language, "Voice advice", "ভয়েস পরামর্শ", "वॉइस सलाह", "குரல் ஆலோசனை", "ਵੌਇਸ ਸਲਾਹ", "వాయిస్ సలహా"))
+            FeatureLine("☀️", tx(language, "Weather alerts", "আবহাওয়া সতর্কতা", "मौसम चेतावनी", "வானிலை எச்சரிக்கை", "ਮੌਸਮ ਚੇਤਾਵਨੀਆਂ", "వాతావరణ హెచ్చరికలు"))
             Spacer(Modifier.height(22.dp))
             Button(onClick = onContinue, modifier = Modifier.fillMaxWidth().height(54.dp), shape = RoundedCornerShape(18.dp)) {
                 Text(tx(language, "Get started", "শুরু করুন", "शुरू करें", "தொடங்குங்கள்", "ਸ਼ੁਰੂ ਕਰੋ", "ప్రారంభించండి"), fontWeight = FontWeight.Bold)
@@ -317,7 +319,7 @@ private fun FeatureLine(icon: String, text: String) {
 }
 
 @Composable
-private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit, onDiagnosis: () -> Unit, onVoice: () -> Unit, onWeather: () -> Unit, onAdvice: () -> Unit) {
+private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit, onDiagnosis: (String) -> Unit, onVoice: () -> Unit, onWeather: () -> Unit, onAdvice: () -> Unit) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Box(Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(DeepGreen, Green, Color(0xFF78BE72)))) ) {
             Column(Modifier.padding(18.dp)) {
@@ -357,7 +359,7 @@ private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String
             Text(tx(language, "Everything you need", "আপনার দরকারি সবকিছু", "आपके लिए सभी ज़रूरी सुविधाएँ", "உங்களுக்கு தேவையான அனைத்தும்", "ਤੁਹਾਡੀ ਲੋੜ ਦੀ ਹਰ ਚੀਜ਼", "మీకు కావాల్సిన ప్రతిదీ"), color = Ink, fontSize = 19.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                FeatureCard(Modifier.weight(1f), "📷", ui(language, "diagnosis"), tx(language, "Scan a crop photo", "ফসলের ছবি স্ক্যান করুন", "फसल की फोटो स्कैन करें", "பயிர் புகைப்படத்தை ஸ்கேன் செய்யுங்கள்", "ਫਸਲ ਦੀ ਤਸਵੀਰ ਸਕੈਨ ਕਰੋ", "పంట ఫోటో స్కాన్ చేయండి"), Mint, onDiagnosis)
+                FeatureCard(Modifier.weight(1f), "📷", ui(language, "diagnosis"), tx(language, "Scan a crop photo", "ফসলের ছবি স্ক্যান করুন", "फसल की फोटो स्क্যান करें", "பயிர் புகைப்படத்தை ஸ்கேன் செய்யுங்கள்", "ਫਸਲ ਦੀ ਤਸਵੀਰ ਸਕੈਨ ਕਰੋ", "పంట ఫోటో స్కాన్ చేయండి"), Mint, { onDiagnosis("rice") })
                 FeatureCard(Modifier.weight(1f), "🎙️", ui(language, "voice"), tx(language, "Speak and hear AI advice", "কথা বলুন, AI পরামর্শ শুনুন", "बोलें और AI सलाह सुनें", "பேசி AI ஆலோசனை கேளுங்கள்", "ਬੋਲੋ ਅਤੇ AI ਸਲਾਹ ਸੁਣੋ", "మాట్లాడి AI సలహా వినండి"), Purple, onVoice)
             }
             Spacer(Modifier.height(12.dp))
@@ -370,7 +372,7 @@ private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String
             Spacer(Modifier.height(10.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(CROP_ITEMS) { crop ->
-                    Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.width(92.dp).clickable(onClick = onDiagnosis)) {
+                    Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.width(92.dp).clickable { onDiagnosis(crop.id) }) {
                         Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(cropIcon(crop.id), fontSize = 30.sp)
                             Spacer(Modifier.height(5.dp))
