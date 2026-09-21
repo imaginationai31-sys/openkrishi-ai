@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun ProductionAdvisoryScreen(language:String, crop:String, cropName:String, query:String, onQuery:(String)->Unit, onAsk:(String)->Unit, loading:Boolean, result:AdvisoryResult?, error:String?, onBack:()->Unit, onRetry:()->Unit, onVoice:()->Unit) {
+internal fun ProductionAdvisoryScreen(language:String, crop:String, cropName:String, query:String, onQuery:(String)->Unit, onAsk:(String)->Unit, loading:Boolean, result:AdvisoryResult?, error:String?, onBack:()->Unit, onRetry:()->Unit, onVoice:()->Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
         TopBar(tx(language,"Crop advisory","ফসলের পরামর্শ","फसल सलाह","பயிர் ஆலோசனை","ਫਸਲ ਸਲਾਹ","పంట సలహా"),language,onBack)
         Spacer(Modifier.height(16.dp))
