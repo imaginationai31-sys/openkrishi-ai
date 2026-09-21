@@ -76,7 +76,7 @@ internal object OpenKrishiApi {
     }
 
     fun getWeather(latitude: Double, longitude: Double, language: String): WeatherResult {
-        val url = URL("$OPENKRISHI_API_BASE/api/v1/weather?latitude=$latitude&longitude=$longitude&language=${languageCode(language)}&forecast_days=1")
+        val url = URL("$OPENKRISHI_API_BASE/api/v1/weather?latitude=$latitude&longitude=$longitude&language=${languageCode(language)}&forecast_days=7")
         val connection = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = 15_000

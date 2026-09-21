@@ -3,7 +3,7 @@ package ai.openkrishi.app
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Row\nimport androidx.compose.foundation.lazy.LazyColumn\nimport androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -85,5 +85,34 @@ private fun WeatherMetricCard(icon:String,title:String,value:String,modifier:Mod
         Column(Modifier.padding(14.dp)) {
             Text(icon,fontSize=24.sp); Spacer(Modifier.height(6.dp)); Text(title,color=Muted,fontSize=11.sp,fontWeight=FontWeight.SemiBold); Spacer(Modifier.height(2.dp)); Text(value,color=Ink,fontSize=15.sp,fontWeight=FontWeight.Bold)
         }
+    }
+}
+
+@Composable
+private fun ForecastCard(day: DailyForecast, today: Boolean, language: String) {
+    val english = language == "English"
+    Card(shape=RoundedCornerShape(18.dp), colors=CardDefaults.cardColors(if(today) Color(0xFFEAF7EF) else Color.White), modifier=Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(14.dp)) {
+            Row(verticalAlignment=Alignment.CenterVertically) {
+                Text(if(today && english) "Today" else day.date, color=KrishiGreen, fontSize=14.sp, fontWeight=FontWeight.Bold, modifier=Modifier.weight(1f))
+                Text("🌦️", fontSize=24.sp)
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement=Arrangement.spacedBy(8.dp), modifier=Modifier.fillMaxWidth()) {
+                SmallWeatherValue(if(english) "Temp" else "তাপমাত্রা", "${day.minTemp} / ${day.maxTemp}", Modifier.weight(1f))
+                SmallWeatherValue(if(english) "Rain" else "বৃষ্টি", day.rainProbability, Modifier.weight(1f))
+                SmallWeatherValue(if(english) "Wind" else "বাতাস", day.windKmh, Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(if(english) "Rain amount: ${day.rainMm}" else "বৃষ্টির পরিমাণ: ${day.rainMm}", color=Muted, fontSize=11.sp)
+        }
+    }
+}
+
+@Composable
+private fun SmallWeatherValue(title:String, value:String, modifier:Modifier) {
+    Column(modifier.background(Color.White.copy(alpha=.75f), RoundedCornerShape(12.dp)).padding(9.dp)) {
+        Text(title,color=Muted,fontSize=10.sp)
+        Text(value,color=Ink,fontSize=12.sp,fontWeight=FontWeight.Bold)
     }
 }
