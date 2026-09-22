@@ -2,7 +2,6 @@ package ai.openkrishi.app
 
 import android.content.Context
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -14,6 +13,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
@@ -180,7 +180,6 @@ private fun ProfileNameScreen(onComplete: (String) -> Unit) {
         Spacer(Modifier.height(18.dp))
         Button(onClick = { if (name.trim().isNotEmpty()) onComplete(name.trim()) }, enabled = name.trim().isNotEmpty(), modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(17.dp), colors = ButtonDefaults.buttonColors(EntryGreen)) { Text("Continue", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
     }
-}
 }
 
 @Composable
