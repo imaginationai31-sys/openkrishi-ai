@@ -54,6 +54,7 @@ fun OpenKrishiApp() {
             var selectedCrop by remember { mutableStateOf("rice") }
             var selectedCropName by remember { mutableStateOf("") }
             var historyEntries by remember { mutableStateOf(loadHistory(context)) }
+            var locationPermissionResult by remember { mutableStateOf<Boolean?>(null) }
 
             val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
                 if (uri != null) {
@@ -78,8 +79,8 @@ fun OpenKrishiApp() {
                 cameraDenied = !granted
                 if (granted) cameraLauncher.launch(null)
             }
-            val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-                loadWeather()
+            val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+                locationPermissionResult = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
             }
             fun openCamera() {
                 if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -154,6 +155,13 @@ fun OpenKrishiApp() {
                             }
                         }
                     }.start()
+                }
+            }
+
+            LaunchedEffect(locationPermissionResult) {
+                if (locationPermissionResult == true) {
+                    locationPermissionResult = null
+                    loadWeather()
                 }
             }
 
