@@ -163,7 +163,7 @@ fun OpenKrishiApp() {
                     }
                 ) { padding ->
                     when (tab) {
-                        AppTab.HOME -> HomeDashboard(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" }, { loadWeather() }, { screen = "advisory" })
+                        AppTab.HOME -> HomeDashboard(Modifier.padding(padding), language, { language = it }, selectedCrop, selectedCropName, { crop, subcategory -> selectedCrop = crop; selectedCropName = subcategory }, { screen = "diagnosis" }, { screen = "voice" }, { loadWeather() }, { screen = "advisory" })
                         AppTab.HISTORY -> ProductionHistoryScreen(Modifier.padding(padding), language, historyEntries, {
                             historyEntries = emptyList()
                             saveHistory(context, historyEntries)
