@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -131,10 +133,7 @@ fun HomeDashboard(
                 colors = CardDefaults.cardColors(Color.White),
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
-                Row(
-                    Modifier.padding(13.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(Modifier.padding(13.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("📍", fontSize = 24.sp)
                     Spacer(Modifier.width(8.dp))
                     Column(Modifier.weight(1f)) {
@@ -152,47 +151,17 @@ fun HomeDashboard(
         Column(Modifier.padding(horizontal = 14.dp, vertical = 15.dp)) {
             Text(tx(language, "How can we help your crop today?", "আজ আপনার ফসলকে কীভাবে সাহায্য করতে পারি?", "आज आपकी फसल की कैसे मदद करें?", "இன்று உங்கள் பயிருக்கு எப்படி உதவலாம்?", "ਅੱਜ ਤੁਹਾਡੀ ਫਸਲ ਦੀ ਕਿਵੇਂ ਮਦਦ ਕਰੀਏ?", "ఈ రోజు మీ పంటకు ఎలా సహాయం చేయాలి?"), color = HomeDeep, fontSize = 21.sp, fontWeight = FontWeight.Black)
             Spacer(Modifier.height(4.dp))
-            Text(tx(language, "Choose a simple way to get farming help.", "কৃষি সহায়তা পাওয়ার সহজ উপায় বেছে নিন।", "कृषि सहायता पाने का आसान तरीका चुनें।", "விவசாய உதவி பெற எளிய வழியைத் தேர்ந்தெடுக்கவும்.", "ਖੇਤੀ ਮਦਦ ਲਈ ਸੌਖਾ ਤਰੀਕਾ ਚੁਣੋ।", "వ్యవసాయ సహాయం పొందడానికి సులభమైన మార్గాన్ని ఎంచుకోండి."), color = HomeMuted, fontSize = 12.sp)
+            Text(tx(language, "Choose a simple way to get farming help.", "কৃষি সহায়তা পাওয়ার সহজ উপায় বেছে নিন।", "कृषि सहायता पाने का आसान तरीका चुनें।", "விவசாய உதவி பெற எளிய வழியைத் தேர்ந்தெடுக்கவும்.", "ਖੇਤੀ ਮਦਦ ਲਈ ਸੌਖਾ ਤਰੀਕਾ ਚੁਣੋ।", "వ్యవసాయ సహాయం పొందడానికి సులభమైన మార్గాన్ని ఎంచుకోండి।"), color = HomeMuted, fontSize = 12.sp)
 
             Spacer(Modifier.height(12.dp))
-
-            HomeAction(
-                modifier = Modifier.fillMaxWidth().height(126.dp),
-                icon = "📷",
-                title = tx(language, "Scan Crop", "ফসল স্ক্যান", "फसल स्कैन", "பயிரை ஸ்கேன்", "ਫਸਲ ਸਕੈਨ", "పంటను స్కాన్"),
-                subtitle = tx(language, "Take a photo and check crop symptoms", "ছবি তুলে ফসলের লক্ষণ দেখুন", "फोटो लेकर फसल के लक्षण देखें", "புகைப்படம் எடுத்து பயிர் அறிகுறிகளைப் பாருங்கள்", "ਫੋਟੋ ਲੈ ਕੇ ਫਸਲ ਦੇ ਲੱਛਣ ਵੇਖੋ", "ఫోటో తీసి పంట లక్షణాలను చూడండి"),
-                colors = listOf(Color(0xFF63D72A), Color(0xFF087443)),
-                onClick = onDiagnosis
-            )
+            HomeAction(Modifier.fillMaxWidth().height(126.dp), "📷", tx(language, "Scan Crop", "ফসল স্ক্যান", "फसल स्कैन", "பயிரை ஸ்கேன்", "ਫਸਲ ਸਕੈਨ", "పంటను స్కాన్"), tx(language, "Take a photo and check crop symptoms", "ছবি তুলে ফসলের লক্ষণ দেখুন", "फोटो लेकर फसल के लक्षण देखें", "புகைப்படம் எடுத்து பயிர் அறிகுறிகளைப் பாருங்கள்", "ਫੋਟੋ ਲੈ ਕੇ ਫਸਲ ਦੇ ਲੱਛਣ ਵੇਖੋ", "ఫోటో తీసి పంట లక్షణాలను చూడండి"), listOf(Color(0xFF63D72A), Color(0xFF087443)), onDiagnosis)
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                HomeAction(
-                    modifier = Modifier.weight(1f).height(122.dp),
-                    icon = "🎙️",
-                    title = tx(language, "Voice Advice", "ভয়েস পরামর্শ", "वॉइस सलाह", "குரல் ஆலோசனை", "ਵੌਇਸ ਸਲਾਹ", "వాయిస్ సలహా"),
-                    subtitle = tx(language, "Ask by speaking", "কথা বলে জিজ্ঞাসা করুন", "बोलकर पूछें", "பேசி கேளுங்கள்", "ਬੋਲ ਕੇ ਪੁੱਛੋ", "మాట్లాడి అడగండి"),
-                    colors = listOf(Color(0xFFB968F4), Color(0xFF5633D9)),
-                    onClick = onVoice
-                )
-                HomeAction(
-                    modifier = Modifier.weight(1f).height(122.dp),
-                    icon = "💡",
-                    title = tx(language, "Ask AI", "AI-কে জিজ্ঞাসা করুন", "AI से पूछें", "AI-யிடம் கேளுங்கள்", "AI ਨੂੰ ਪੁੱਛੋ", "AIని అడగండి"),
-                    subtitle = tx(language, "Describe your problem", "আপনার সমস্যা বলুন", "अपनी समस्या बताएं", "உங்கள் பிரச்சினையைச் சொல்லுங்கள்", "ਆਪਣੀ ਸਮੱਸਿਆ ਦੱਸੋ", "మీ సమస్యను వివరించండి"),
-                    colors = listOf(Color(0xFFFFC928), Color(0xFFFF7415)),
-                    onClick = onAdvice
-                )
+                HomeAction(Modifier.weight(1f).height(122.dp), "🎙️", tx(language, "Voice Advice", "ভয়েস পরামর্শ", "वॉइस सलाह", "குரல் ஆலோசனை", "ਵੌਇਸ ਸਲਾਹ", "వాయిస్ సలహా"), tx(language, "Ask by speaking", "কথা বলে জিজ্ঞাসা করুন", "बोलकर पूछें", "பேசி கேளுங்கள்", "ਬੋਲ ਕੇ ਪੁੱਛੋ", "మాట్లాడి అడగండి"), listOf(Color(0xFFB968F4), Color(0xFF5633D9)), onVoice)
+                HomeAction(Modifier.weight(1f).height(122.dp), "💡", tx(language, "Ask AI", "AI-কে জিজ্ঞাসা করুন", "AI से पूछें", "AI-யிடம் கேளுங்கள்", "AI ਨੂੰ ਪੁੱਛੋ", "AIని అడగండి"), tx(language, "Describe your problem", "আপনার সমস্যা বলুন", "अपनी समस्या बताएं", "உங்கள் பிரச்சினையைச் சொல்லுங்கள்", "ਆਪਣੀ ਸਮੱਸਿਆ ਦੱਸੋ", "మీ సమస్యను వివరించండి"), listOf(Color(0xFFFFC928), Color(0xFFFF7415)), onAdvice)
             }
-
             Spacer(Modifier.height(10.dp))
-            HomeAction(
-                modifier = Modifier.fillMaxWidth().height(94.dp),
-                icon = "☀️",
-                title = tx(language, "Weather & Farm Alerts", "আবহাওয়া ও কৃষি সতর্কতা", "मौसम और कृषि चेतावनी", "வானிலை மற்றும் விவசாய எச்சரிக்கைகள்", "ਮੌਸਮ ਅਤੇ ਖੇਤੀ ਚੇਤਾਵਨੀਆਂ", "వాతావరణం మరియు వ్యవసాయ హెచ్చరికలు"),
-                subtitle = tx(language, "Local forecast and farming alerts", "স্থানীয় পূর্বাভাস ও কৃষি সতর্কতা", "स्थानीय पूर्वानुमान और कृषि चेतावनी", "உள்ளூர் முன்னறிவிப்பு மற்றும் விவசாய எச்சரிக்கைகள்", "ਸਥਾਨਕ ਪੂਰਵ-ਅਨੁਮਾਨ ਅਤੇ ਖੇਤੀ ਚੇਤਾਵਨੀਆਂ", "స్థానిక వాతావరణ అంచనా మరియు వ్యవసాయ హెచ్చరికలు"),
-                colors = listOf(Color(0xFF22BDE8), Color(0xFF087CE5)),
-                onClick = onWeather
-            )
+            HomeAction(Modifier.fillMaxWidth().height(94.dp), "☀️", tx(language, "Weather & Farm Alerts", "আবহাওয়া ও কৃষি সতর্কতা", "मौसम और कृषि चेतावनी", "வானிலை மற்றும் விவசாய எச்சரிக்கைகள்", "ਮੌਸਮ ਅਤੇ ਖੇਤੀ ਚੇਤਾਵਨੀਆਂ", "వాతావరణం మరియు వ్యవసాయ హెచ్చరికలు"), tx(language, "Local forecast and farming alerts", "স্থানীয় পূর্বাভাস ও কৃষি সতর্কতা", "स्थानीय पूर्वानुमान और कृषि चेतावनी", "உள்ளூர் முன்னறிவிப்பு மற்றும் விவசாய எச்சரிக்கைகள்", "ਸਥਾਨਕ ਪੂਰਵ-ਅਨੁਮਾਨ ਅਤੇ ਖੇਤੀ ਚੇਤਾਵਨੀਆਂ", "స్థానిక వాతావరణ అంచనా మరియు వ్యవసాయ హెచ్చరికలు"), listOf(Color(0xFF22BDE8), Color(0xFF087CE5)), onWeather)
 
             Spacer(Modifier.height(20.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -200,25 +169,15 @@ fun HomeDashboard(
                 Text(tx(language, "4 categories", "৪টি বিভাগ", "4 श्रेणियाँ", "4 வகைகள்", "4 ਸ਼੍ਰੇਣੀਆਂ", "4 వర్గాలు"), color = HomeGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(9.dp))
-
             LazyRow(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                items(
-                    listOf(
-                        Triple("🌾", "Rice", Color(0xFFE7F6E8)),
-                        Triple("🥜", "Peanut", Color(0xFFFFF0D2)),
-                        Triple("🥬", "Vegetables", Color(0xFFEAF7D8)),
-                        Triple("🌸", "Flowers", Color(0xFFF2E4FF))
-                    )
-                ) { crop ->
-                    Card(
-                        modifier = Modifier.width(142.dp).height(122.dp),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(crop.third)
-                    ) {
-                        Column(
-                            Modifier.fillMaxSize().padding(12.dp),
-                            verticalArrangement = Arrangement.SpaceBetween
-                        ) {
+                items(listOf(
+                    Triple("🌾", tx(language, "Rice", "ধান", "चावल", "நெல்", "ਚੌਲ", "వరి"), Color(0xFFE7F6E8)),
+                    Triple("🥜", tx(language, "Peanut", "চিনাবাদাম", "मूंगफली", "வேர்க்கடலை", "ਮੂੰਗਫਲੀ", "వేరుశెనగ"), Color(0xFFFFF0D2)),
+                    Triple("🥬", tx(language, "Vegetables", "সবজি", "सब्ज़ियाँ", "காய்கறிகள்", "ਸਬਜ਼ੀਆਂ", "కూరగాయలు"), Color(0xFFEAF7D8)),
+                    Triple("🌸", tx(language, "Flowers", "ফুল", "फूल", "மலர்கள்", "ਫੁੱਲ", "పూలు"), Color(0xFFF2E4FF))
+                )) { crop ->
+                    Card(Modifier.width(142.dp).height(122.dp), RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(crop.third)) {
+                        Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.SpaceBetween) {
                             Text(crop.first, fontSize = 42.sp)
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(crop.second, color = HomeInk, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -230,11 +189,7 @@ fun HomeDashboard(
             }
 
             Spacer(Modifier.height(18.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(HomeMint)
-            ) {
+            Card(Modifier.fillMaxWidth(), RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(HomeMint)) {
                 Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("🛡️", fontSize = 25.sp)
                     Spacer(Modifier.width(10.dp))
@@ -244,48 +199,23 @@ fun HomeDashboard(
                     }
                 }
             }
-
             Spacer(Modifier.height(8.dp))
-            Text(
-                "Language: $language",
-                color = HomeMuted,
-                fontSize = 10.sp,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            Text(tx(language, "Language: ", "భాష: ", "भाषा: ", "மொழி: ", "ਭਾਸ਼ਾ: ", "భాష: ") + language, color = HomeMuted, fontSize = 10.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
         }
     }
 }
 
 @Composable
-private fun HomeAction(
-    modifier: Modifier,
-    icon: String,
-    title: String,
-    subtitle: String,
-    colors: List<Color>,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = modifier.clickable(onClick = onClick),
-        shape = RoundedCornerShape(21.dp),
-        colors = CardDefaults.cardColors(Color.Transparent),
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
-        Box(
-            Modifier.fillMaxSize().background(Brush.linearGradient(colors)).padding(15.dp)
-        ) {
+private fun HomeAction(modifier: Modifier, icon: String, title: String, subtitle: String, colors: List<Color>, onClick: () -> Unit) {
+    Card(modifier = modifier.clickable(onClick = onClick), shape = RoundedCornerShape(21.dp), colors = CardDefaults.cardColors(Color.Transparent), elevation = CardDefaults.cardElevation(4.dp)) {
+        Box(Modifier.fillMaxSize().background(Brush.linearGradient(colors)).padding(15.dp)) {
             Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
                 Text(icon, fontSize = 30.sp)
                 Spacer(Modifier.height(5.dp))
                 Text(title, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Black)
                 Text(subtitle, color = Color.White.copy(alpha = .92f), fontSize = 10.sp, lineHeight = 14.sp, maxLines = 2)
             }
-            Text(
-                "→",
-                color = Color.White,
-                fontSize = 24.sp,
-                modifier = Modifier.align(Alignment.BottomEnd)
-            )
+            Text("→", color = Color.White, fontSize = 24.sp, modifier = Modifier.align(Alignment.BottomEnd))
         }
     }
 }
