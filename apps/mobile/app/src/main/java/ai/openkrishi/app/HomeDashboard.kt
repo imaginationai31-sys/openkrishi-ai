@@ -26,11 +26,22 @@ private val HomeMint = Color(0xFFE6F6EC)
 private val HomeInk = Color(0xFF13231B)
 private val HomeMuted = Color(0xFF66736B)
 
+private data class CropMenuCategory(val id: String, val label: String, val icon: String, val subcategories: List<String>)
+private val cropMenuCategories = listOf(
+    CropMenuCategory("rice", "Rice", "🌾", listOf("Basmati", "Sona Masuri", "IR64", "Other Rice")),
+    CropMenuCategory("peanut", "Peanut", "🥜", listOf("Spanish", "Virginia", "Valencia", "Runner", "Other Peanut")),
+    CropMenuCategory("vegetables", "Vegetables", "🥬", listOf("Brinjal", "Okra", "Potato", "Tomato", "Chilli", "Onion", "Cauliflower", "Cabbage", "Other Vegetable")),
+    CropMenuCategory("flowers", "Flowers", "🌸", listOf("Rose", "Marigold", "Jasmine", "Chrysanthemum", "Gerbera", "Tuberose", "Other Flower"))
+)
+
 @Composable
 fun HomeDashboard(
     modifier: Modifier,
     language: String,
     onLanguage: (String) -> Unit,
+    selectedCrop: String,
+    selectedCropName: String,
+    onCropSelection: (String, String) -> Unit,
     onDiagnosis: () -> Unit,
     onVoice: () -> Unit,
     onWeather: () -> Unit,
@@ -56,8 +67,59 @@ fun HomeDashboard(
                     Text("Smart farming, in your language", color = HomeMuted, fontSize = 11.sp)
                 }
 
-                TextButton(onClick = { }) {
-                    Text("🌐", fontSize = 18.sp)
+                var menuExpanded by remember { mutableStateOf(false) }
+                var expandedCategory by remember { mutableStateOf<String?>(null) }
+
+                Box {
+                    IconButton(onClick = { menuExpanded = true; expandedCategory = null }) {
+                        Text("☰", color = HomeDeep, fontSize = 25.sp)
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false; expandedCategory = null }
+                    ) {
+                        Text("Crop categories", modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp), color = HomeDeep, fontSize = 14.sp, fontWeight = FontWeight.Black)
+                        HorizontalDivider()
+                        cropMenuCategories.forEach { category ->
+                            val isSelectedCategory = selectedCrop == category.id
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().clickable {
+                                        expandedCategory = if (expandedCategory == category.id) null else category.id
+                                    }.padding(horizontal = 14.dp, vertical = 11.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(category.icon, fontSize = 20.sp)
+                                    Spacer(Modifier.width(10.dp))
+                                    Text(category.label, modifier = Modifier.weight(1f), color = if (isSelectedCategory) HomeGreen else HomeInk, fontSize = 14.sp, fontWeight = if (isSelectedCategory) FontWeight.Bold else FontWeight.Medium)
+                                    Text(if (expandedCategory == category.id) "⌃" else "⌄", color = HomeMuted, fontSize = 16.sp)
+                                }
+                                if (expandedCategory == category.id) {
+                                    category.subcategories.forEach { subcategory ->
+                                        val selected = isSelectedCategory && selectedCropName == subcategory
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().clickable {
+                                                onCropSelection(category.id, subcategory)
+                                                menuExpanded = false
+                                                expandedCategory = null
+                                            }.padding(start = 48.dp, end = 14.dp, top = 8.dp, bottom = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(if (selected) "✓" else "•", color = if (selected) HomeGreen else HomeMuted, fontSize = 13.sp)
+                                            Spacer(Modifier.width(8.dp))
+                                            Text(subcategory, color = if (selected) HomeGreen else HomeInk, fontSize = 13.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        HorizontalDivider()
+                        Text(
+                            if (selectedCropName.isBlank()) "Selected: " + (cropMenuCategories.firstOrNull { it.id == selectedCrop }?.label ?: "Rice")
+                            else "Selected: " + (cropMenuCategories.firstOrNull { it.id == selectedCrop }?.label ?: selectedCrop) + " • " + selectedCropName,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp), color = HomeMuted, fontSize = 10.sp
+                        )
+                    }
                 }
             }
 
