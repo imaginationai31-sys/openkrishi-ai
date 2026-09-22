@@ -6,6 +6,9 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -46,6 +49,8 @@ fun OpenKrishiApp() {
             var advisoryQuery by remember { mutableStateOf("") }
             var weather by remember { mutableStateOf<WeatherResult?>(null) }
             var weatherLoading by remember { mutableStateOf(false) }
+            var weatherLatitude by remember { mutableStateOf(22.5726) }
+            var weatherLongitude by remember { mutableStateOf(88.3639) }
             var selectedCrop by remember { mutableStateOf("rice") }
             var selectedCropName by remember { mutableStateOf("") }
             var historyEntries by remember { mutableStateOf(loadHistory(context)) }
@@ -72,6 +77,9 @@ fun OpenKrishiApp() {
             val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
                 cameraDenied = !granted
                 if (granted) cameraLauncher.launch(null)
+            }
+            val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+                loadWeather()
             }
             fun openCamera() {
                 if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -124,17 +132,29 @@ fun OpenKrishiApp() {
             fun loadWeather() {
                 weatherLoading = true
                 screen = "weather"
-                Thread {
-                    try {
-                        val result = OpenKrishiApi.getWeather(22.5726, 88.3639, language)
-                        Handler(Looper.getMainLooper()).post { weather = result; weatherLoading = false }
-                    } catch (e: Exception) {
-                        Handler(Looper.getMainLooper()).post {
-                            advisoryError = e.message ?: "Weather service is unavailable."
-                            weatherLoading = false
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    weatherLoading = false
+                    locationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                    return
+                }
+                fetchCurrentLocation(context) { location ->
+                    val lat = location?.latitude ?: weatherLatitude
+                    val lon = location?.longitude ?: weatherLongitude
+                    weatherLatitude = lat
+                    weatherLongitude = lon
+                    Thread {
+                        try {
+                            val result = OpenKrishiApi.getWeather(lat, lon, language)
+                            Handler(Looper.getMainLooper()).post { weather = result; weatherLoading = false }
+                        } catch (e: Exception) {
+                            Handler(Looper.getMainLooper()).post {
+                                advisoryError = e.message ?: "Weather service is unavailable."
+                                weatherLoading = false
+                            }
                         }
-                    }
-                }.start()
+                    }.start()
+                }
             }
 
             when (screen) {
@@ -174,6 +194,41 @@ fun OpenKrishiApp() {
             }
         }
     }
+}
+
+private fun fetchCurrentLocation(context: android.content.Context, onResult: (Location?) -> Unit) {
+    val manager = context.getSystemService(android.content.Context.LOCATION_SERVICE) as LocationManager
+    val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+        .filter { manager.isProviderEnabled(it) }
+    var delivered = false
+    fun deliver(location: Location?) {
+        if (!delivered) {
+            delivered = true
+            onResult(location)
+        }
+    }
+    val best = providers.mapNotNull { runCatching { manager.getLastKnownLocation(it) }.getOrNull() }
+        .maxByOrNull { it.time }
+    if (best != null) deliver(best)
+    if (!delivered && providers.isEmpty()) {
+        deliver(null)
+        return
+    }
+    val listener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            runCatching { manager.removeUpdates(this) }
+            deliver(location)
+        }
+    }
+    providers.forEach { provider ->
+        runCatching {
+            manager.requestLocationUpdates(provider, 0L, 0f, listener, Looper.getMainLooper())
+        }
+    }
+    Handler(Looper.getMainLooper()).postDelayed({
+        runCatching { manager.removeUpdates(listener) }
+        deliver(best)
+    }, 5000L)
 }
 
 @Composable
