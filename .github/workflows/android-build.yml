@@ -38,6 +38,9 @@ jobs:
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
 
+      - name: Print debug signing fingerprints
+        run: gradle --no-daemon signingReport
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
