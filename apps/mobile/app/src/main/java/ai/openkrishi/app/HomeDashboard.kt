@@ -64,7 +64,7 @@ fun HomeDashboard(
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text("OpenKrishi AI", color = HomeDeep, fontSize = 24.sp, fontWeight = FontWeight.Black)
-                    Text("Smart farming, in your language", color = HomeMuted, fontSize = 11.sp)
+                    Text(tx(language, "Smart farming, in your language", "আপনার ভাষায় স্মার্ট কৃষি", "आपकी भाषा में स्मार्ट खेती", "உங்கள் மொழியில் ஸ்மார்ட் விவசாயம்", "ਤੁਹਾਡੀ ਭਾਸ਼ਾ ਵਿੱਚ ਸਮਾਰਟ ਖੇਤੀ", "మీ భాషలో స్మార్ట్ వ్యవసాయం"), color = HomeMuted, fontSize = 11.sp)
                 }
 
                 var menuExpanded by remember { mutableStateOf(false) }
@@ -78,7 +78,7 @@ fun HomeDashboard(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false; expandedCategory = null }
                     ) {
-                        Text("Crop categories", modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp), color = HomeDeep, fontSize = 14.sp, fontWeight = FontWeight.Black)
+                        Text(tx(language, "Crop categories", "ফসলের বিভাগ", "फसल श्रेणियाँ", "பயிர் வகைகள்", "ਫਸਲ ਸ਼੍ਰੇਣੀਆਂ", "పంట వర్గాలు"), modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp), color = HomeDeep, fontSize = 14.sp, fontWeight = FontWeight.Black)
                         HorizontalDivider()
                         cropMenuCategories.forEach { category ->
                             val isSelectedCategory = selectedCrop == category.id
@@ -115,8 +115,8 @@ fun HomeDashboard(
                         }
                         HorizontalDivider()
                         Text(
-                            if (selectedCropName.isBlank()) "Selected: " + (cropMenuCategories.firstOrNull { it.id == selectedCrop }?.label ?: "Rice")
-                            else "Selected: " + (cropMenuCategories.firstOrNull { it.id == selectedCrop }?.label ?: selectedCrop) + " • " + selectedCropName,
+                            if (selectedCropName.isBlank()) tx(language, "Selected: ", "নির্বাচিত: ", "चयनित: ", "தேர்வு: ", "ਚੁਣਿਆ: ", "ఎంచుకున్న: ") + (cropMenuCategories.firstOrNull { it.id == selectedCrop }?.label ?: "Rice")
+                            else tx(language, "Selected: ", "নির্বাচিত: ", "चयनित: ", "தேர்வு: ", "ਚੁਣਿਆ: ", "ఎంచుకున్న: ") + (cropMenuCategories.firstOrNull { it.id == selectedCrop }?.label ?: selectedCrop) + " • " + selectedCropName,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp), color = HomeMuted, fontSize = 10.sp
                         )
                     }
@@ -138,29 +138,29 @@ fun HomeDashboard(
                     Text("📍", fontSize = 24.sp)
                     Spacer(Modifier.width(8.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Your farm location", color = HomeMuted, fontSize = 10.sp)
-                        Text("Kolkata, West Bengal", color = HomeDeep, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(tx(language, "Your farm location", "আপনার খামারের অবস্থান", "आपके खेत का स्थान", "உங்கள் பண்ணை இருப்பிடம்", "ਤੁਹਾਡੇ ਖੇਤ ਦੀ ਸਥਿਤੀ", "మీ పొలం స్థానం"), color = HomeMuted, fontSize = 10.sp)
+                        Text(tx(language, "Current location", "বর্তমান অবস্থান", "वर्तमान स्थान", "தற்போதைய இருப்பிடம்", "ਮੌਜੂਦਾ ਸਥਿਤੀ", "ప్రస్తుత స్థానం"), color = HomeDeep, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text("28°C", color = HomeInk, fontSize = 19.sp, fontWeight = FontWeight.Black)
-                        Text("Partly cloudy", color = HomeMuted, fontSize = 10.sp)
+                        Text(tx(language, "Partly cloudy", "আংশিক মেঘলা", "आंशिक बादल", "பகுதி மேகமூட்டம்", "ਅੰਸ਼ਿਕ ਬੱਦਲਵਾਈ", "పాక్షిక మేఘావృతం"), color = HomeMuted, fontSize = 10.sp)
                     }
                 }
             }
         }
 
         Column(Modifier.padding(horizontal = 14.dp, vertical = 15.dp)) {
-            Text("How can we help your crop today?", color = HomeDeep, fontSize = 21.sp, fontWeight = FontWeight.Black)
+            Text(tx(language, "How can we help your crop today?", "আজ আপনার ফসলকে কীভাবে সাহায্য করতে পারি?", "आज आपकी फसल की कैसे मदद करें?", "இன்று உங்கள் பயிருக்கு எப்படி உதவலாம்?", "ਅੱਜ ਤੁਹਾਡੀ ਫਸਲ ਦੀ ਕਿਵੇਂ ਮਦਦ ਕਰੀਏ?", "ఈ రోజు మీ పంటకు ఎలా సహాయం చేయాలి?"), color = HomeDeep, fontSize = 21.sp, fontWeight = FontWeight.Black)
             Spacer(Modifier.height(4.dp))
-            Text("Choose a simple way to get farming help.", color = HomeMuted, fontSize = 12.sp)
+            Text(tx(language, "Choose a simple way to get farming help.", "কৃষি সহায়তা পাওয়ার সহজ উপায় বেছে নিন।", "कृषि सहायता पाने का आसान तरीका चुनें।", "விவசாய உதவி பெற எளிய வழியைத் தேர்ந்தெடுக்கவும்.", "ਖੇਤੀ ਮਦਦ ਲਈ ਸੌਖਾ ਤਰੀਕਾ ਚੁਣੋ।", "వ్యవసాయ సహాయం పొందడానికి సులభమైన మార్గాన్ని ఎంచుకోండి."), color = HomeMuted, fontSize = 12.sp)
 
             Spacer(Modifier.height(12.dp))
 
             HomeAction(
                 modifier = Modifier.fillMaxWidth().height(126.dp),
                 icon = "📷",
-                title = "Scan Crop",
-                subtitle = "Take a photo and check crop symptoms",
+                title = tx(language, "Scan Crop", "ফসল স্ক্যান", "फसल स्कैन", "பயிரை ஸ்கேன்", "ਫਸਲ ਸਕੈਨ", "పంటను స్కాన్"),
+                subtitle = tx(language, "Take a photo and check crop symptoms", "ছবি তুলে ফসলের লক্ষণ দেখুন", "फोटो लेकर फसल के लक्षण देखें", "புகைப்படம் எடுத்து பயிர் அறிகுறிகளைப் பாருங்கள்", "ਫੋਟੋ ਲੈ ਕੇ ਫਸਲ ਦੇ ਲੱਛਣ ਵੇਖੋ", "ఫోటో తీసి పంట లక్షణాలను చూడండి"),
                 colors = listOf(Color(0xFF63D72A), Color(0xFF087443)),
                 onClick = onDiagnosis
             )
@@ -169,16 +169,16 @@ fun HomeDashboard(
                 HomeAction(
                     modifier = Modifier.weight(1f).height(122.dp),
                     icon = "🎙️",
-                    title = "Voice Advice",
-                    subtitle = "Ask by speaking",
+                    title = tx(language, "Voice Advice", "ভয়েস পরামর্শ", "वॉइस सलाह", "குரல் ஆலோசனை", "ਵੌਇਸ ਸਲਾਹ", "వాయిస్ సలహా"),
+                    subtitle = tx(language, "Ask by speaking", "কথা বলে জিজ্ঞাসা করুন", "बोलकर पूछें", "பேசி கேளுங்கள்", "ਬੋਲ ਕੇ ਪੁੱਛੋ", "మాట్లాడి అడగండి"),
                     colors = listOf(Color(0xFFB968F4), Color(0xFF5633D9)),
                     onClick = onVoice
                 )
                 HomeAction(
                     modifier = Modifier.weight(1f).height(122.dp),
                     icon = "💡",
-                    title = "Ask AI",
-                    subtitle = "Describe your problem",
+                    title = tx(language, "Ask AI", "AI-কে জিজ্ঞাসা করুন", "AI से पूछें", "AI-யிடம் கேளுங்கள்", "AI ਨੂੰ ਪੁੱਛੋ", "AIని అడగండి"),
+                    subtitle = tx(language, "Describe your problem", "আপনার সমস্যা বলুন", "अपनी समस्या बताएं", "உங்கள் பிரச்சினையைச் சொல்லுங்கள்", "ਆਪਣੀ ਸਮੱਸਿਆ ਦੱਸੋ", "మీ సమస్యను వివరించండి"),
                     colors = listOf(Color(0xFFFFC928), Color(0xFFFF7415)),
                     onClick = onAdvice
                 )
@@ -188,16 +188,16 @@ fun HomeDashboard(
             HomeAction(
                 modifier = Modifier.fillMaxWidth().height(94.dp),
                 icon = "☀️",
-                title = "Weather & Farm Alerts",
-                subtitle = "Local forecast and farming alerts",
+                title = tx(language, "Weather & Farm Alerts", "আবহাওয়া ও কৃষি সতর্কতা", "मौसम और कृषि चेतावनी", "வானிலை மற்றும் விவசாய எச்சரிக்கைகள்", "ਮੌਸਮ ਅਤੇ ਖੇਤੀ ਚੇਤਾਵਨੀਆਂ", "వాతావరణం మరియు వ్యవసాయ హెచ్చరికలు"),
+                subtitle = tx(language, "Local forecast and farming alerts", "স্থানীয় পূর্বাভাস ও কৃষি সতর্কতা", "स्थानीय पूर्वानुमान और कृषि चेतावनी", "உள்ளூர் முன்னறிவிப்பு மற்றும் விவசாய எச்சரிக்கைகள்", "ਸਥਾਨਕ ਪੂਰਵ-ਅਨੁਮਾਨ ਅਤੇ ਖੇਤੀ ਚੇਤਾਵਨੀਆਂ", "స్థానిక వాతావరణ అంచనా మరియు వ్యవసాయ హెచ్చరికలు"),
                 colors = listOf(Color(0xFF22BDE8), Color(0xFF087CE5)),
                 onClick = onWeather
             )
 
             Spacer(Modifier.height(20.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Your crops", color = HomeDeep, fontSize = 20.sp, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
-                Text("4 categories", color = HomeGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(tx(language, "Your crops", "আপনার ফসল", "आपकी फसलें", "உங்கள் பயிர்கள்", "ਤੁਹਾਡੀਆਂ ਫਸਲਾਂ", "మీ పంటలు"), color = HomeDeep, fontSize = 20.sp, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
+                Text(tx(language, "4 categories", "৪টি বিভাগ", "4 श्रेणियाँ", "4 வகைகள்", "4 ਸ਼੍ਰੇਣੀਆਂ", "4 వర్గాలు"), color = HomeGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(9.dp))
 
@@ -239,8 +239,8 @@ fun HomeDashboard(
                     Text("🛡️", fontSize = 25.sp)
                     Spacer(Modifier.width(10.dp))
                     Column {
-                        Text("Safe AI guidance", color = HomeDeep, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                        Text("OpenKrishi gives cautious next steps and recommends local confirmation for uncertain crop problems.", color = HomeMuted, fontSize = 10.sp, lineHeight = 15.sp)
+                        Text(tx(language, "Safe AI guidance", "নিরাপদ AI পরামর্শ", "सुरक्षित AI मार्गदर्शन", "பாதுகாப்பான AI வழிகாட்டுதல்", "ਸੁਰੱਖਿਅਤ AI ਸਲਾਹ", "సురక్షిత AI మార్గదర్శకం"), color = HomeDeep, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(tx(language, "OpenKrishi gives cautious next steps and recommends local confirmation for uncertain crop problems.", "OpenKrishi সতর্ক পরবর্তী পদক্ষেপ দেয় এবং অনিশ্চিত ফসল সমস্যায় স্থানীয়ভাবে নিশ্চিত করতে বলে।", "OpenKrishi सावधानी से अगले कदम बताता है और अनिश्चित फसल समस्याओं में स्थानीय पुष्टि की सलाह देता है।", "OpenKrishi எச்சரிக்கையான அடுத்த படிகளை வழங்குகிறது; உறுதியற்ற பயிர் பிரச்சினைகளில் உள்ளூர் நிபுணரிடம் உறுதி செய்ய பரிந்துரைக்கிறது.", "OpenKrishi ਸਾਵਧਾਨ ਅਗਲੇ ਕਦਮ ਦਿੰਦਾ ਹੈ ਅਤੇ ਅਣਸ਼ਚਿਤ ਫਸਲ ਸਮੱਸਿਆਵਾਂ ਲਈ ਸਥਾਨਕ ਪੁਸ਼ਟੀ ਦੀ ਸਲਾਹ ਦਿੰਦਾ ਹੈ।", "OpenKrishi జాగ్రత్తగా తదుపరి చర్యలను సూచిస్తుంది మరియు అనిశ్చిత పంట సమస్యలకు స్థానిక నిర్ధారణను సిఫార్సు చేస్తుంది."), color = HomeMuted, fontSize = 10.sp, lineHeight = 15.sp)
                     }
                 }
             }
