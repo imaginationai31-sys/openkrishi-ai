@@ -39,7 +39,8 @@ fun OpenKrishiApp() {
             val context = LocalContext.current
             var tab by remember { mutableStateOf(AppTab.HOME) }
             var screen by remember { mutableStateOf("home") }
-            val appPrefs = remember { context.getSharedPreferences("openkrishi", android.content.Context.MODE_PRIVATE) }\n            var language by rememberSaveable { mutableStateOf(appPrefs.getString("app_language", "English") ?: "English") }
+            val appPrefs = remember { context.getSharedPreferences("openkrishi", android.content.Context.MODE_PRIVATE) }
+            var language by rememberSaveable { mutableStateOf(appPrefs.getString("app_language", "English") ?: "English") }
             var selectedImage by remember { mutableStateOf<Bitmap?>(null) }
             var imageSource by remember { mutableStateOf<ImageSource?>(null) }
             var cameraDenied by remember { mutableStateOf(false) }
@@ -191,12 +192,15 @@ fun OpenKrishiApp() {
                     }
                 ) { padding ->
                     when (tab) {
-                        AppTab.HOME -> key(language) { HomeDashboard(Modifier.padding(padding), language, { selectedLanguage ->\n                            language = selectedLanguage\n                            appPrefs.edit().putString("app_language", selectedLanguage).apply()\n                        }, selectedCrop, selectedCropName, { crop, subcategory -> selectedCrop = crop; selectedCropName = subcategory }, { screen = "diagnosis" }, { screen = "voice" }, { loadWeather() }, { screen = "advisory" }) }
+                        AppTab.HOME -> key(language) { HomeDashboard(Modifier.padding(padding), language, { selectedLanguage ->
+                            language = selectedLanguage\n                            appPrefs.edit().putString("app_language", selectedLanguage).apply()
+                        }, selectedCrop, selectedCropName, { crop, subcategory -> selectedCrop = crop; selectedCropName = subcategory }, { screen = "diagnosis" }, { screen = "voice" }, { loadWeather() }, { screen = "advisory" }) }
                         AppTab.HISTORY -> ProductionHistoryScreen(Modifier.padding(padding), language, historyEntries, {
                             historyEntries = emptyList()
                             saveHistory(context, historyEntries)
                         })
-                        AppTab.PROFILE -> ProductionProfileScreen(Modifier.padding(padding), language, { selectedLanguage ->\n                            language = selectedLanguage\n                            appPrefs.edit().putString("app_language", selectedLanguage).apply()\n                        })
+                        AppTab.PROFILE -> ProductionProfileScreen(Modifier.padding(padding), language, { selectedLanguage ->
+                            language = selectedLanguage\n                            appPrefs.edit().putString("app_language", selectedLanguage).apply()\n                        })
                     }
                 }
             }
