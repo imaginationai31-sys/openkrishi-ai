@@ -17,6 +17,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -193,14 +194,17 @@ fun OpenKrishiApp() {
                 ) { padding ->
                     when (tab) {
                         AppTab.HOME -> key(language) { HomeDashboard(Modifier.padding(padding), language, { selectedLanguage ->
-                            language = selectedLanguage\n                            appPrefs.edit().putString("app_language", selectedLanguage).apply()
+                            language = selectedLanguage
+                            appPrefs.edit().putString("app_language", selectedLanguage).apply()
                         }, selectedCrop, selectedCropName, { crop, subcategory -> selectedCrop = crop; selectedCropName = subcategory }, { screen = "diagnosis" }, { screen = "voice" }, { loadWeather() }, { screen = "advisory" }) }
                         AppTab.HISTORY -> ProductionHistoryScreen(Modifier.padding(padding), language, historyEntries, {
                             historyEntries = emptyList()
                             saveHistory(context, historyEntries)
                         })
                         AppTab.PROFILE -> ProductionProfileScreen(Modifier.padding(padding), language, { selectedLanguage ->
-                            language = selectedLanguage\n                            appPrefs.edit().putString("app_language", selectedLanguage).apply()\n                        })
+                            language = selectedLanguage
+                            appPrefs.edit().putString("app_language", selectedLanguage).apply()
+                        })
                     }
                 }
             }
