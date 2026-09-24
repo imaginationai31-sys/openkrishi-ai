@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "837358973413",
+    "project_id": "openkrishi-ai",
+    "storage_bucket": "openkrishi-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837358973413:android:be769d133c7d1089ce3f0c",
+        "android_client_info": {
+          "package_name": "ai.openkrishi.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2D4e2rfRnYvdo-pa_H0X7QCovdTq1gBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
