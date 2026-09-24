@@ -159,7 +159,6 @@ exports.advisory = onRequest(
         location: req.body.location ? String(req.body.location).trim() : null,
         crop_category: req.body.crop_category || null,
         crop_name: req.body.crop_name || null,
-        user_id: user.uid,
         platform: "firebase",
         model: GEMINI_MODEL,
       });
