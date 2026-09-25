@@ -48,6 +48,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.google.firebase.Firebase
+import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
 
 private val KrishiGreen = Color(0xFF087443)
 private val KrishiDeep = Color(0xFF063D2A)
@@ -61,6 +63,11 @@ private val Muted = Color(0xFF66736B)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (BuildConfig.DEBUG) {
+            Firebase.appCheck.installAppCheckProviderFactory(
+                DebugAppCheckProviderFactory.getInstance()
+            )
+        }
         setContent { OpenKrishiApp() }
     }
 }
