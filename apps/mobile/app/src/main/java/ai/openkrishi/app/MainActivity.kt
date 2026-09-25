@@ -187,7 +187,7 @@ fun OpenKrishiApp() {
                     when (tab) {
                         AppTab.HOME -> HomeScreen(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" }, { screen = "weather"; loadWeather() }, { screen = "advisory" })
                         AppTab.HISTORY -> HistoryScreen(Modifier.padding(padding), language)
-                        AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language, { language = it }) { FirebaseAuthManager.signOut(); authUser = null }
+                        AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language, { language = it }) { FirebaseAuthManager.signOut(context); authUser = null }
                     }
                 }
             }
