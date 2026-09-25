@@ -1,7 +1,7 @@
 package ai.openkrishi.app
 
 import android.graphics.Bitmap
-import com.google.firebase.ai.FirebaseAI
+import com.google.firebase.Firebase
 import com.google.firebase.ai.GenerativeBackend
 import com.google.firebase.ai.type.content
 import kotlinx.coroutines.runBlocking
@@ -11,7 +11,7 @@ internal object FirebaseAiManager {
     private const val MODEL_NAME = "gemini-3.8-flash"
 
     private val model by lazy {
-        FirebaseAI.getInstance(GenerativeBackend.googleAI()).generativeModel(MODEL_NAME)
+        Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(MODEL_NAME)
     }
 
     fun advisory(query: String, language: String, cropCategory: String, cropName: String?): AdvisoryResult = runBlocking {
