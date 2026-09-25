@@ -95,6 +95,12 @@ fun OpenKrishiApp() {
             var weatherLoading by remember { mutableStateOf(false) }
             var selectedCrop by remember { mutableStateOf("rice") }
             var selectedCropName by remember { mutableStateOf("") }
+            var history by remember { mutableStateOf<List<DiagnosisHistoryItem>>(emptyList()) }
+            var historyLoading by remember { mutableStateOf(false) }
+
+            LaunchedEffect(authUser.uid) {
+                FirestoreManager.saveFarmerProfile(authUser, authUser.displayName, language, selectedCrop, selectedCropName)
+            }
 
             val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
                 if (uri != null) {
@@ -131,7 +137,11 @@ fun OpenKrishiApp() {
                 Thread {
                     try {
                         val result = OpenKrishiApi.assessImage(selectedImage ?: throw IllegalStateException("No crop image selected."), language, selectedCrop, cropName = selectedCropName)
-                        Handler(Looper.getMainLooper()).post { advisoryResult = result; analyzing = false }
+                        Handler(Looper.getMainLooper()).post {
+                            advisoryResult = result
+                            analyzing = false
+                            FirestoreManager.saveDiagnosis(authUser, "vision", language, selectedCrop, selectedCropName, result = result, imageSource = imageSource?.name)
+                        }
                     } catch (e: Exception) {
                         Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "OpenKrishi AI से कनेक्ट नहीं हो सका।"; analyzing = false }
                     }
@@ -147,7 +157,11 @@ fun OpenKrishiApp() {
                 Thread {
                     try {
                         val result = OpenKrishiApi.getAdvisory(query, language, selectedCrop, selectedCropName)
-                        Handler(Looper.getMainLooper()).post { advisoryResult = result; analyzing = false }
+                        Handler(Looper.getMainLooper()).post {
+                            advisoryResult = result
+                            analyzing = false
+                            FirestoreManager.saveDiagnosis(authUser, "advisory", language, selectedCrop, selectedCropName, query = query, result = result)
+                        }
                     } catch (e: Exception) {
                         Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "OpenKrishi AI is unavailable."; analyzing = false }
                     }
@@ -186,8 +200,18 @@ fun OpenKrishiApp() {
                 ) { padding ->
                     when (tab) {
                         AppTab.HOME -> HomeScreen(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" }, { screen = "weather"; loadWeather() }, { screen = "advisory" })
-                        AppTab.HISTORY -> HistoryScreen(Modifier.padding(padding), language)
-                        AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language, { language = it }) { FirebaseAuthManager.signOut(context); authUser = null }
+                        AppTab.HISTORY -> HistoryScreen(Modifier.padding(padding), language, authUser, history, historyLoading) {
+                            historyLoading = true
+                            FirestoreManager.loadHistory(authUser) {
+                                it.onSuccess { items -> history = items }
+                                    .onFailure { /* keep the existing history on transient errors */ }
+                                historyLoading = false
+                            }
+                        }
+                        AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language, { newLanguage ->
+                            language = newLanguage
+                            FirestoreManager.saveFarmerProfile(authUser, authUser.displayName, newLanguage, selectedCrop, selectedCropName)
+                        }) { FirebaseAuthManager.signOut(context); authUser = null }
                     }
                 }
             }
@@ -996,7 +1020,47 @@ private fun AdvisoryInputScreen(language:String, selectedCrop:String, onCropChan
 }
 
 @Composable
-private fun HistoryScreen(modifier: Modifier, language: String) { Column(modifier.fillMaxSize().padding(18.dp)) { Text(ui(language, "history"), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(8.dp)); Text(ui(language, "history_desc"), color = Muted, fontSize = 13.sp); Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Text(ui(language, "no_history"), color = Muted, modifier = Modifier.padding(18.dp)) } } }
+private fun HistoryScreen(
+    modifier: Modifier, language: String, user: com.google.firebase.auth.FirebaseUser,
+    history: List<DiagnosisHistoryItem>, loading: Boolean, onRefresh: () -> Unit
+) {
+    LaunchedEffect(user.uid) { onRefresh() }
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.weight(1f)) {
+                Text(ui(language, "history"), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink)
+                Spacer(Modifier.height(4.dp))
+                Text(ui(language, "history_desc"), color = Muted, fontSize = 13.sp)
+            }
+            TextButton(onClick = onRefresh, enabled = !loading) { Text(if (loading) "…" else "↻", color = KrishiGreen, fontSize = 20.sp) }
+        }
+        Spacer(Modifier.height(16.dp))
+        if (loading && history.isEmpty()) {
+            Box(Modifier.fillMaxWidth().padding(30.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = KrishiGreen) }
+        } else if (history.isEmpty()) {
+            Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Text(ui(language, "no_history"), color = Muted, modifier = Modifier.padding(18.dp)) }
+        } else {
+            history.forEach { item ->
+                val crop = cropLabel(item.cropCategory, language) + if (item.cropName.isNotBlank()) " • " + item.cropName else ""
+                Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+                    Column(Modifier.padding(15.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(if (item.type == "vision") "🌿" else "💬", fontSize = 22.sp); Spacer(Modifier.width(9.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(crop, color = KrishiGreen, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text(item.type.replaceFirstChar { it.uppercase() }, color = Muted, fontSize = 10.sp)
+                            }
+                        }
+                        if (item.query.isNotBlank()) { Spacer(Modifier.height(8.dp)); Text(item.query, color = Ink, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                        Spacer(Modifier.height(8.dp))
+                        Text(item.answer, color = Ink, fontSize = 13.sp, lineHeight = 19.sp, maxLines = 4, overflow = TextOverflow.Ellipsis)
+                        if (item.confidence.isNotBlank()) { Spacer(Modifier.height(7.dp)); Text("Confidence: " + item.confidence + " • Safety: " + item.safety, color = Muted, fontSize = 10.sp) }
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun ProfileScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit, onSignOut: () -> Unit) {
