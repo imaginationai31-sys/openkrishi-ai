@@ -5,6 +5,8 @@ import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.exceptions.ClearCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -130,7 +132,19 @@ object FirebaseAuthManager {
             }
     }
 
-    fun signOut() {
+    fun signOut(context: Context? = null) {
         auth.signOut()
+        if (context != null) {
+            val credentialManager = CredentialManager.create(context)
+            credentialManager.clearCredentialStateAsync(
+                ClearCredentialStateRequest(),
+                androidx.core.os.CancellationSignal(),
+                java.util.concurrent.Executors.newSingleThreadExecutor(),
+                object : androidx.credentials.CredentialManagerCallback<Unit, ClearCredentialException> {
+                    override fun onResult(result: Unit) = Unit
+                    override fun onError(e: ClearCredentialException) = Unit
+                }
+            )
+        }
     }
 }
