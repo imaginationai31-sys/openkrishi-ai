@@ -15,6 +15,8 @@ import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import java.util.Locale
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -72,6 +74,13 @@ fun OpenKrishiApp() {
     MaterialTheme {
         Surface(Modifier.fillMaxSize(), color = Color(0xFFF6FAF7)) {
             val context = LocalContext.current
+            var authUser by remember { mutableStateOf(FirebaseAuthManager.currentUser) }
+            if (authUser == null) {
+                LoginScreen(
+                    onAuthenticated = { authUser = it }
+                )
+                return@Surface
+            }
             var tab by remember { mutableStateOf(AppTab.HOME) }
             var screen by remember { mutableStateOf("home") }
             var language by remember { mutableStateOf("English") }
@@ -178,7 +187,7 @@ fun OpenKrishiApp() {
                     when (tab) {
                         AppTab.HOME -> HomeScreen(Modifier.padding(padding), language, { language = it }, { screen = "diagnosis" }, { screen = "voice" }, { screen = "weather"; loadWeather() }, { screen = "advisory" })
                         AppTab.HISTORY -> HistoryScreen(Modifier.padding(padding), language)
-                        AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language, { language = it })
+                        AppTab.PROFILE -> ProfileScreen(Modifier.padding(padding), language, { language = it }) { FirebaseAuthManager.signOut(); authUser = null }
                     }
                 }
             }
@@ -187,6 +196,228 @@ fun OpenKrishiApp() {
 }
 
 private fun Context.contentResolverBitmap(uri: android.net.Uri): Bitmap? = runCatching { contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) } }.getOrNull()
+
+@Composable
+private fun LoginScreen(onAuthenticated: (com.google.firebase.auth.FirebaseUser) -> Unit) {
+    val context = LocalContext.current
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var signUpMode by remember { mutableStateOf(false) }
+    var resetMode by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var message by remember { mutableStateOf<String?>(null) }
+
+    fun finish(result: Result<com.google.firebase.auth.FirebaseUser>) {
+        loading = false
+        result.onSuccess {
+            error = null
+            onAuthenticated(it)
+        }.onFailure {
+            error = it.message ?: "Authentication failed."
+        }
+    }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFFEAF7EE), Color(0xFFF8FCF9), Color.White)
+                )
+            )
+            .padding(horizontal = 22.dp, vertical = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(Modifier.height(24.dp))
+        Text("🌱", fontSize = 64.sp)
+        Spacer(Modifier.height(8.dp))
+        Text("OpenKrishi AI", fontSize = 30.sp, fontWeight = FontWeight.Black, color = KrishiDeep)
+        Text("Vernacular AI Agronomy & Voice Advisory", color = Muted, fontSize = 12.sp, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(26.dp))
+
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(Color.White),
+            elevation = CardDefaults.cardElevation(5.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(Modifier.padding(20.dp)) {
+                Text(
+                    when {
+                        resetMode -> "Reset your password"
+                        signUpMode -> "Create your account"
+                        else -> "Welcome to OpenKrishi"
+                    },
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Ink
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    when {
+                        resetMode -> "Enter your email and we will send a password reset link."
+                        signUpMode -> "Save your farming history and advisory activity securely."
+                        else -> "Sign in to continue to your farming assistant."
+                    },
+                    color = Muted,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp
+                )
+                Spacer(Modifier.height(18.dp))
+
+                if (!resetMode) {
+                    Button(
+                        onClick = {
+                            loading = true
+                            error = null
+                            message = null
+                            FirebaseAuthManager.signInWithGoogle(context, ::finish)
+                        },
+                        enabled = !loading,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(15.dp),
+                        colors = ButtonDefaults.buttonColors(Color(0xFF1877F2))
+                    ) {
+                        Text("G  Continue with Google", fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(Modifier.height(10.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            loading = true
+                            error = null
+                            message = null
+                            FirebaseAuthManager.signInAsGuest(::finish)
+                        },
+                        enabled = !loading,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(15.dp)
+                    ) {
+                        Text("👤  Continue as Guest", fontWeight = FontWeight.Bold, color = KrishiGreen)
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        HorizontalDivider(Modifier.weight(1f), color = Color(0xFFE2E9E4))
+                        Text("  OR  ", color = Muted, fontSize = 11.sp)
+                        HorizontalDivider(Modifier.weight(1f), color = Color(0xFFE2E9E4))
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it; error = null; message = null },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Email") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    enabled = !loading
+                )
+
+                if (!resetMode) {
+                    Spacer(Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it; error = null },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Password") },
+                        singleLine = true,
+                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        enabled = !loading
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    Button(
+                        onClick = {
+                            loading = true
+                            error = null
+                            message = null
+                            if (signUpMode) FirebaseAuthManager.signUp(email, password, ::finish)
+                            else FirebaseAuthManager.signIn(email, password, ::finish)
+                        },
+                        enabled = !loading && email.isNotBlank() && password.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(15.dp),
+                        colors = ButtonDefaults.buttonColors(KrishiGreen)
+                    ) {
+                        Text(if (signUpMode) "Create Account" else "Sign In", fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    if (!signUpMode) {
+                        TextButton(
+                            onClick = { resetMode = true; error = null; message = null },
+                            enabled = !loading,
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text("Forgot password?", color = KrishiGreen) }
+                    }
+                    TextButton(
+                        onClick = { signUpMode = !signUpMode; error = null; message = null },
+                        enabled = !loading,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            if (signUpMode) "Already have an account? Sign in"
+                            else "New farmer? Create an account",
+                            color = KrishiGreen
+                        )
+                    }
+                } else {
+                    Spacer(Modifier.height(14.dp))
+                    Button(
+                        onClick = {
+                            loading = true
+                            error = null
+                            message = null
+                            FirebaseAuthManager.sendPasswordReset(email) {
+                                loading = false
+                                it.onSuccess {
+                                    message = "Password reset email sent. Check your inbox."
+                                }.onFailure { e ->
+                                    error = e.message ?: "Password reset failed."
+                                }
+                            }
+                        },
+                        enabled = !loading && email.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(15.dp),
+                        colors = ButtonDefaults.buttonColors(KrishiGreen)
+                    ) { Text("Send Reset Link", fontWeight = FontWeight.Bold) }
+                    TextButton(
+                        onClick = { resetMode = false; error = null; message = null },
+                        enabled = !loading,
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("← Back to sign in", color = KrishiGreen) }
+                }
+
+                if (loading) {
+                    Spacer(Modifier.height(14.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                        CircularProgressIndicator(modifier = Modifier.size(22.dp), color = KrishiGreen)
+                    }
+                }
+                error?.let {
+                    Spacer(Modifier.height(12.dp))
+                    Text(it, color = Color(0xFFB3261E), fontSize = 12.sp, lineHeight = 17.sp)
+                }
+                message?.let {
+                    Spacer(Modifier.height(12.dp))
+                    Text(it, color = KrishiGreen, fontSize = 12.sp, lineHeight = 17.sp)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+        Text(
+            "By continuing, you can use OpenKrishi AI with Google, email, or a guest session.",
+            color = Muted,
+            fontSize = 11.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 16.sp
+        )
+    }
+}
 
 @Composable
 private fun HomeScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit, onDiagnosis: () -> Unit, onVoice: () -> Unit, onWeather: () -> Unit, onAdvice: () -> Unit) {
@@ -768,7 +999,7 @@ private fun AdvisoryInputScreen(language:String, selectedCrop:String, onCropChan
 private fun HistoryScreen(modifier: Modifier, language: String) { Column(modifier.fillMaxSize().padding(18.dp)) { Text(ui(language, "history"), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink); Spacer(Modifier.height(8.dp)); Text(ui(language, "history_desc"), color = Muted, fontSize = 13.sp); Spacer(Modifier.height(18.dp)); Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(Color.White), modifier = Modifier.fillMaxWidth()) { Text(ui(language, "no_history"), color = Muted, modifier = Modifier.padding(18.dp)) } } }
 
 @Composable
-private fun ProfileScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit) {
+private fun ProfileScreen(modifier: Modifier, language: String, onLanguage: (String) -> Unit, onSignOut: () -> Unit) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp)) {
         Text(ui(language, "profile"), fontSize=24.sp, fontWeight=FontWeight.Bold, color=Ink)
         Spacer(Modifier.height(18.dp))
@@ -781,6 +1012,32 @@ private fun ProfileScreen(modifier: Modifier, language: String, onLanguage: (Str
                     Row(Modifier.fillMaxWidth().clickable { onLanguage(label) }.padding(vertical=6.dp), verticalAlignment=Alignment.CenterVertically) {
                         RadioButton(selected=language==label, onClick={onLanguage(label)}); Text(label, color=Ink)
                     }
+                }
+                Spacer(Modifier.height(18.dp))
+                val user = FirebaseAuthManager.currentUser
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(KrishiMint),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(14.dp)) {
+                        Text(
+                            if (user?.isAnonymous == true) "Guest account" else "Signed-in account",
+                            color = KrishiDeep,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                        user?.email?.let { Text(it, color = Muted, fontSize = 12.sp) }
+                        Text("User ID: ${user?.uid?.take(10) ?: ""}…", color = Muted, fontSize = 10.sp)
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onSignOut,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Sign out", color = Color(0xFFB3261E), fontWeight = FontWeight.Bold)
                 }
             }
         }
