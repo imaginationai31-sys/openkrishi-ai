@@ -32,7 +32,6 @@ android {
 }
 
 dependencies {
-    // Compose 1.9.x remains compatible with this project's AGP/compileSdk setup.
     val composeBom = platform("androidx.compose:compose-bom:2025.11.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -48,6 +47,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.firebase:firebase-ai")
 
     // Google Sign-In via Android Credential Manager
     implementation("androidx.credentials:credentials:1.3.0")
