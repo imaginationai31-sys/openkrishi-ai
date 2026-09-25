@@ -72,7 +72,7 @@ object FirebaseAuthManager {
     fun signInWithGoogle(context: Context, onResult: (Result<FirebaseUser>) -> Unit) {
         val credentialManager = CredentialManager.create(context)
         val googleIdOption = GetGoogleIdOption.Builder()
-            .setServerClientId(context.getString(com.google.firebase.auth.R.string.default_web_client_id))
+            .setServerClientId(context.getString(R.string.default_web_client_id))
             .setFilterByAuthorizedAccounts(false)
             .build()
         val request = GetCredentialRequest.Builder()
@@ -82,7 +82,7 @@ object FirebaseAuthManager {
         credentialManager.getCredentialAsync(
             context,
             request,
-            androidx.core.os.CancellationSignal(),
+            android.os.CancellationSignal(),
             java.util.concurrent.Executors.newSingleThreadExecutor(),
             object : androidx.credentials.CredentialManagerCallback<androidx.credentials.GetCredentialResponse, androidx.credentials.exceptions.GetCredentialException> {
                 override fun onResult(result: androidx.credentials.GetCredentialResponse) {
