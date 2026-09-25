@@ -138,10 +138,10 @@ object FirebaseAuthManager {
             val credentialManager = CredentialManager.create(context)
             credentialManager.clearCredentialStateAsync(
                 ClearCredentialStateRequest(),
-                androidx.core.os.CancellationSignal(),
+                android.os.CancellationSignal(),
                 java.util.concurrent.Executors.newSingleThreadExecutor(),
-                object : androidx.credentials.CredentialManagerCallback<Unit, ClearCredentialException> {
-                    override fun onResult(result: Unit) = Unit
+                object : androidx.credentials.CredentialManagerCallback<Void?, ClearCredentialException> {
+                    override fun onResult(result: Void?) = Unit
                     override fun onError(e: ClearCredentialException) = Unit
                 }
             )
