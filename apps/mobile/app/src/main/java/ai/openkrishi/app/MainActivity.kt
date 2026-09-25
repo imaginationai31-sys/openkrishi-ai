@@ -140,7 +140,21 @@ fun OpenKrishiApp() {
                         Handler(Looper.getMainLooper()).post {
                             advisoryResult = result
                             analyzing = false
-                            FirestoreManager.saveDiagnosis(authUser, "vision", language, selectedCrop, selectedCropName, result = result, imageSource = imageSource?.name)
+                            val image = selectedImage
+                            if (image != null) {
+                                FirebaseStorageManager.uploadCropImage(authUser, image) { upload ->
+                                    val url = upload.getOrNull()
+                                    FirestoreManager.saveDiagnosis(
+                                        authUser, "vision", language, selectedCrop, selectedCropName,
+                                        result = result, imageSource = imageSource?.name, imageUrl = url
+                                    )
+                                }
+                            } else {
+                                FirestoreManager.saveDiagnosis(
+                                    authUser, "vision", language, selectedCrop, selectedCropName,
+                                    result = result, imageSource = imageSource?.name
+                                )
+                            }
                         }
                     } catch (e: Exception) {
                         Handler(Looper.getMainLooper()).post { advisoryError = e.message ?: "OpenKrishi AI से कनेक्ट नहीं हो सका।"; analyzing = false }
