@@ -20,6 +20,7 @@ internal data class DiagnosisHistoryItem(
     val confidence: String = "",
     val safety: String = "",
     val imageSource: String = "",
+    val imageUrl: String = "",
     val createdAtMillis: Long = 0L
 )
 
@@ -62,6 +63,7 @@ internal object FirestoreManager {
         query: String? = null,
         result: AdvisoryResult,
         imageSource: String? = null,
+        imageUrl: String? = null,
         onResult: (Result<Unit>) -> Unit = {}
     ) {
         val doc = historyRef(user).document()
@@ -80,6 +82,7 @@ internal object FirestoreManager {
         if (cropName.isNotBlank()) data["cropName"] = cropName
         query?.takeIf { it.isNotBlank() }?.let { data["query"] = it }
         imageSource?.takeIf { it.isNotBlank() }?.let { data["imageSource"] = it }
+        imageUrl?.takeIf { it.isNotBlank() }?.let { data["imageUrl"] = it }
 
         doc.set(data)
             .addOnSuccessListener { onResult(Result.success(Unit)) }
@@ -110,6 +113,7 @@ internal object FirestoreManager {
                         confidence = doc.getString("confidence") ?: "",
                         safety = doc.getString("safety") ?: "",
                         imageSource = doc.getString("imageSource") ?: "",
+                        imageUrl = doc.getString("imageUrl") ?: "",
                         createdAtMillis = doc.getLong("createdAt") ?: 0L
                     )
                 }
