@@ -48,6 +48,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-ai")
+    implementation("com.google.firebase:firebase-appcheck-debug")
 
     // Google Sign-In via Android Credential Manager
     implementation("androidx.credentials:credentials:1.3.0")
