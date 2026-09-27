@@ -5,11 +5,13 @@ import uuid
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from services.api.app_check import require_app_check
+
 logger = logging.getLogger("openkrishi.api")
 
 
 class RequestTraceMiddleware(BaseHTTPMiddleware):
-    """Attach a short trace ID to every request and response."""
+    """Attach a short trace ID to every request and enforce optional App Check."""
 
     async def dispatch(self, request: Request, call_next):
         trace_id = request.headers.get("X-Trace-ID") or uuid.uuid4().hex[:16]
@@ -17,6 +19,7 @@ class RequestTraceMiddleware(BaseHTTPMiddleware):
         started = time.perf_counter()
 
         try:
+            await require_app_check(request)
             response = await call_next(request)
         except Exception:
             elapsed_ms = (time.perf_counter() - started) * 1000
