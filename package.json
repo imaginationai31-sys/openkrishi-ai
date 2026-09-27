@@ -1,0 +1,1 @@
+{"name":"openkrishi-ai","private":true,"workspaces":["apps/pwa"],"scripts":{"build:pwa":"npm --workspace apps/pwa run build","dev:pwa":"npm --workspace apps/pwa run dev"}}
