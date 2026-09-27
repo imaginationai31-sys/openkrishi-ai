@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://openkrishi-ai-api.onrender.com").replace(/\/$/, "");
+import { apiFetch } from "./api";
 
 export type WeatherData = {
   location: { latitude: number; longitude: number; timezone?: string; elevation_m?: number };
@@ -35,7 +35,7 @@ export async function getWeather(latitude: number, longitude: number, language: 
     language,
     forecast_days: String(forecastDays),
   });
-  const response = await fetch(`${API_BASE_URL}/api/v1/weather?${params.toString()}`);
+  const response = await apiFetch(`/api/v1/weather?${params.toString()}`);
   if (!response.ok) {
     let message = "Weather information is temporarily unavailable.";
     try {
