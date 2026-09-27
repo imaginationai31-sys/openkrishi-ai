@@ -2,10 +2,8 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, type AppCheck } from "firebase/app-check";
 
-// Firebase Web SDK configuration is client-side configuration.
-// Firebase Security Rules and App Check protect backend resources.
-// Environment variables can override these values for staging/development.
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBfI46YJApVNyiV4saVGO-OVsH9UgdDXfs",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "openkrishi-ai.firebaseapp.com",
@@ -16,6 +14,15 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
+
+const recaptchaEnterpriseSiteKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY || "";
+
+export const appCheck: AppCheck | null = recaptchaEnterpriseSiteKey
+  ? initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(recaptchaEnterpriseSiteKey),
+      isTokenAutoRefreshEnabled: true,
+    })
+  : null;
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
