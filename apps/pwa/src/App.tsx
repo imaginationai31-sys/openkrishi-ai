@@ -4,6 +4,7 @@ import { auth } from "./firebase";
 import { upsertUserProfile } from "./services/profile";
 import { assessCropImage, type VisionAssessment } from "./services/diagnosis";
 import { playBase64Audio, sendVoiceAdvisory, type VoiceAdvisoryResult } from "./services/voice";
+import { listHistory, saveDiagnosisHistory, type HistoryRecord } from "./services/history";
 
 const languages = [["bn", "বাংলা"], ["hi", "हिन्दी"], ["ta", "தமிழ்"], ["pa", "ਪੰਜਾਬੀ"], ["te", "తెలుగు"]] as const;
 const crops = [["rice", "Rice", "🌾"], ["peanut", "Peanut", "🥜"], ["vegetables", "Vegetables", "🥬"], ["flowers", "Flowers", "🌼"]] as const;
@@ -13,7 +14,7 @@ export default function App() {
   const [language, setLanguage] = useState("hi");
   const [busy, setBusy] = useState(true);
   const [authError, setAuthError] = useState("");
-  const [screen, setScreen] = useState<"home" | "diagnose">("home");
+  const [screen, setScreen] = useState<"home" | "diagnose" | "voice" | "history">("home");
   const [crop, setCrop] = useState("rice");
   const [growthStage, setGrowthStage] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
@@ -30,6 +31,9 @@ export default function App() {
   const [diagnosisError, setDiagnosisError] = useState("");
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
+  const [history, setHistory] = useState<HistoryRecord[]>([]);
+  const [historyBusy, setHistoryBusy] = useState(false);
+  const [historyError, setHistoryError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -87,6 +91,7 @@ export default function App() {
         try {
           const result = await sendVoiceAdvisory(blob, language, crop, growthStage);
           setVoiceResult(result);
+          if (user) await saveDiagnosisHistory(user.uid, { type: "voice", language, cropCategory: crop, growthStage, question: result.transcription.text, advisory: result.advisory });
           if (user) await upsertUserProfile(user, language, crop);
           if (result.audio?.base64) playBase64Audio(result.audio.base64, result.audio.mime_type || "audio/wav");
         } catch (error) { setVoiceError(error instanceof Error ? error.message : "Voice advisory failed. Please try again."); }
@@ -132,6 +137,7 @@ export default function App() {
     try {
       const result = await assessCropImage(photo, { cropCategory: crop, language, growthStage });
       setAssessment(result);
+      if (user) await saveDiagnosisHistory(user.uid, { type: "vision", language, cropCategory: crop, growthStage, advisory: result.advisory, possibleCauses: result.vision.possible_causes });
       if (user) {
         await upsertUserProfile(user, language, crop);
       }
@@ -142,8 +148,25 @@ export default function App() {
     }
   };
 
+  const openHistory = async () => {
+    setScreen("history"); setHistoryError(""); setHistoryBusy(true);
+    try { if (user) setHistory(await listHistory(user.uid)); }
+    catch (error) { setHistoryError(error instanceof Error ? error.message : "Unable to load history."); }
+    finally { setHistoryBusy(false); }
+  };
+
   if (busy) {
     return <main className="splash"><div className="logo">🌱</div><h1>OpenKrishi AI</h1><p>Preparing your farm assistant…</p></main>;
+  }
+
+  if (screen === "history") {
+    return <main className="shell">
+      <header className="topbar"><button className="back-button" onClick={() => setScreen("home")}>← Home</button><span className="status">{user ? "Connected" : "Offline"}</span></header>
+      <section className="diagnose-hero"><p className="eyebrow">YOUR FARM HISTORY</p><h1>Past advice</h1><p>Your recent crop diagnoses and voice advisories are saved privately to your Firebase account.</p></section>
+      {historyError && <div className="notice error" role="alert">{historyError}</div>}
+      {historyBusy ? <section className="panel"><p>Loading your history…</p></section> : history.length === 0 ? <section className="panel"><h2>No history yet</h2><p>Complete a crop diagnosis or voice advisory and it will appear here.</p></section> : <section className="history-list">{history.map((item) => <article className="panel history-card" key={item.id}><div className="result-status"><span>{item.type === "vision" ? "📷 Crop diagnosis" : "🎙️ Voice advisory"}</span><strong>{item.confidence || "unknown"} confidence</strong></div><h2>{item.advisory.answer}</h2><p className="history-meta">{item.cropCategory || "Crop"}{item.growthStage ? ` · ${item.growthStage}` : ""}{item.question ? ` · “${item.question}”` : ""}</p>{item.advisory.recommendations.length > 0 && <ResultList title="Recommended checks" items={item.advisory.recommendations} />}</article>)}</section>}
+      <nav className="bottom-nav"><button onClick={()=>setScreen("home")}>⌂<span>Home</span></button><button onClick={()=>openDiagnosis()}>📷<span>Diagnose</span></button><button onClick={openVoice}>🎙️<span>Voice</span></button><button className="nav-active" onClick={openHistory}>📚<span>History</span></button></nav>
+    </main>;
   }
 
   if (screen === "voice") {
@@ -155,7 +178,7 @@ export default function App() {
       <section className="panel voice-panel"><button className={recording ? "record-button recording":"record-button"} onClick={recording ? stopRecording : startRecording} aria-label={recording ? "Stop recording":"Start recording"}>🎙️</button><h2>{recording ? "Listening…" : voiceBusy ? "Preparing your advisory…" : "Tap to speak"}</h2><p>{recording ? "Speak clearly about your crop, then tap again when finished.":"Your browser will request microphone permission the first time."}</p></section>
       {voiceError && <div className="notice error" role="alert">{voiceError}</div>}
       {voiceResult && <section className="panel result-panel"><div className="result-status"><span>Transcription</span><strong>{voiceResult.transcription.confidence} confidence</strong></div><p className="transcription">“{voiceResult.transcription.text}”</p><h2>{voiceResult.advisory.answer}</h2>{voiceResult.advisory.observations.length>0&&<ResultList title="Observations" items={voiceResult.advisory.observations}/>}<ResultList title="Safe next steps" items={voiceResult.advisory.recommendations}/>{voiceResult.advisory.uncertainties.length>0&&<ResultList title="Important limitations" items={voiceResult.advisory.uncertainties}/>} {voiceResult.audio?.base64&&<button className="secondary-action replay-button" onClick={()=>playBase64Audio(voiceResult.audio!.base64,voiceResult.audio!.mime_type||"audio/wav")}>🔊 Play again</button>}</section>}
-      <nav className="bottom-nav"><button onClick={()=>setScreen("home")}>⌂<span>Home</span></button><button onClick={()=>openDiagnosis()}>📷<span>Diagnose</span></button><button className="nav-active">🎙️<span>Voice</span></button><button>📚<span>History</span></button></nav>
+      <nav className="bottom-nav"><button onClick={()=>setScreen("home")}>⌂<span>Home</span></button><button onClick={()=>openDiagnosis()}>📷<span>Diagnose</span></button><button className="nav-active">🎙️<span>Voice</span></button><button onClick={openHistory}>📚<span>History</span></button></nav>
     </main>;
   }
 
@@ -228,7 +251,7 @@ export default function App() {
           <button onClick={() => setScreen("home")}>⌂<span>Home</span></button>
           <button className="nav-active">📷<span>Diagnose</span></button>
           <button onClick={openVoice}>🎙️<span>Voice</span></button>
-          <button>📚<span>History</span></button>
+          <button onClick={openHistory}>📚<span>History</span></button>
         </nav>
       </main>
     );
