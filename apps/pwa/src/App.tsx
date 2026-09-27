@@ -5,6 +5,7 @@ import { upsertUserProfile } from "./services/profile";
 import { assessCropImage, type VisionAssessment } from "./services/diagnosis";
 import { playBase64Audio, sendVoiceAdvisory, type VoiceAdvisoryResult } from "./services/voice";
 import { listHistory, saveDiagnosisHistory, type HistoryRecord } from "./services/history";
+import { getWeather, type WeatherData } from "./services/weather";
 
 const languages = [["bn", "বাংলা"], ["hi", "हिन्दी"], ["ta", "தமிழ்"], ["pa", "ਪੰਜਾਬੀ"], ["te", "తెలుగు"]] as const;
 const crops = [["rice", "Rice", "🌾"], ["peanut", "Peanut", "🥜"], ["vegetables", "Vegetables", "🥬"], ["flowers", "Flowers", "🌼"]] as const;
@@ -34,6 +35,9 @@ export default function App() {
   const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [historyBusy, setHistoryBusy] = useState(false);
   const [historyError, setHistoryError] = useState("");
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weatherBusy, setWeatherBusy] = useState(false);
+  const [weatherError, setWeatherError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -70,6 +74,35 @@ export default function App() {
   }, [user, language]);
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+
+  useEffect(() => { if (screen === "home" && !weather) loadWeather(); }, [screen]);
+
+  useEffect(() => { if (screen === "home" && weather) loadWeather(); }, [language]);
+
+  const loadWeather = () => {
+    if (!navigator.geolocation) {
+      setWeatherError("Location is not supported by this browser.");
+      return;
+    }
+    setWeatherBusy(true);
+    setWeatherError("");
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          setWeather(await getWeather(position.coords.latitude, position.coords.longitude, language, 5));
+        } catch (error) {
+          setWeatherError(error instanceof Error ? error.message : "Unable to load weather.");
+        } finally {
+          setWeatherBusy(false);
+        }
+      },
+      () => {
+        setWeatherBusy(false);
+        setWeatherError("Location access was not granted. Tap refresh and allow location to see local weather.");
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 15 * 60 * 1000 },
+    );
+  };
 
   const openVoice = () => { setScreen("voice"); setVoiceError(""); setVoiceResult(null); };
 
@@ -264,6 +297,10 @@ export default function App() {
         <span className="status">{user ? "Connected" : "Offline"}</span>
       </header>
       {authError && <div className="notice" role="status">{authError}</div>}
+      <section className="weather-card panel">
+        <div className="section-heading"><h2>🌤️ Local weather</h2><button className="weather-refresh" onClick={loadWeather} disabled={weatherBusy}>{weatherBusy ? "Updating…" : "Refresh"}</button></div>
+        {weather ? <><div className="weather-current"><div><strong>{Math.round(weather.current.temperature_2m ?? 0)}°C</strong><span>{weather.current.weather_description || "Weather"}</span></div><div className="weather-stats"><span>💧 {Math.round(weather.current.relative_humidity_2m ?? 0)}% humidity</span><span>💨 {Math.round(weather.current.wind_speed_10m ?? 0)} km/h wind</span></div></div><div className="weather-alert">🌱 {weather.farm_alert}</div><div className="forecast-row">{weather.forecast.slice(0,5).map((day)=><div className="forecast-day" key={day.date}><strong>{new Date(day.date + "T00:00:00").toLocaleDateString(undefined,{weekday:"short"})}</strong><span>{Math.round(day.temperature_max_c ?? 0)}° / {Math.round(day.temperature_min_c ?? 0)}°</span><small>🌧️ {Math.round(day.precipitation_probability_max_pct ?? 0)}%</small></div>)}</div></> : <div className="weather-empty"><p>{weatherError || "Get your local weather and farm alert."}</p><button className="primary-action" onClick={loadWeather} disabled={weatherBusy}>{weatherBusy ? "Getting weather…" : "Use my location"}</button></div>}
+      </section>
       <section className="hero">
         <div><p className="eyebrow">YOUR FARM ASSISTANT</p><h1>Understand your crop. Act with confidence.</h1><p>Take a crop photo, ask by voice, and receive localized agricultural guidance.</p></div>
         <div className="hero-icon">🌾</div>
