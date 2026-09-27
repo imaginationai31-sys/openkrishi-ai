@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://openkrishi-ai-api.onrender.com").replace(/\/$/, "");
+import { apiFetch } from "./api";
 
 export type VisionAssessment = {
   status: string;
@@ -34,7 +34,7 @@ export async function assessCropImage(
   form.append("language", options.language);
   if (options.growthStage?.trim()) form.append("growth_stage", options.growthStage.trim());
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/vision/assess`, {
+  const response = await apiFetch("/api/v1/vision/assess", {
     method: "POST",
     body: form,
   });
