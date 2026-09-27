@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://openkrishi-ai-api.onrender.com").replace(/\/$/, "");
+import { apiFetch } from "./api";
 
 export type VoiceAdvisoryResult = {
   transcription: { text: string; normalized_text: string; language: string; confidence: string };
@@ -25,7 +25,7 @@ export async function sendVoiceAdvisory(
   if (cropCategory) form.append("crop_category", cropCategory);
   if (growthStage?.trim()) form.append("growth_stage", growthStage.trim());
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/voice/advisory`, {
+  const response = await apiFetch("/api/v1/voice/advisory", {
     method: "POST",
     body: form,
   });
