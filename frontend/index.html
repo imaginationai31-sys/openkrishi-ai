@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#166534">
-<title>OpenKrishi AI — Voice & Vision Advisory</title>
+<title>OpenKrishi AI — Free Agricultural Intelligence</title>
 <style>
 :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#173b2f;background:#f7fbf8;--green:#0b7a4b;--deep:#064d32;--muted:#64766d}
 *{box-sizing:border-box}
@@ -121,10 +121,10 @@ label{display:block;font-weight:700;margin:0 0 7px}select{width:100%;padding:13p
   <div class="content">
     <h2 class="section-title" style="display:none">Quick help for you</h2>
     <div class="grid2">
-      <button class="feature green" onclick="showPage('diagnosis')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><rect x="38" y="45" width="104" height="70" rx="14" fill="#182534"/><rect x="55" y="32" width="38" height="18" rx="5" fill="#243447"/><circle cx="90" cy="80" r="31" fill="#071827" stroke="#d7f7ff" stroke-width="7"/><circle cx="90" cy="80" r="19" fill="#149bd1"/><circle cx="84" cy="74" r="6" fill="#8ce7ff"/><rect x="45" y="56" width="18" height="10" rx="4" fill="#dce9ef"/><rect x="117" y="54" width="13" height="9" rx="3" fill="#9caeb8"/><path d="M132 88c20-18 32-19 38-9-3 22-17 36-38 34-9-1-14-6-16-12 5-4 10-8 16-13Z" fill="#45bf55"/><circle cx="143" cy="98" r="4" fill="#e8cf38"/><circle cx="155" cy="105" r="3" fill="#e8cf38"/><path d="M24 38v-12h18M156 38v-12h-18M24 112v12h18M156 112v12h-18" fill="none" stroke="white" stroke-width="6" stroke-linecap="round"/></svg></div><strong id="quickDiagnosis">Diagnosis</strong><span id="quickDiagnosisDesc">Take a photo to find the problem</span></button>
-      <button class="feature purple" onclick="showPage('voice')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><circle cx="90" cy="72" r="51" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="5"/><rect x="76" y="35" width="28" height="63" rx="15" fill="white"/><path d="M62 70c0 19 12 32 28 32s28-13 28-32M90 103v17M72 122h36" fill="none" stroke="white" stroke-width="7" stroke-linecap="round"/><path d="M45 62v20M34 56v32M23 67v10M135 62v20M146 56v32M157 67v10" stroke="white" stroke-width="7" stroke-linecap="round"/></svg></div><strong id="quickVoice">Voice</strong><span id="quickVoiceDesc">Speak and hear the answer</span></button>
+      <button class="feature green" onclick="showPage('diagnosis')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><rect x="38" y="45" width="104" height="70" rx="14" fill="#182534"/><rect x="55" y="32" width="38" height="18" rx="5" fill="#243447"/><circle cx="90" cy="80" r="31" fill="#071827" stroke="#d7f7ff" stroke-width="7"/><circle cx="90" cy="80" r="19" fill="#149bd1"/><circle cx="84" cy="74" r="6" fill="#8ce7ff"/><rect x="45" y="56" width="18" height="10" rx="4" fill="#dce9ef"/><rect x="117" y="54" width="13" height="9" rx="3" fill="#9caeb8"/><path d="M132 88c20-18 32-19 38-9-3 22-17 36-38 34-9-1-14-6-16-12 5-4 10-8 16-13Z" fill="#45bf55"/><circle cx="143" cy="98" r="4" fill="#e8cf38"/><circle cx="155" cy="105" r="3" fill="#e8cf38"/><path d="M24 38v-12h18M156 38v-12h-18M24 112v12h18M156 112v12h-18" fill="none" stroke="white" stroke-width="6" stroke-linecap="round"/></svg></div><strong id="quickDiagnosis">Ask AI</strong><span id="quickDiagnosisDesc">Describe your crop problem</span></button>
+      <button class="feature purple" onclick="showPage('diagnosis')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><circle cx="90" cy="72" r="51" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="5"/><rect x="76" y="35" width="28" height="63" rx="15" fill="white"/><path d="M62 70c0 19 12 32 28 32s28-13 28-32M90 103v17M72 122h36" fill="none" stroke="white" stroke-width="7" stroke-linecap="round"/><path d="M45 62v20M34 56v32M23 67v10M135 62v20M146 56v32M157 67v10" stroke="white" stroke-width="7" stroke-linecap="round"/></svg></div><strong id="quickVoice">Ask AI</strong><span id="quickVoiceDesc">Get practical farming guidance</span></button>
       <button class="feature sky" onclick="showPage('weather')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><circle cx="62" cy="55" r="29" fill="#ffd21c"/><g stroke="#ffe86b" stroke-width="6" stroke-linecap="round"><path d="M62 12v13M62 85v13M19 55h13M92 55h13M32 25l9 9M84 81l9 9M32 85l9-9M84 29l9-9"/></g><path d="M54 88c-1-19 17-29 32-20 9-22 44-15 44 9 16-1 27 9 27 22H47c-8 0-12-8-5-14 3-3 7-4 12-3Z" fill="#f2f9ff"/><path d="M72 116c0 9-6 13-6 18 0 5 3 8 7 8s7-3 7-8c0-5-8-9-8-18ZM103 116c0 9-6 13-6 18 0 5 3 8 7 8s7-3 7-8c0-5-8-9-8-18ZM134 116c0 9-6 13-6 18 0 5 3 8 7 8s7-3 7-8c0-5-8-9-8-18Z" fill="#28c9f4"/></svg></div><strong id="quickWeather">Weather</strong><span id="quickWeatherDesc">Rain and alerts</span></button>
-      <button class="feature amber" onclick="showPage('advisory')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><circle cx="90" cy="55" r="37" fill="#fff6a8"/><circle cx="90" cy="55" r="28" fill="#fffde7"/><path d="M80 80h20v22H80zM76 103h28v8H76zM82 111h16v7H82z" fill="#303b45"/><path d="M90 102V55M90 72c-20 0-27-12-28-24 17-2 28 6 28 24ZM90 65c18-4 27-14 28-27-16-3-28 6-28 27Z" fill="#38b94a"/><path d="M25 126c25-13 47-13 65 0 18-13 40-13 65 0" fill="none" stroke="#3b9f3f" stroke-width="8" stroke-linecap="round"/><path d="M90 18V5M46 28l-9-10M134 28l9-10M35 62H21M145 62h14" stroke="white" stroke-width="6" stroke-linecap="round"/></svg></div><strong id="quickAdvice">Advisory</strong><span id="quickAdviceDesc">Practical farming guidance</span></button>
+      <button class="feature amber" onclick="showPage('diagnosis')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><circle cx="90" cy="55" r="37" fill="#fff6a8"/><circle cx="90" cy="55" r="28" fill="#fffde7"/><path d="M80 80h20v22H80zM76 103h28v8H76zM82 111h16v7H82z" fill="#303b45"/><path d="M90 102V55M90 72c-20 0-27-12-28-24 17-2 28 6 28 24ZM90 65c18-4 27-14 28-27-16-3-28 6-28 27Z" fill="#38b94a"/><path d="M25 126c25-13 47-13 65 0 18-13 40-13 65 0" fill="none" stroke="#3b9f3f" stroke-width="8" stroke-linecap="round"/><path d="M90 18V5M46 28l-9-10M134 28l9-10M35 62H21M145 62h14" stroke="white" stroke-width="6" stroke-linecap="round"/></svg></div><strong id="quickAdvice">Crop Knowledge</strong><span id="quickAdviceDesc">Learn about crops and farming</span></button>
     </div>
     <h2 class="section-title" style="margin-top:18px">Popular crops <span style="float:right;font-size:16px;padding-top:8px;color:#13745b">View all crops&nbsp; →</span></h2>
     <div class="crops">
@@ -133,36 +133,39 @@ label{display:block;font-weight:700;margin:0 0 7px}select{width:100%;padding:13p
 <div class="crop-card"><div class="crop-art"><svg viewBox="0 0 400 190"><defs><linearGradient id="vg"><stop stop-color="#c5ef7c"/><stop offset="1" stop-color="#51a94b"/></linearGradient></defs><rect width="400" height="190" fill="url(#vg)"/><g fill="#3c9e48"><ellipse cx="72" cy="88" rx="38" ry="23"/><ellipse cx="120" cy="72" rx="43" ry="26"/><ellipse cx="172" cy="88" rx="44" ry="28"/><ellipse cx="220" cy="68" rx="42" ry="25"/><ellipse cx="270" cy="90" rx="48" ry="29"/><ellipse cx="320" cy="72" rx="42" ry="25"/></g><g><ellipse cx="112" cy="127" rx="31" ry="27" fill="#e33b2f"/><ellipse cx="180" cy="129" rx="34" ry="28" fill="#ef4a37"/><path d="M245 105h35v55h-35z" fill="#f2b728"/><ellipse cx="305" cy="132" rx="28" ry="18" fill="#e85a2f"/><path d="M107 102c6-12 18-15 29-9M174 102c7-12 19-14 30-7M247 103c6-12 17-14 29-7" stroke="#3b963f" stroke-width="7" fill="none"/></g></svg></div><div class="crop-info"><span>🥬</span>Vegetables</div></div>
 <div class="crop-card"><div class="crop-art"><svg viewBox="0 0 400 190"><defs><linearGradient id="fg"><stop stop-color="#f0b9ff"/><stop offset=".65" stop-color="#f3e7ff"/><stop offset="1" stop-color="#d45d88"/></linearGradient></defs><rect width="400" height="190" fill="url(#fg)"/><g stroke="#2e8d3d" stroke-width="6"><path d="M100 165V92M200 165V66M300 165V93"/></g><g fill="#ef3340"><circle cx="100" cy="70" r="18"/><circle cx="84" cy="82" r="18"/><circle cx="116" cy="82" r="18"/></g><g fill="#e5a500"><circle cx="200" cy="47" r="18"/><circle cx="184" cy="60" r="18"/><circle cx="216" cy="60" r="18"/></g><g fill="#c13de4"><circle cx="300" cy="73" r="17"/><circle cx="285" cy="86" r="17"/><circle cx="315" cy="86" r="17"/></g><circle cx="100" cy="80" r="8" fill="#ffd84a"/><circle cx="200" cy="57" r="8" fill="#ffd84a"/><circle cx="300" cy="82" r="8" fill="#ffd84a"/></svg></div><div class="crop-info"><span>🌸</span>Flowers</div></div>
 </div>
-    <div class="farmer-card"><div class="check">✓</div><div><strong id="farmerTitle">In the farmer's language, by the farmer's side</strong><span id="farmerSub">AI Vision • Voice • Weather • 6 languages</span></div></div>
+    <div class="farmer-card"><div class="check">✓</div><div><strong id="farmerTitle">In the farmer's language, by the farmer's side</strong><span id="farmerSub">AI Advisory • Weather • Crop Knowledge • Farmer History</span></div></div>
   </div>
 </section>
 
 <section id="diagnosisPage" class="workspace page-section">
   <button class="back" onclick="showPage('home')">← <span id="backDiagnosis">Home</span></button>
   <div class="panel">
-    <h2 class="panel-title">Crop Diagnosis</h2>
+    <h2 class="panel-title">Ask OpenKrishi AI</h2>
+    <p class="hint" style="margin-bottom:18px">Describe your crop problem and get practical guidance in your selected language.</p>
     <label id="languageLabel" for="language"></label>
     <select id="language"><option value="en" selected>English</option><option value="bn">বাংলা</option><option value="hi">हिन्दी</option><option value="ta">தமிழ்</option><option value="pa">ਪੰਜਾਬੀ</option><option value="te">తెలుగు</option></select>
     <label id="cropLabel" for="crop"></label>
-    <select id="crop"><option value="rice">🌾 Rice</option><option value="peanut">🥜 Peanut</option><option value="vegetables">🥬 Vegetables</option><option value="flowers">🌸 Flowers</option></select><label id="cropNameLabel" for="cropName"></label><select id="cropName"></select>
-    <label id="photoLabel"></label>
-    <div class="photo-actions"><button id="cameraButton" class="photo-button" type="button"></button><button id="galleryButton" class="photo-button" type="button"></button></div>
-    <input id="cameraInput" class="hidden-file" type="file" accept="image/*" capture="environment"><input id="galleryInput" class="hidden-file" type="file" accept="image/*">
-    <div id="selectedFile" class="selected-file"></div><img id="photoPreview" class="photo-preview" hidden alt="Selected crop photo preview">
-    <button id="record" class="record" type="button"></button>
-    <div id="status" class="status"></div><p id="photoHint" class="hint"></p>
+    <select id="crop"><option value="rice">🌾 Rice</option><option value="peanut">🥜 Peanut</option><option value="vegetables">🥬 Vegetables</option><option value="flowers">🌸 Flowers</option></select>
+    <label id="cropNameLabel" for="cropName"></label><select id="cropName"></select>
+    <label for="growthStage">Growth stage (optional)</label>
+    <input id="growthStage" type="text" placeholder="e.g. seedling, tillering, flowering" style="width:100%;padding:13px;border:1px solid #cbd8c8;border-radius:12px;background:#fff;font-size:16px;margin-bottom:14px">
+    <label for="question">Your farming question</label>
+    <textarea id="question" rows="6" placeholder="Example: My rice leaves are turning yellow. What should I do?" style="width:100%;padding:13px;border:1px solid #cbd8c8;border-radius:12px;background:#fff;font-size:16px;resize:vertical"></textarea>
+    <button id="askButton" class="location-button" type="button" style="width:100%;margin-top:12px">Ask OpenKrishi AI</button>
+    <div id="status" class="status" style="margin-top:12px"></div>
   </div>
-  <div id="resultCard" class="panel" hidden><strong id="adviceTitle"></strong><div id="result" class="result"></div><span id="safety" class="safety"></span><audio id="audio" controls></audio><div id="vision" class="small"></div><div id="details" class="small"></div></div>
+  <div id="resultCard" class="panel" hidden><strong id="adviceTitle"></strong><div id="result" class="result"></div><span id="safety" class="safety"></span><audio id="audio" controls hidden></audio><div id="vision" class="small" hidden></div><div id="details" class="small"></div></div>
+  <div style="display:none"><button id="record" type="button"></button><button id="cameraButton" type="button"></button><button id="galleryButton" type="button"></button><input id="cameraInput" type="file"><input id="galleryInput" type="file"><div id="selectedFile"></div><img id="photoPreview"><p id="photoHint"></p></div>
 </section>
 
 <section id="voicePage" class="workspace page-section">
   <button class="back" onclick="showPage('home')">← Home</button>
-  <div class="panel"><h2 class="panel-title">Voice Advisory</h2><p class="hint">Hold the microphone and speak your crop problem.</p><button class="record" type="button" onclick="showPage('diagnosis');document.getElementById('record').click()">🎙️<br>Speak</button></div>
+  <div class="panel"><h2 class="panel-title">Ask OpenKrishi AI</h2><p class="hint">Use the Ask AI screen to describe your crop problem.</p><button class="record" type="button" onclick="showPage('diagnosis');document.getElementById('record').click()">🎙️<br>Speak</button></div>
 </section>
 
 <section id="advisoryPage" class="workspace page-section">
   <button class="back" onclick="showPage('home')">← Home</button>
-  <div class="panel"><h2 class="panel-title">OpenKrishi Advisory</h2><p class="hint">Use the microphone to ask your farming question.</p><button class="record" type="button" onclick="showPage('diagnosis');document.getElementById('record').click()">🎙️<br>Ask</button></div>
+  <div class="panel"><h2 class="panel-title">Crop Knowledge</h2><p class="hint">Select a crop and ask a farming question to get practical guidance.</p><button class="record" type="button" onclick="showPage('diagnosis');document.getElementById('record').click()">🎙️<br>Ask</button></div>
 </section>
 
 <section id="weatherPage" class="workspace page-section">
@@ -224,7 +227,7 @@ activePointerId=null,
 lastLatitude=null,
 lastLongitude=null;
 
-const CROP_CATALOG={rice:["Basmati","Pusa Basmati 1121","Pusa Basmati 1509","Pusa Basmati 1718","Sona Masuri","IR64","Swarna","Gobindobhog","Ponni","HMT","MTU 1010","MTU 7029","Samba Mahsuri","BPT 5204","PR 106","PR 114","ADT 36","ADT 43","ADT 45","CR 1009","CR 1009 Sub1","Jaya","Jyothi","Uma","Kalanamak","Kala Namak"],peanut:["JL 24","GG 20","TMV 2","TAG 24","Kadiri 6","Kadiri 9","Kadiri 2","ICGS 11","ICGS 44","Dharani","Kadiri Harithandhra","TMV 7","VRI 2"],vegetables:["Potato","Tomato","Brinjal","Chilli","Okra","Cabbage","Cauliflower","Onion","Cucumber","Pumpkin","Bitter Gourd","Bottle Gourd","Beans","Peas","Carrot","Radish","Spinach","Amaranth","Beetroot","Turnip","Broccoli","Capsicum","French Bean","Cluster Bean","Drumstick","Ivy Gourd","Ridge Gourd","Snake Gourd","Ash Gourd","Pointed Gourd","Coriander","Fenugreek","Sweet Potato","Yam","Colocasia","Garlic","Ginger","Green Peas","Sweet Corn","Mushroom"],flowers:["Rose","Marigold","Chrysanthemum","Jasmine","Tuberose","Hibiscus","Gerbera","Gladiolus","Lily","Orchid","Carnation","Dahlia","Aster","Zinnia","Petunia","Gomphrena","Celosia","Crossandra","Anthurium","Sunflower","Calendula","Portulaca","Periwinkle","Rajnigandha"]};
+const CROP_CATALOG={rice:["Basmati","Pusa Basmati 1121","Pusa Basmati 1509","Pusa Basmati 1718","Sona Masuri","IR64","Swarna","Gobindobhog","Ponni","HMT","MTU 1010","MTU 7029","Samba Mahsuri","BPT 5204","PR 106","PR 114","ADT 36","ADT 43","ADT 45","CR 1009","CR 1009 Sub1","Jaya","Jyothi","Uma","Kalanamak","Kala Namak"],peanut:["JL 24","GG 20","TMV 2","TAG 24","Kadiri 6","Kadiri 9","Kadiri 2","ICGS 11","ICGS 44","Dharani","Kadiri Harithandhra","TMV 7","VRI 2"],vegetables:["Potato","Brinjal","Okra","Cabbage","Cauliflower","Onion","Cucumber","Pumpkin","Bitter Gourd","Bottle Gourd","Beans","Peas","Carrot","Radish","Spinach","Amaranth","Beetroot","Turnip","Broccoli","Capsicum","French Bean","Cluster Bean","Drumstick","Ivy Gourd","Ridge Gourd","Snake Gourd","Ash Gourd","Pointed Gourd","Coriander","Fenugreek","Sweet Potato","Yam","Colocasia","Garlic","Ginger","Green Peas","Sweet Corn","Mushroom"],flowers:["Rose","Marigold","Chrysanthemum","Jasmine","Tuberose","Hibiscus","Gerbera","Gladiolus","Lily","Orchid","Carnation","Dahlia","Aster","Zinnia","Petunia","Gomphrena","Celosia","Crossandra","Anthurium","Sunflower","Calendula","Portulaca","Periwinkle","Rajnigandha"]};
 function populateCropNames(){
   if(!cropNameEl)return;
   const list=CROP_CATALOG[cropEl.value]||[];
@@ -280,7 +283,7 @@ weatherUpdated=document.getElementById('weatherUpdated');
 const ui={
 
 en:{
-tagline:'Describe your crop problem and optionally add a photo',
+tagline:'Free agricultural intelligence for every farmer',
 weatherTitle:'🌦 Farm Weather',
 locationNone:'Location not selected',
 locationDetected:'Location detected',
@@ -337,7 +340,7 @@ somethingWrong:'Something went wrong.'
 },
 
 bn:{
-tagline:'আপনার ফসলের সমস্যা বলুন এবং চাইলে ছবি যোগ করুন',
+tagline:'আপনার ফসলের সমস্যা বলুন এবং বিনামূল্যে কৃষি পরামর্শ নিন',
 weatherTitle:'🌦 খামারের আবহাওয়া',
 locationNone:'অবস্থান নির্বাচন করা হয়নি',
 locationDetected:'অবস্থান শনাক্ত হয়েছে',
@@ -393,7 +396,7 @@ somethingWrong:'কিছু ভুল হয়েছে।'
 },
 
 hi:{
-tagline:'अपनी फसल की समस्या बताएं और चाहें तो फोटो जोड़ें',
+tagline:'अपनी फसल की समस्या बताएं और मुफ्त कृषि सलाह पाएं',
 weatherTitle:'🌦 खेत का मौसम',
 locationNone:'स्थान चुना नहीं गया',
 locationDetected:'स्थान मिल गया',
@@ -449,7 +452,7 @@ somethingWrong:'कुछ गलत हो गया।'
 },
 
 ta:{
-tagline:'உங்கள் பயிர் பிரச்சினையைப் பேசுங்கள்; விரும்பினால் புகைப்படம் சேர்க்கவும்',
+tagline:'உங்கள் பயிர் பிரச்சினையைச் சொல்லுங்கள்; இலவச வேளாண் ஆலோசனை பெறுங்கள்',
 weatherTitle:'🌦 பண்ணை வானிலை',
 locationNone:'இடம் தேர்ந்தெடுக்கப்படவில்லை',
 locationDetected:'இருப்பிடம் கண்டறியப்பட்டது',
@@ -505,7 +508,7 @@ somethingWrong:'ஏதோ தவறு ஏற்பட்டது.'
 },
 
 pa:{
-tagline:'ਆਪਣੀ ਫਸਲ ਦੀ ਸਮੱਸਿਆ ਦੱਸੋ ਅਤੇ ਚਾਹੋ ਤਾਂ ਫੋਟੋ ਜੋੜੋ',
+tagline:'ਆਪਣੀ ਫਸਲ ਦੀ ਸਮੱਸਿਆ ਦੱਸੋ ਅਤੇ ਮੁਫ਼ਤ ਖੇਤੀ ਸਲਾਹ ਲਵੋ',
 weatherTitle:'🌦 ਖੇਤ ਦਾ ਮੌਸਮ',
 locationNone:'ਟਿਕਾਣਾ ਨਹੀਂ ਚੁਣਿਆ',
 locationDetected:'ਟਿਕਾਣਾ ਮਿਲ ਗਿਆ',
@@ -561,7 +564,7 @@ somethingWrong:'ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ।'
 },
 
 te:{
-tagline:'మీ పంట సమస్యను చెప్పండి; కావాలంటే ఫోటో జోడించండి',
+tagline:'మీ పంట సమస్యను చెప్పండి; ఉచిత వ్యవసాయ సలహా పొందండి',
 weatherTitle:'🌦 పొలం వాతావరణం',
 locationNone:'ప్రదేశం ఎంచుకోలేదు',
 locationDetected:'ప్రదేశం గుర్తించబడింది',
@@ -1126,6 +1129,23 @@ visionEl.textContent=text;
 }
 
 languageEl.addEventListener('change',applyLanguage);
+const questionEl=document.getElementById('question'),growthStageEl=document.getElementById('growthStage'),askButton=document.getElementById('askButton');
+async function askAdvisory(){
+ const question=questionEl.value.trim();
+ if(!question){setStatus('Please enter your farming question.',true);questionEl.focus();return;}
+ askButton.disabled=true;setStatus(t('processing'));
+ try{
+  const r=await fetch(`${API_BASE}/api/v1/advisory`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:question,language:languageEl.value,crop_category:cropEl.value,crop_name:cropNameEl?.value||null,growth_stage:growthStageEl?.value.trim()||null})});
+  const d=await r.json(); if(!r.ok)throw new Error(d.detail||t('processingError'));
+  resultCard.hidden=false;document.getElementById('adviceTitle').textContent=t('advice');
+  resultEl.textContent=d.answer||d.advisory?.answer||t('noAdvisory');
+  dSafetyStatus=d.safety?.status||d.advisory?.safety?.status||'caution';safetyEl.textContent=`${t('safety')}: ${getSafetyText(dSafetyStatus)}`;
+  detailsEl.textContent=`${t('detected')}: ${cropNames[languageEl.value]?.[cropEl.value]||cropEl.value} · ${t('confidence')}: ${d.confidence||d.advisory?.confidence||'low'}`;
+  setStatus(t('ready'));resultCard.scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(e){setStatus(e.message||t('somethingWrong'),true)}finally{askButton.disabled=false;}
+}
+askButton.addEventListener('click',askAdvisory);
+questionEl.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')askAdvisory();});
 
 async function startRecording(e){
 
