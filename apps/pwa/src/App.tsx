@@ -6,6 +6,9 @@ import { assessCropImage, type VisionAssessment } from "./services/diagnosis";
 import { playBase64Audio, sendVoiceAdvisory, type VoiceAdvisoryResult } from "./services/voice";
 import { listHistory, saveDiagnosisHistory, type HistoryRecord } from "./services/history";
 import { getWeather, type WeatherData } from "./services/weather";
+import { listenForForegroundMessages, requestPushNotifications } from "./services/notifications";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { db } from "./firebase";
 
 const languages = [["bn", "বাংলা"], ["hi", "हिन्दी"], ["ta", "தமிழ்"], ["pa", "ਪੰਜਾਬੀ"], ["te", "తెలుగు"]] as const;
 const crops = [["rice", "Rice", "🌾"], ["peanut", "Peanut", "🥜"], ["vegetables", "Vegetables", "🥬"], ["flowers", "Flowers", "🌼"]] as const;
@@ -38,6 +41,9 @@ export default function App() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherBusy, setWeatherBusy] = useState(false);
   const [weatherError, setWeatherError] = useState("");
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationBusy, setNotificationBusy] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -74,6 +80,39 @@ export default function App() {
   }, [user, language]);
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+
+  useEffect(() => {
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    listenForForegroundMessages((title, body) => {
+      if (active) setNotificationMessage(`${title}: ${body}`);
+    }).then((cleanup) => { unsubscribe = cleanup; }).catch(() => {});
+    return () => { active = false; unsubscribe?.(); };
+  }, []);
+
+  const enableNotifications = async () => {
+    if (!user) return;
+    setNotificationBusy(true);
+    setNotificationMessage("");
+    try {
+      const token = await requestPushNotifications();
+      if (!token) {
+        setNotificationMessage("Push notifications need browser permission and Firebase web notification setup.");
+        return;
+      }
+      await setDoc(doc(db, "users", user.uid, "preferences", "notifications"), {
+        pushToken: token,
+        enabled: true,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+      setNotificationsEnabled(true);
+      setNotificationMessage("Farm alerts are enabled on this device.");
+    } catch (error) {
+      setNotificationMessage(error instanceof Error ? error.message : "Unable to enable notifications.");
+    } finally {
+      setNotificationBusy(false);
+    }
+  };
 
   useEffect(() => { if (screen === "home" && !weather) loadWeather(); }, [screen]);
 
@@ -297,6 +336,12 @@ export default function App() {
         <span className="status">{user ? "Connected" : "Offline"}</span>
       </header>
       {authError && <div className="notice" role="status">{authError}</div>}
+      <section className="panel notification-card">
+        <div className="section-heading"><h2>🔔 Farm alerts</h2><span>{notificationsEnabled ? "Enabled" : "Optional"}</span></div>
+        <p>Receive important weather and farm alerts on this device.</p>
+        <button className="secondary-action" onClick={enableNotifications} disabled={notificationBusy || notificationsEnabled}>{notificationBusy ? "Enabling…" : notificationsEnabled ? "Alerts enabled" : "Enable farm alerts"}</button>
+        {notificationMessage && <div className="notification-message" role="status">{notificationMessage}</div>}
+      </section>
       <section className="weather-card panel">
         <div className="section-heading"><h2>🌤️ Local weather</h2><button className="weather-refresh" onClick={loadWeather} disabled={weatherBusy}>{weatherBusy ? "Updating…" : "Refresh"}</button></div>
         {weather ? <><div className="weather-current"><div><strong>{Math.round(weather.current.temperature_2m ?? 0)}°C</strong><span>{weather.current.weather_description || "Weather"}</span></div><div className="weather-stats"><span>💧 {Math.round(weather.current.relative_humidity_2m ?? 0)}% humidity</span><span>💨 {Math.round(weather.current.wind_speed_10m ?? 0)} km/h wind</span></div></div><div className="weather-alert">🌱 {weather.farm_alert}</div><div className="forecast-row">{weather.forecast.slice(0,5).map((day)=><div className="forecast-day" key={day.date}><strong>{new Date(day.date + "T00:00:00").toLocaleDateString(undefined,{weekday:"short"})}</strong><span>{Math.round(day.temperature_max_c ?? 0)}° / {Math.round(day.temperature_min_c ?? 0)}°</span><small>🌧️ {Math.round(day.precipitation_probability_max_pct ?? 0)}%</small></div>)}</div></> : <div className="weather-empty"><p>{weatherError || "Get your local weather and farm alert."}</p><button className="primary-action" onClick={loadWeather} disabled={weatherBusy}>{weatherBusy ? "Getting weather…" : "Use my location"}</button></div>}
