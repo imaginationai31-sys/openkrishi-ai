@@ -112,3 +112,25 @@ def test_selected_crop_variety_is_carried_into_advisory(crop_category, crop_name
     )
     assert result["crop_name"] == crop_name
     assert crop_name in result["answer"]
+
+def test_gemini_provider_failure_falls_back_to_rules(monkeypatch):
+    import services.advisory.engine as engine
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setenv("GEMINI_FALLBACK_TO_RULES", "true")
+
+    def fail_provider(**kwargs):
+        raise ValueError("malformed provider response")
+
+    monkeypatch.setattr(engine, "_generate_gemini_advisory", fail_provider)
+
+    result = engine.generate_advisory(
+        query="My rice plants have yellow leaves.",
+        language="en",
+        crop_category="rice",
+    )
+
+    assert result["language"] == "en"
+    assert result["observations"]
+    assert result["recommendations"]
+    assert result["safety"]["status"] == "caution"
