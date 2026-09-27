@@ -1,5 +1,22 @@
-import { initializeApp } from "firebase/app"; import { getAuth } from "firebase/auth"; import { getFirestore } from "firebase/firestore"; import { getStorage } from "firebase/storage";
-const required=["VITE_FIREBASE_API_KEY","VITE_FIREBASE_AUTH_DOMAIN","VITE_FIREBASE_PROJECT_ID","VITE_FIREBASE_STORAGE_BUCKET","VITE_FIREBASE_MESSAGING_SENDER_ID","VITE_FIREBASE_APP_ID"] as const;
-for(const key of required){if(!import.meta.env[key]) throw new Error("Missing Firebase configuration: "+key);}
-const app=initializeApp({apiKey:import.meta.env.VITE_FIREBASE_API_KEY,authDomain:import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,projectId:import.meta.env.VITE_FIREBASE_PROJECT_ID,storageBucket:import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,messagingSenderId:import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,appId:import.meta.env.VITE_FIREBASE_APP_ID});
-export const auth=getAuth(app); export const db=getFirestore(app); export const storage=getStorage(app);
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+
+// Firebase Web SDK configuration is client-side configuration.
+// Firebase Security Rules and App Check protect backend resources.
+// Environment variables can override these values for staging/development.
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBfI46YJApVNyiV4saVGO-OVsH9UgdDXfs",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "openkrishi-ai.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "openkrishi-ai",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "openkrishi-ai.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "837358973413",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:837358973413:web:49f86614fd155f29ce3f0c",
+};
+
+const app = initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
