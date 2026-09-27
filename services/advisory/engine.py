@@ -261,13 +261,17 @@ def generate_advisory(
                 growth_stage=growth_stage,
                 location=location,
             )
-        except RuntimeError as exc:
-            # Keep the API available when Gemini is temporarily capacity-limited (for example 503 UNAVAILABLE).
-            # Gemini remains the primary provider; rules are only an availability fallback.
-            temporary_unavailable = "temporarily unavailable" in str(exc).lower()
+        except Exception as exc:
+            # Provider failures must never turn a farmer advisory into an HTTP 500.
+            # Gemini remains primary; deterministic rules provide a safe availability
+            # fallback for provider outages, malformed JSON, SDK changes, or timeouts.
             rules_enabled = os.getenv("GEMINI_FALLBACK_TO_RULES", "true").lower() == "true"
-            if not (rules_enabled or temporary_unavailable):
-                raise
+            logger.warning(
+                "Gemini advisory failed; using rule fallback=%s error_type=%s error=%s",
+                rules_enabled, type(exc).__name__, exc,
+            )
+            if not rules_enabled:
+                raise RuntimeError("Advisory provider is temporarily unavailable.") from exc
 
     return _generate_rule_based_advisory(
         query=query,
