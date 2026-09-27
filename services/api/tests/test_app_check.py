@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 from fastapi import HTTPException
 
@@ -26,28 +28,24 @@ class DummyRequest:
         self.state = DummyState()
 
 
-@pytest.mark.asyncio
-async def test_app_check_is_disabled_by_default(monkeypatch):
+def test_app_check_is_disabled_by_default(monkeypatch):
     monkeypatch.delenv("FIREBASE_APPCHECK_ENFORCE", raising=False)
-    await require_app_check(DummyRequest("/api/v1/advisory"))
+    asyncio.run(require_app_check(DummyRequest("/api/v1/advisory")))
 
 
-@pytest.mark.asyncio
-async def test_health_endpoint_is_excluded_when_enforced(monkeypatch):
+def test_health_endpoint_is_excluded_when_enforced(monkeypatch):
     monkeypatch.setenv("FIREBASE_APPCHECK_ENFORCE", "true")
-    await require_app_check(DummyRequest("/api/v1/health"))
+    asyncio.run(require_app_check(DummyRequest("/api/v1/health")))
 
 
-@pytest.mark.asyncio
-async def test_missing_token_is_rejected_when_enforced(monkeypatch):
+def test_missing_token_is_rejected_when_enforced(monkeypatch):
     monkeypatch.setenv("FIREBASE_APPCHECK_ENFORCE", "true")
     with pytest.raises(HTTPException) as exc_info:
-        await require_app_check(DummyRequest("/api/v1/advisory"))
+        asyncio.run(require_app_check(DummyRequest("/api/v1/advisory")))
     assert exc_info.value.status_code == 401
 
 
-@pytest.mark.asyncio
-async def test_valid_token_claims_are_saved(monkeypatch):
+def test_valid_token_claims_are_saved(monkeypatch):
     monkeypatch.setenv("FIREBASE_APPCHECK_ENFORCE", "true")
     monkeypatch.setattr(
         "services.api.app_check.verify_app_check_token",
@@ -57,5 +55,5 @@ async def test_valid_token_claims_are_saved(monkeypatch):
         "/api/v1/advisory",
         headers={"X-Firebase-AppCheck": "test-token"},
     )
-    await require_app_check(request)
+    asyncio.run(require_app_check(request))
     assert request.state.firebase_app_check["sub"].startswith("1:837358973413:web:")
