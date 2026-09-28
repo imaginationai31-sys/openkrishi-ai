@@ -44,7 +44,8 @@ async def irrigation(
     try:
         weather = await get_weather(latitude, longitude, language, 1)
         current = weather.get("current", {})
-        return build_irrigation(crop_category, language, current.get("temperature_2m"), current.get("precipitation"), current.get("et0_fao_evapotranspiration"))
+        forecast = (weather.get("forecast") or [{}])[0]
+        return build_irrigation(crop_category, language, current.get("temperature_2m"), forecast.get("precipitation_probability_max_pct"), forecast.get("et0_fao_evapotranspiration"))
     except ValueError as exc:
         _err(exc)
     except RuntimeError as exc:
@@ -67,7 +68,8 @@ async def pest_alerts(
     try:
         weather = await get_weather(latitude, longitude, language, 1)
         current = weather.get("current", {})
-        return build_pest_alerts(crop_category, language, current.get("precipitation_probability"), current.get("relative_humidity_2m"))
+        forecast = (weather.get("forecast") or [{}])[0]
+        return build_pest_alerts(crop_category, language, forecast.get("precipitation_probability_max_pct"), current.get("relative_humidity_2m"))
     except ValueError as exc:
         _err(exc)
     except RuntimeError as exc:
