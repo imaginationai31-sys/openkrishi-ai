@@ -1525,7 +1525,7 @@ te:{title:'🌾 వ్యవసాయ మేధస్సు',sub:'మీ పం�
 function farmL(){return farmText[languageEl?.value]||farmText.en}
 function farmEsc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;")}
 function farmLocationReady(){return lastLatitude!==null&&lastLongitude!==null}
-function farmEnsureLocation(){if(!farmLocationReady()&&typeof getCurrentLocation==='function')getCurrentLocation()}
+function farmEnsureLocation(){return new Promise((resolve,reject)=>{if(farmLocationReady())return resolve();if(!navigator.geolocation)return reject(new Error('Location is not supported by this browser.'));navigator.geolocation.getCurrentPosition(p=>{lastLatitude=p.coords.latitude;lastLongitude=p.coords.longitude;resolve()},()=>reject(new Error('Please allow location access to use weather-based farm tools.')),{enableHighAccuracy:true,timeout:15000,maximumAge:300000})})}
 function renderFarm(data,tool){
  const box=document.getElementById('farmResult'); if(!box)return;
  let title=farmL()[tool==='plan'?'plan':tool==='irrigation'?'irrigation':tool==='fertilizer'?'fertilizer':tool==='pest-alerts'?'pest':tool==='recommendation'?'crop':tool==='knowledge'?'knowledge':'market'];
