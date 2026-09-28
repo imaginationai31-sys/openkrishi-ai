@@ -99,7 +99,15 @@ label{display:block;font-weight:700;margin:0 0 7px}select{width:100%;padding:13p
   .crop-art{height:105px;flex:0 0 105px}
   .crop-info{height:42px;flex:0 0 42px}
 }
-</style>
+<style>
+.farm-feature{background:linear-gradient(145deg,#0bbf8b 0%,#05624a 100%)}
+.farm-panel{max-width:1100px;margin:auto}
+.farm-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.farm-controls label{grid-column:auto}
+.farm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+.farm-tool{border:1px solid #d7e8dc;background:#f8fcf9;border-radius:18px;padding:18px;text-align:left;cursor:pointer;min-height:130px;font-size:30px;display:flex;flex-direction:column;gap:7px}.farm-tool strong{font-size:17px;color:#145b43}.farm-tool span{font-size:12px;color:#65756d}.farm-tool:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(20,80,45,.1)}
+.farm-result{margin-top:16px}.farm-result h3{margin:0 0 10px;color:#0b6b4d}.farm-result ul{margin:8px 0;padding-left:22px;line-height:1.7}.farm-result .market-link{display:block;margin:10px 0;padding:12px;border-radius:12px;background:#eef8f2;color:#096343;text-decoration:none;font-weight:800}
+@media(max-width:760px){.farm-controls{grid-template-columns:1fr}.farm-grid{grid-template-columns:repeat(2,1fr)}.farm-tool{min-height:120px;padding:13px}}
+</style></style>
 </head>
 
 <body><main class="app">
@@ -124,7 +132,7 @@ label{display:block;font-weight:700;margin:0 0 7px}select{width:100%;padding:13p
       <button class="feature green" onclick="showPage('diagnosis')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><rect x="38" y="45" width="104" height="70" rx="14" fill="#182534"/><rect x="55" y="32" width="38" height="18" rx="5" fill="#243447"/><circle cx="90" cy="80" r="31" fill="#071827" stroke="#d7f7ff" stroke-width="7"/><circle cx="90" cy="80" r="19" fill="#149bd1"/><circle cx="84" cy="74" r="6" fill="#8ce7ff"/><rect x="45" y="56" width="18" height="10" rx="4" fill="#dce9ef"/><rect x="117" y="54" width="13" height="9" rx="3" fill="#9caeb8"/><path d="M132 88c20-18 32-19 38-9-3 22-17 36-38 34-9-1-14-6-16-12 5-4 10-8 16-13Z" fill="#45bf55"/><circle cx="143" cy="98" r="4" fill="#e8cf38"/><circle cx="155" cy="105" r="3" fill="#e8cf38"/><path d="M24 38v-12h18M156 38v-12h-18M24 112v12h18M156 112v12h-18" fill="none" stroke="white" stroke-width="6" stroke-linecap="round"/></svg></div><strong id="quickDiagnosis">Ask AI</strong><span id="quickDiagnosisDesc">Describe your crop problem</span></button>
       <button class="feature purple" onclick="showPage('diagnosis')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><circle cx="90" cy="72" r="51" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="5"/><rect x="76" y="35" width="28" height="63" rx="15" fill="white"/><path d="M62 70c0 19 12 32 28 32s28-13 28-32M90 103v17M72 122h36" fill="none" stroke="white" stroke-width="7" stroke-linecap="round"/><path d="M45 62v20M34 56v32M23 67v10M135 62v20M146 56v32M157 67v10" stroke="white" stroke-width="7" stroke-linecap="round"/></svg></div><strong id="quickVoice">Ask AI</strong><span id="quickVoiceDesc">Get practical farming guidance</span></button>
       <button class="feature sky" onclick="showPage('weather')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><circle cx="62" cy="55" r="29" fill="#ffd21c"/><g stroke="#ffe86b" stroke-width="6" stroke-linecap="round"><path d="M62 12v13M62 85v13M19 55h13M92 55h13M32 25l9 9M84 81l9 9M32 85l9-9M84 29l9-9"/></g><path d="M54 88c-1-19 17-29 32-20 9-22 44-15 44 9 16-1 27 9 27 22H47c-8 0-12-8-5-14 3-3 7-4 12-3Z" fill="#f2f9ff"/><path d="M72 116c0 9-6 13-6 18 0 5 3 8 7 8s7-3 7-8c0-5-8-9-8-18ZM103 116c0 9-6 13-6 18 0 5 3 8 7 8s7-3 7-8c0-5-8-9-8-18ZM134 116c0 9-6 13-6 18 0 5 3 8 7 8s7-3 7-8c0-5-8-9-8-18Z" fill="#28c9f4"/></svg></div><strong id="quickWeather">Weather</strong><span id="quickWeatherDesc">Rain and alerts</span></button>
-      <button class="feature amber" onclick="showPage('diagnosis')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><circle cx="90" cy="55" r="37" fill="#fff6a8"/><circle cx="90" cy="55" r="28" fill="#fffde7"/><path d="M80 80h20v22H80zM76 103h28v8H76zM82 111h16v7H82z" fill="#303b45"/><path d="M90 102V55M90 72c-20 0-27-12-28-24 17-2 28 6 28 24ZM90 65c18-4 27-14 28-27-16-3-28 6-28 27Z" fill="#38b94a"/><path d="M25 126c25-13 47-13 65 0 18-13 40-13 65 0" fill="none" stroke="#3b9f3f" stroke-width="8" stroke-linecap="round"/><path d="M90 18V5M46 28l-9-10M134 28l9-10M35 62H21M145 62h14" stroke="white" stroke-width="6" stroke-linecap="round"/></svg></div><strong id="quickAdvice">Crop Knowledge</strong><span id="quickAdviceDesc">Learn about crops and farming</span></button>
+      <button class="feature amber" onclick="showPage('diagnosis')"><div class="icon"><svg viewBox="0 0 180 150" aria-hidden="true"><circle cx="90" cy="55" r="37" fill="#fff6a8"/><circle cx="90" cy="55" r="28" fill="#fffde7"/><path d="M80 80h20v22H80zM76 103h28v8H76zM82 111h16v7H82z" fill="#303b45"/><path d="M90 102V55M90 72c-20 0-27-12-28-24 17-2 28 6 28 24ZM90 65c18-4 27-14 28-27-16-3-28 6-28 27Z" fill="#38b94a"/><path d="M25 126c25-13 47-13 65 0 18-13 40-13 65 0" fill="none" stroke="#3b9f3f" stroke-width="8" stroke-linecap="round"/><path d="M90 18V5M46 28l-9-10M134 28l9-10M35 62H21M145 62h14" stroke="white" stroke-width="6" stroke-linecap="round"/></svg></div><strong id="quickAdvice">Crop Knowledge</strong><span id="quickAdviceDesc">Learn about crops and farming</span></button><button class="feature farm-feature" onclick="showPage('farm')"><div class="icon">🌾</div><strong id="quickFarm">Farm Plan</strong><span id="quickFarmDesc">Daily plan, irrigation, pests and markets</span></button>
     </div>
     <h2 class="section-title" style="margin-top:18px">Popular crops <span style="float:right;font-size:16px;padding-top:8px;color:#13745b">View all crops&nbsp; →</span></h2>
     <div class="crops">
@@ -177,6 +185,27 @@ label{display:block;font-weight:700;margin:0 0 7px}select{width:100%;padding:13p
   </div>
 </section>
 
+<section id="farmPage" class="workspace page-section">
+<button class="back" onclick="showPage('home')">← <span>Home</span></button>
+<div class="panel farm-panel">
+<h2 class="panel-title" id="farmTitle">🌾 Farm Intelligence</h2>
+<p class="hint" id="farmSubtitle">Daily farming plan and practical tools for your crop.</p>
+<div class="farm-controls">
+<label for="farmCrop">Crop category</label><select id="farmCrop"><option value="rice">🌾 Rice</option><option value="peanut">🥜 Peanut</option><option value="vegetables">🥬 Vegetables</option><option value="flowers">🌸 Flowers</option></select>
+<label for="farmStage">Growth stage</label><input id="farmStage" type="text" placeholder="e.g. tillering, flowering" style="width:100%;padding:13px;border:1px solid #cbd8c8;border-radius:12px;background:#fff;font-size:16px;margin-bottom:14px">
+</div>
+<div class="farm-grid">
+<button class="farm-tool" onclick="farmTool('plan')">📋<strong id="farmPlanBtn">Today's Farm Plan</strong><span>Weather + crop stage</span></button>
+<button class="farm-tool" onclick="farmTool('irrigation')">💧<strong id="farmIrrigationBtn">Irrigation Advisor</strong><span>Moisture + weather</span></button>
+<button class="farm-tool" onclick="farmTool('fertilizer')">🧪<strong id="farmFertilizerBtn">Fertilizer Advisor</strong><span>Safe nutrient guidance</span></button>
+<button class="farm-tool" onclick="farmTool('pest-alerts')">🐛<strong id="farmPestBtn">Pest Alerts</strong><span>What to monitor</span></button>
+<button class="farm-tool" onclick="farmTool('recommendation')">🌱<strong id="farmCropBtn">Crop Recommendation</strong><span>Plan your next crop</span></button>
+<button class="farm-tool" onclick="farmTool('knowledge')">📚<strong id="farmKnowledgeBtn">Crop Knowledge</strong><span>Stages and practices</span></button>
+<button class="farm-tool" onclick="farmTool('market')">💰<strong id="farmMarketBtn">Market Prices</strong><span>Official mandi sources</span></button>
+</div>
+<div id="farmResult" class="farm-result panel" hidden></div>
+</div>
+</section>
 <section id="historyPage" class="workspace page-section"><div class="panel"><h2 class="panel-title">History</h2><p class="hint">Your recent crop diagnoses and advisories will appear here.</p></div></section>
 <section id="profilePage" class="workspace page-section"><div class="panel"><h2 class="panel-title">Profile</h2><p class="hint">Choose your preferred language and use OpenKrishi AI in your language.</p></div></section>
 
@@ -193,6 +222,7 @@ const el=document.getElementById(page+'Page'); if(el) el.classList.add('active')
 document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
 const nav=document.getElementById('nav'+page.charAt(0).toUpperCase()+page.slice(1)); if(nav) nav.classList.add('active');
 if(page==='weather'&&typeof getCurrentLocation==='function'&&lastLatitude===null)getCurrentLocation();
+if(page==='farm'&&typeof syncFarmLanguage==='function')syncFarmLanguage();
 }
 const oldApply=typeof applyLanguage==='function'?applyLanguage:null;
 </script><script>
@@ -1478,6 +1508,55 @@ languageEl?.addEventListener('change',()=>{
   applyLanguage();
   syncHomeUi();
 });
+</script>
+<script>
+const farmText={
+en:{title:'🌾 Farm Intelligence',sub:'Daily farming plan and practical tools for your crop.',plan:"Today's Farm Plan",irrigation:'Irrigation Advisor',fertilizer:'Fertilizer Advisor',pest:'Pest Alerts',crop:'Crop Recommendation',knowledge:'Crop Knowledge',market:'Market Prices',loading:'Loading farm intelligence…',error:'Unable to load this tool right now.',home:'Home'},
+bn:{title:'🌾 কৃষি বুদ্ধিমত্তা',sub:'আপনার ফসলের জন্য দৈনিক পরিকল্পনা ও ব্যবহারিক সরঞ্জাম।',plan:'আজকের কৃষি পরিকল্পনা',irrigation:'সেচ পরামর্শ',fertilizer:'সার পরামর্শ',pest:'পোকার সতর্কতা',crop:'ফসল নির্বাচন',knowledge:'ফসল জ্ঞান',market:'বাজার দর',loading:'কৃষি তথ্য লোড হচ্ছে…',error:'এই তথ্য এখন লোড করা যাচ্ছে না।',home:'হোম'},
+hi:{title:'🌾 कृषि बुद्धिमत्ता',sub:'आपकी फसल के लिए दैनिक योजना और उपयोगी उपकरण।',plan:'आज की खेती की योजना',irrigation:'सिंचाई सलाह',fertilizer:'उर्वरक सलाह',pest:'कीट चेतावनी',crop:'फसल चयन',knowledge:'फसल ज्ञान',market:'बाजार भाव',loading:'कृषि जानकारी लोड हो रही है…',error:'यह जानकारी अभी उपलब्ध नहीं है।',home:'होम'},
+ta:{title:'🌾 பண்ணை நுண்ணறிவு',sub:'உங்கள் பயிருக்கு தினசரி திட்டமும் நடைமுறை கருவிகளும்.',plan:'இன்றைய பண்ணைத் திட்டம்',irrigation:'நீர்ப்பாசன ஆலோசனை',fertilizer:'உர ஆலோசனை',pest:'பூச்சி எச்சரிக்கைகள்',crop:'பயிர் தேர்வு',knowledge:'பயிர் அறிவு',market:'சந்தை விலை',loading:'பண்ணை தகவல் ஏற்றப்படுகிறது…',error:'இந்த தகவலை இப்போது ஏற்ற முடியவில்லை.',home:'முகப்பு'},
+pa:{title:'🌾 ਖੇਤੀ ਬੁੱਧੀ',sub:'ਤੁਹਾਡੀ ਫਸਲ ਲਈ ਰੋਜ਼ਾਨਾ ਯੋਜਨਾ ਅਤੇ ਵਰਤੋਂਯੋਗ ਸਾਧਨ।',plan:'ਅੱਜ ਦੀ ਖੇਤੀ ਯੋਜਨਾ',irrigation:'ਸਿੰਚਾਈ ਸਲਾਹ',fertilizer:'ਖਾਦ ਸਲਾਹ',pest:'ਕੀਟ ਚੇਤਾਵਨੀਆਂ',crop:'ਫਸਲ ਚੋਣ',knowledge:'ਫਸਲ ਗਿਆਨ',market:'ਮੰਡੀ ਭਾਅ',loading:'ਖੇਤੀ ਜਾਣਕਾਰੀ ਲੋਡ ਹੋ ਰਹੀ ਹੈ…',error:'ਇਹ ਜਾਣਕਾਰੀ ਹੁਣ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।',home:'ਹੋਮ'},
+te:{title:'🌾 వ్యవసాయ మేధస్సు',sub:'మీ పంటకు రోజువారీ ప్రణాళిక మరియు ఉపయోగకరమైన సాధనాలు.',plan:'ఈరోజు వ్యవసాయ ప్రణాళిక',irrigation:'నీటి పారుదల సలహా',fertilizer:'ఎరువు సలహా',pest:'పురుగు హెచ్చరికలు',crop:'పంట ఎంపిక',knowledge:'పంట జ్ఞానం',market:'మార్కెట్ ధరలు',loading:'వ్యవసాయ సమాచారం లోడ్ అవుతోంది…',error:'ఈ సమాచారాన్ని ఇప్పుడు లోడ్ చేయలేకపోయాము.',home:'హోమ్'}
+};
+function farmL(){return farmText[languageEl?.value]||farmText.en}
+function farmEsc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;")}
+function farmLocationReady(){return lastLatitude!==null&&lastLongitude!==null}
+function farmEnsureLocation(){if(!farmLocationReady()&&typeof getCurrentLocation==='function')getCurrentLocation()}
+function renderFarm(data,tool){
+ const box=document.getElementById('farmResult'); if(!box)return;
+ let title=farmL()[tool==='plan'?'plan':tool==='irrigation'?'irrigation':tool==='fertilizer'?'fertilizer':tool==='pest-alerts'?'pest':tool==='recommendation'?'crop':tool==='knowledge'?'knowledge':'market'];
+ let html='<h3>'+farmEsc(title)+'</h3>';
+ if(data.title)html+='<p><strong>'+farmEsc(data.title)+'</strong></p>';
+ if(data.tasks)html+='<ul>'+data.tasks.map(x=>'<li>'+farmEsc(x)+'</li>').join('')+'</ul>';
+ if(data.advice)html+='<ul>'+data.advice.map(x=>'<li>'+farmEsc(x)+'</li>').join('')+'</ul>';
+ if(data.alerts)html+='<ul>'+data.alerts.map(x=>'<li>'+farmEsc(x)+'</li>').join('')+'</ul>';
+ if(data.watch_list)html+='<p><strong>Watch:</strong> '+data.watch_list.map(farmEsc).join(', ')+'</p>';
+ if(data.recommended_categories)html+='<p><strong>Suggested categories:</strong> '+data.recommended_categories.map(farmEsc).join(', ')+'</p>';
+ if(data.notes)html+='<ul>'+data.notes.map(x=>'<li>'+farmEsc(x)+'</li>').join('')+'</ul>';
+ if(data.stages)html+='<p><strong>Stages:</strong> '+data.stages.map(farmEsc).join(' → ')+'</p><p>'+farmEsc(data.water)+'</p>';
+ if(data.sources)html+=data.sources.map(x=>'<a class="market-link" href="'+farmEsc(x.url)+'" target="_blank" rel="noopener">↗ '+farmEsc(x.name)+'</a>').join('');
+ if(data.message)html+='<p>'+farmEsc(data.message)+'</p>';
+ if(data.safety)html+='<div class="safety">'+farmEsc(data.safety)+'</div>';
+ box.innerHTML=html;box.hidden=false;box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function farmTool(tool){
+ const t=farmL(),crop=document.getElementById('farmCrop').value,stage=document.getElementById('farmStage').value.trim();
+ const box=document.getElementById('farmResult');box.hidden=false;box.innerHTML='<p class="status">'+farmEsc(t.loading)+'</p>';
+ if(['plan','irrigation','pest-alerts'].includes(tool))farmEnsureLocation();
+ if(['plan','irrigation','pest-alerts'].includes(tool)&&!farmLocationReady()){box.innerHTML='<p>'+farmEsc(t.error)+'</p>';return}
+ let url=API_BASE+'/api/v1/farm/'+tool+'?language='+encodeURIComponent(languageEl.value)+'&crop_category='+encodeURIComponent(crop);
+ if(tool==='plan')url+='&latitude='+encodeURIComponent(lastLatitude)+'&longitude='+encodeURIComponent(lastLongitude)+'&growth_stage='+encodeURIComponent(stage);
+ if(tool==='irrigation'||tool==='pest-alerts')url+='&latitude='+encodeURIComponent(lastLatitude)+'&longitude='+encodeURIComponent(lastLongitude);
+ if(tool==='fertilizer')url+='&growth_stage='+encodeURIComponent(stage);
+ if(tool==='recommendation')url=API_BASE+'/api/v1/farm/recommendation?language='+encodeURIComponent(languageEl.value)+'&soil_type=&water_availability=&season=';
+ try{const r=await fetch(url);const d=await r.json();if(!r.ok)throw new Error(d.detail||t.error);renderFarm(d,tool)}catch(e){box.innerHTML='<p class="error">'+farmEsc(e.message||t.error)+'</p>'}
+}
+function syncFarmLanguage(){
+ const t=farmL();const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+ set('farmTitle',t.title);set('farmSubtitle',t.sub);set('farmPlanBtn',t.plan);set('farmIrrigationBtn',t.irrigation);set('farmFertilizerBtn',t.fertilizer);set('farmPestBtn',t.pest);set('farmCropBtn',t.crop);set('farmKnowledgeBtn',t.knowledge);set('farmMarketBtn',t.market);
+}
+if(typeof languageEl!=='undefined')languageEl.addEventListener('change',syncFarmLanguage);
+document.addEventListener('DOMContentLoaded',syncFarmLanguage);
 </script>
 </body>
 </html>
