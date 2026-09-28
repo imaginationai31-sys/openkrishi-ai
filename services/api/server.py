@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from services.api.middleware import RequestTraceMiddleware
-from services.api.routes import advisory, health, vision, voice, weather
+from services.api.routes import advisory, farm, health, vision, voice, weather
 
 app = FastAPI(
     title="OpenKrishi AI API",
@@ -35,6 +35,7 @@ app.include_router(advisory.router, prefix="/api/v1")
 app.include_router(voice.router, prefix="/api/v1")
 app.include_router(vision.router, prefix="/api/v1")
 app.include_router(weather.router, prefix="/api/v1")
+app.include_router(farm.router, prefix="/api/v1")
 
 
 @app.get("/")
