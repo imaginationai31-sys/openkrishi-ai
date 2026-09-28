@@ -1,12 +1,13 @@
-"""Crop image assessment with a conservative Gemini vision provider."""
+"""Crop image assessment backed by OpenAI GPT-5 mini."""
 
 from __future__ import annotations
 
+import base64
 import json
 import logging
+import os
 from typing import Any
 
-from services.gemini.client import get_gemini_client, get_model, output_text
 
 logger = logging.getLogger(__name__)
 
@@ -94,9 +95,16 @@ def assess_crop_image(
     if language not in LANGUAGE_NAMES:
         raise ValueError("Unsupported language.")
 
-    client = get_gemini_client()
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not configured. Set it before using vision.")
+    from openai import OpenAI
+    client = OpenAI(api_key=api_key)
+    model = os.getenv("OPENAI_VISION_MODEL", "gpt-5-mini")
     language_name = LANGUAGE_NAMES[language]
-    context = f"Crop category: {crop_category or 'unknown'}; specific crop/variety: {crop_name or 'not specified'}; growth stage: {growth_stage or 'unknown'}."
+    encoded = base64.b64encode(image_bytes).decode("ascii")
+    data_url = f"data:{normalized_type};base64,{encoded}"
+    context = f"Crop category: {crop_category or 'unknown'}; specific crop/variety: {crop_name or 'not specified'}; growth stage: {growth_stage or 'unknown' }."
     prompt = f"""You are a conservative agricultural image-assessment assistant.
 Assess only what is visibly supported by the crop photo.
 Do not claim a definitive disease, pest, nutrient deficiency, or treatment.
@@ -111,33 +119,28 @@ Context:
 Analyze the attached crop image. Return only the JSON object matching the response schema."""
 
     try:
-        from google.genai import types
-
-        response = client.models.generate_content(
-            model=get_model(),
-            contents=[
-                types.Part.from_bytes(data=image_bytes, mime_type=normalized_type),
-                prompt,
-            ],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=VISION_RESPONSE_SCHEMA,
-            ),
+        response = client.responses.create(
+            model=model,
+            input=[{
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": prompt},
+                    {"type": "input_image", "image_url": data_url, "detail": "high"},
+                ],
+            }],
+            text={
+                "format": {
+                    "type": "json_schema",
+                    "name": "crop_image_assessment",
+                    "strict": True,
+                    "schema": VISION_RESPONSE_SCHEMA,
+                }
+            },
         )
     except Exception as exc:
-        logger.exception(
-            "Gemini vision request failed: model=%s mime_type=%s size_bytes=%d crop=%s language=%s error_type=%s error=%s",
-            get_model(),
-            normalized_type,
-            len(image_bytes),
-            crop_category,
-            language,
-            type(exc).__name__,
-            exc,
-        )
+        logger.exception("OpenAI vision request failed: model=%s crop=%s language=%s error=%s", model, crop_category, language, exc)
         raise RuntimeError("Vision provider is temporarily unavailable.") from exc
-
-    raw_text = getattr(response, "text", None) or output_text(response)
+    raw_text = getattr(response, "output_text", "")
     payload = _parse_assessment(raw_text)
     result = _safe_result(payload)
     result["image"] = {"content_type": normalized_type, "size_bytes": len(image_bytes)}
