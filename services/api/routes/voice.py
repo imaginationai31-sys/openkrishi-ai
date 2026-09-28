@@ -8,8 +8,8 @@ from services.advisory.localization import localize_advisory, localize_visual
 from services.advisory.normalizer import normalize_agricultural_terms
 from services.advisory.voice_understanding import build_voice_understanding
 from services.voice.languages import is_supported_language
-from services.voice.speech_to_text import GeminiSpeechToText
-from services.voice.text_to_speech import GeminiTextToSpeech
+from services.voice.speech_to_text import SarvamSpeechToText
+from services.voice.text_to_speech import SarvamTextToSpeech
 from services.vision.engine import assess_crop_image
 
 router = APIRouter()
@@ -18,7 +18,7 @@ SUPPORTED_CROPS = {"rice", "peanut", "vegetables", "flowers"}
 
 
 def _transcribe(audio: bytes, language: str, filename: str | None, content_type: str | None):
-    return GeminiSpeechToText().transcribe(audio, language, filename=filename, content_type=content_type)
+    return SarvamSpeechToText().transcribe(audio, language, filename=filename, content_type=content_type)
 
 
 def _spoken_advisory(advisory: dict[str, Any], visual: dict[str, Any] | None = None) -> str:
@@ -57,7 +57,7 @@ def _spoken_advisory(advisory: dict[str, Any], visual: dict[str, Any] | None = N
 
 
 def _synthesize(text: str, language: str):
-    return GeminiTextToSpeech().synthesize(text, language)
+    return SarvamTextToSpeech().synthesize(text, language)
 
 
 @router.post("/voice/transcribe")
