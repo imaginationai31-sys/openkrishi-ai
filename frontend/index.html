@@ -193,6 +193,9 @@ label{display:block;font-weight:700;margin:0 0 7px}select{width:100%;padding:13p
 <div class="farm-controls">
 <label for="farmCrop">Crop category</label><select id="farmCrop"><option value="rice">🌾 Rice</option><option value="peanut">🥜 Peanut</option><option value="vegetables">🥬 Vegetables</option><option value="flowers">🌸 Flowers</option></select>
 <label for="farmStage">Growth stage</label><input id="farmStage" type="text" placeholder="e.g. tillering, flowering" style="width:100%;padding:13px;border:1px solid #cbd8c8;border-radius:12px;background:#fff;font-size:16px;margin-bottom:14px">
+<label for="farmSoil">Soil type (for crop recommendation)</label><input id="farmSoil" type="text" placeholder="e.g. loam, clay, sandy" style="width:100%;padding:13px;border:1px solid #cbd8c8;border-radius:12px;background:#fff;font-size:16px;margin-bottom:14px">
+<label for="farmWater">Water availability</label><select id="farmWater"><option value="">Select</option><option value="low">Low / limited</option><option value="medium">Medium</option><option value="high">High</option></select>
+<label for="farmSeason">Season</label><input id="farmSeason" type="text" placeholder="e.g. monsoon, dry season" style="width:100%;padding:13px;border:1px solid #cbd8c8;border-radius:12px;background:#fff;font-size:16px;margin-bottom:0">
 </div>
 <div class="farm-grid">
 <button class="farm-tool" onclick="farmTool('plan')">📋<strong id="farmPlanBtn">Today's Farm Plan</strong><span>Weather + crop stage</span></button>
@@ -206,7 +209,7 @@ label{display:block;font-weight:700;margin:0 0 7px}select{width:100%;padding:13p
 <div id="farmResult" class="farm-result panel" hidden></div>
 </div>
 </section>
-<section id="historyPage" class="workspace page-section"><div class="panel"><h2 class="panel-title">History</h2><p class="hint">Your recent crop diagnoses and advisories will appear here.</p></div></section>
+<section id="historyPage" class="workspace page-section"><div class="panel"><h2 class="panel-title">History</h2><p class="hint">Your recent crop questions and AI responses are stored on this device.</p><div id="historyList"></div><button class="location-button" type="button" onclick="clearOpenKrishiHistory()">Clear history</button></div></section>
 <section id="profilePage" class="workspace page-section"><div class="panel"><h2 class="panel-title">Profile</h2><p class="hint">Choose your preferred language and use OpenKrishi AI in your language.</p></div></section>
 
 <nav class="bottom-nav">
@@ -223,6 +226,7 @@ document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
 const nav=document.getElementById('nav'+page.charAt(0).toUpperCase()+page.slice(1)); if(nav) nav.classList.add('active');
 if(page==='weather'&&typeof getCurrentLocation==='function'&&lastLatitude===null)getCurrentLocation();
 if(page==='farm'&&typeof syncFarmLanguage==='function')syncFarmLanguage();
+if(page==='history'&&typeof loadOpenKrishiHistory==='function')loadOpenKrishiHistory();
 }
 const oldApply=typeof applyLanguage==='function'?applyLanguage:null;
 </script><script>
@@ -1346,7 +1350,7 @@ resultCard.hidden=false;
 document.getElementById('adviceTitle').textContent=t('advice');
 
 resultEl.textContent=
-d.advisory?.answer||t('noAdvisory');
+d.advisory?.answer||t('noAdvisory'); saveOpenKrishiHistory(d.transcription?.text||'',resultEl.textContent);
 
 dSafetyStatus=
 d.advisory?.safety?.status||'caution';
@@ -1548,7 +1552,7 @@ async function farmTool(tool){
  if(tool==='plan')url+='&latitude='+encodeURIComponent(lastLatitude)+'&longitude='+encodeURIComponent(lastLongitude)+'&growth_stage='+encodeURIComponent(stage);
  if(tool==='irrigation'||tool==='pest-alerts')url+='&latitude='+encodeURIComponent(lastLatitude)+'&longitude='+encodeURIComponent(lastLongitude);
  if(tool==='fertilizer')url+='&growth_stage='+encodeURIComponent(stage);
- if(tool==='recommendation')url=API_BASE+'/api/v1/farm/recommendation?language='+encodeURIComponent(languageEl.value)+'&soil_type=&water_availability=&season=';
+ if(tool==='recommendation')url=API_BASE+'/api/v1/farm/recommendation?language='+encodeURIComponent(languageEl.value)+'&soil_type='+encodeURIComponent(document.getElementById('farmSoil').value)+'&water_availability='+encodeURIComponent(document.getElementById('farmWater').value)+'&season='+encodeURIComponent(document.getElementById('farmSeason').value);
  try{const r=await fetch(url);const d=await r.json();if(!r.ok)throw new Error(d.detail||t.error);renderFarm(d,tool)}catch(e){box.innerHTML='<p class="error">'+farmEsc(e.message||t.error)+'</p>'}
 }
 function syncFarmLanguage(){
@@ -1557,6 +1561,22 @@ function syncFarmLanguage(){
 }
 if(typeof languageEl!=='undefined')languageEl.addEventListener('change',syncFarmLanguage);
 document.addEventListener('DOMContentLoaded',syncFarmLanguage);
+</script>
+<script>
+function loadOpenKrishiHistory(){
+ const el=document.getElementById('historyList');if(!el)return;
+ let items=[];try{items=JSON.parse(localStorage.getItem('openkrishi_history')||'[]')}catch(_){}
+ if(!items.length){el.innerHTML='<p class="hint">No history yet. Ask a question or use voice/photo advisory.</p>';return}
+ el.innerHTML=items.slice(0,30).map(x=>'<div class="panel" style="margin-top:10px"><strong>'+farmEsc(x.crop||'Crop')+'</strong><div class="small">'+farmEsc(x.date||'')+'</div><p>'+farmEsc(x.question||'')+'</p><div class="result">'+farmEsc(x.answer||'')+'</div></div>').join('');
+}
+function saveOpenKrishiHistory(question,answer){
+ if(!question||!answer)return;
+ let items=[];try{items=JSON.parse(localStorage.getItem('openkrishi_history')||'[]')}catch(_){}
+ items.unshift({crop:(typeof cropNameEl!=='undefined'&&cropNameEl?.value)||'Crop',question:String(question).slice(0,1000),answer:String(answer).slice(0,4000),date:new Date().toLocaleString()});
+ localStorage.setItem('openkrishi_history',JSON.stringify(items.slice(0,50)));loadOpenKrishiHistory();
+}
+function clearOpenKrishiHistory(){localStorage.removeItem('openkrishi_history');loadOpenKrishiHistory()}
+document.addEventListener('DOMContentLoaded',loadOpenKrishiHistory);
 </script>
 </body>
 </html>
