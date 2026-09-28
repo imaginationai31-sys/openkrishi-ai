@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import base64
 import os
+import httpx
 from typing import Protocol
 
 
@@ -18,9 +19,8 @@ class TextToSpeechProvider(Protocol):
         """Convert an advisory response into spoken audio."""
 
 
-GEMINI_TTS_MODEL = "gemini-3.1-flash-tts-preview"
-GEMINI_TTS_LANGUAGES = {"bn": "bn-IN", "hi": "hi-IN", "ta": "ta-IN", "pa": "pa-IN", "te": "te-IN"}
-GEMINI_TTS_VOICES = {"bn": "Kore", "hi": "Kore", "ta": "Kore", "pa": "Kore", "te": "Kore"}
+SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
+SARVAM_LANGUAGE_CODES = {"en": "en-IN", "bn": "bn-IN", "hi": "hi-IN", "ta": "ta-IN", "pa": "pa-IN", "te": "te-IN"}
 
 
 def _pcm_to_wav(pcm: bytes, sample_rate: int = 24000, channels: int = 1, sample_width: int = 2) -> bytes:
@@ -37,60 +37,47 @@ def _pcm_to_wav(pcm: bytes, sample_rate: int = 24000, channels: int = 1, sample_
     return output.getvalue()
 
 
-class GeminiTextToSpeech:
-    """Indian-language TTS backed by Gemini 3.1 Flash TTS."""
-
+class SarvamTextToSpeech:
+    """Sarvam Bulbul v3 TTS for OpenKrishi AI."""
     def __init__(self, model: str | None = None, voice: str | None = None) -> None:
-        self.model = model or os.getenv("GEMINI_TTS_MODEL", GEMINI_TTS_MODEL)
+        self.model = model or os.getenv("SARVAM_TTS_MODEL", "bulbul:v3")
         self.voice = voice
 
     def synthesize(self, text: str, language: str) -> SpeechAudio:
         if not text.strip():
             raise ValueError("Text input cannot be empty.")
-
-        language_code = GEMINI_TTS_LANGUAGES.get(language)
+        api_key = os.getenv("SARVAM_API_KEY")
+        if not api_key:
+            raise RuntimeError("SARVAM_API_KEY is not configured. Set it before generating audio.")
+        language_code = SARVAM_LANGUAGE_CODES.get(language)
         if not language_code:
             raise ValueError(f"Unsupported TTS language: {language}")
-
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise RuntimeError("GEMINI_API_KEY is not configured. Set it before generating audio.")
-
-        from google import genai
-
-        client = genai.Client(api_key=api_key)
-        voice = self.voice or GEMINI_TTS_VOICES[language]
-        prompt = (
-            f"Synthesize the following OpenKrishi farmer advisory in {language_code}. "
-            "Speak naturally, clearly, warmly, and at a moderate pace. "
-            "Do not add or remove information. Spoken text:\n" + text
-        )
+        payload = {"text": text[:2500], "target_language_code": language_code, "model": self.model, "speaker": self.voice or "shubh"}
+        headers = {"api-subscription-key": api_key, "Content-Type": "application/json"}
         try:
-            interaction = client.interactions.create(
-                model=self.model,
-                input=prompt,
-                response_format={"type": "audio"},
-                generation_config={
-                    "speech_config": [{"voice": voice, "language": language_code}]
-                },
-            )
-        except Exception as exc:
+            with httpx.Client(timeout=45.0) as client:
+                response = client.post(SARVAM_TTS_URL, headers=headers, json=payload)
+                response.raise_for_status()
+                data = response.json()
+        except (httpx.HTTPError, ValueError) as exc:
             raise RuntimeError("Text-to-speech provider is temporarily unavailable.") from exc
-
-        output_audio = getattr(interaction, "output_audio", None)
-        data = getattr(output_audio, "data", None) if output_audio is not None else None
-        if not data:
-            raise RuntimeError("Gemini TTS returned empty audio.")
-
+        audios = data.get("audios") or []
+        if not audios:
+            raise RuntimeError("Sarvam TTS returned empty audio.")
         try:
-            pcm = base64.b64decode(data)
+            audio = base64.b64decode(audios[0])
         except Exception as exc:
-            raise RuntimeError("Gemini TTS returned invalid audio data.") from exc
+            raise RuntimeError("Sarvam TTS returned invalid audio data.") from exc
+        if not audio:
+            raise RuntimeError("Sarvam TTS returned empty audio.")
+        return SpeechAudio(audio=audio, language=language, mime_type="audio/wav")
 
-        if not pcm:
-            raise RuntimeError("Gemini TTS returned empty audio.")
-        return SpeechAudio(audio=_pcm_to_wav(pcm), language=language, mime_type="audio/wav")
-
+class GeminiTextToSpeech:
+    """Compatibility wrapper; Sarvam is now the active TTS provider."""
+    def __init__(self, model: str | None = None, voice: str | None = None) -> None:
+        self._provider = SarvamTextToSpeech()
+    def synthesize(self, text: str, language: str) -> SpeechAudio:
+        return self._provider.synthesize(text, language)
 
 class TTSFreeTextToSpeech:
     """Backward-compatible TTSFree provider."""
