@@ -1,3 +1,5 @@
+import asyncio
+
 import httpx
 from unittest.mock import AsyncMock, patch
 
@@ -40,7 +42,7 @@ def test_weather_provider_failure_returns_503():
     assert "weather provider" in response.json()["detail"].lower()
 
 
-async def test_weather_retries_after_rate_limit():
+def test_weather_retries_after_rate_limit():
     rate_limited = httpx.Response(429, headers={"retry-after": "0.1"}, request=httpx.Request("GET", "https://example.test"))
     success = httpx.Response(
         200,
@@ -59,7 +61,7 @@ async def test_weather_retries_after_rate_limit():
         client = client_class.return_value.__aenter__.return_value
         client.get = AsyncMock(side_effect=[rate_limited, success])
         from services.weather.engine import get_weather
-        result = await get_weather(22.57, 88.36, "en", 1)
+        result = asyncio.run(get_weather(22.57, 88.36, "en", 1))
     assert result["source"] == "Open-Meteo"
     assert client.get.await_count == 2
 
@@ -81,6 +83,6 @@ def test_weather_cache_avoids_repeat_provider_call():
         from services.weather.engine import get_weather
         import services.weather.engine as engine
         engine._WEATHER_CACHE.clear()
-        await get_weather(22.571, 88.361, "en", 1)
-        await get_weather(22.571, 88.361, "en", 1)
+        asyncio.run(get_weather(22.571, 88.361, "en", 1))
+        asyncio.run(get_weather(22.571, 88.361, "en", 1))
     assert client.get.await_count == 1
