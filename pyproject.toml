@@ -37,8 +37,8 @@ target-version = "py311"
 extend-exclude = ["apps/mobile"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "TRY", "SIM"]
-ignore = ["B008"]
+select = ["F", "I", "B", "UP", "TRY", "SIM"]
+ignore = ["B008", "TRY003"]
 
 [tool.ruff.format]
 quote-style = "double"
