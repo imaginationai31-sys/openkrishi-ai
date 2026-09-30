@@ -223,3 +223,10 @@ node_modules/
 .firebase-debug.log
 .idea/
 .vscode/
+
+
+# Frontend build and test output
+frontend/dist/
+frontend/coverage/
+frontend/.vite/
+npm-debug.log*
