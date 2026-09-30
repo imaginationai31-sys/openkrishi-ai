@@ -1,7 +1,7 @@
 import base64
 from typing import Any
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, Response, UploadFile
 
 from services.advisory.engine import generate_advisory
 from services.advisory.localization import localize_advisory, localize_visual
@@ -67,6 +67,7 @@ def _synthesize(text: str, language: str):
 @limiter.limit(VOICE_LIMIT)
 async def transcribe_voice(
     request: Request,
+    response: Response,
     file: UploadFile = File(...),
     language: str = Form(...),
 ) -> dict[str, Any]:
@@ -92,6 +93,7 @@ async def transcribe_voice(
 @limiter.limit(VOICE_LIMIT)
 async def voice_advisory(
     request: Request,
+    response: Response,
     file: UploadFile = File(...),
     language: str = Form(...),
     crop_category: str | None = Form(default=None),
@@ -134,6 +136,7 @@ async def voice_advisory(
 @limiter.limit(VOICE_LIMIT)
 async def voice_vision_advisory(
     request: Request,
+    response: Response,
     file: UploadFile = File(...),
     image: UploadFile = File(...),
     language: str = Form(...),
