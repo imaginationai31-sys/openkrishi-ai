@@ -96,9 +96,8 @@ def assess_crop_image(
     if language not in LANGUAGE_NAMES:
         raise ValueError("Unsupported language.")
 
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY is not configured. Set it before using vision.")
+    settings = get_settings()
+    api_key = settings.openai_api_key.get_secret_value()
     from openai import OpenAI
     client = OpenAI(api_key=api_key)
     model = settings.openai_vision_model

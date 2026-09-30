@@ -20,7 +20,7 @@ class TextToSpeechProvider(Protocol):
         """Convert an advisory response into spoken audio."""
 
 
-get_settings().sarvam_tts_url = "https://api.sarvam.ai/text-to-speech"
+SARVAM_TTS_URL = get_settings().sarvam_tts_url
 SARVAM_LANGUAGE_CODES = {"en": "en-IN", "bn": "bn-IN", "hi": "hi-IN", "ta": "ta-IN", "pa": "pa-IN", "te": "te-IN"}
 
 
@@ -47,9 +47,7 @@ class SarvamTextToSpeech:
     def synthesize(self, text: str, language: str) -> SpeechAudio:
         if not text.strip():
             raise ValueError("Text input cannot be empty.")
-        api_key = os.getenv("SARVAM_API_KEY")
-        if not api_key:
-            raise RuntimeError("SARVAM_API_KEY is not configured. Set it before generating audio.")
+        api_key = get_settings().sarvam_api_key.get_secret_value()
         language_code = SARVAM_LANGUAGE_CODES.get(language)
         if not language_code:
             raise ValueError(f"Unsupported TTS language: {language}")

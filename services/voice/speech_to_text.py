@@ -8,7 +8,8 @@ import time
 import httpx
 from typing import Protocol
 
-from .languages import is_supported_language\nfrom services.core.config import get_settings
+from .languages import is_supported_language
+from services.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ class SpeechToTextProvider(Protocol):
     def transcribe(self, audio: bytes, language: str, filename: str | None = None, content_type: str | None = None) -> Transcription: ...
 
 SUPPORTED_AUDIO_EXTENSIONS = {"aac", "flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "opus", "wav", "webm"}
-get_settings().sarvam_stt_url = "https://api.sarvam.ai/speech-to-text"
+SARVAM_STT_URL = get_settings().sarvam_stt_url
 LANGUAGE_CODES = {"en": "en-IN", "bn": "bn-IN", "hi": "hi-IN", "ta": "ta-IN", "pa": "pa-IN", "te": "te-IN"}
 LANGUAGE_NAMES = {"bn": "Bengali", "hi": "Hindi", "ta": "Tamil", "pa": "Punjabi", "te": "Telugu"}
 
@@ -54,9 +55,7 @@ class SarvamSpeechToText:
             raise ValueError("Audio input cannot be empty.")
         if not is_supported_language(language):
             raise ValueError(f"Unsupported voice language: {language}")
-        api_key = os.getenv("SARVAM_API_KEY")
-        if not api_key:
-            raise RuntimeError("SARVAM_API_KEY is not configured. Set it before processing audio.")
+        api_key = get_settings().sarvam_api_key.get_secret_value()
         language_code = LANGUAGE_CODES.get(language)
         if not language_code:
             raise ValueError(f"Unsupported Sarvam voice language: {language}")
@@ -89,7 +88,7 @@ class GroqSpeechToText:
     def transcribe(self, audio: bytes, language: str, filename: str | None = None, content_type: str | None = None) -> Transcription:
         if not audio: raise ValueError("Audio input cannot be empty.")
         if not is_supported_language(language): raise ValueError(f"Unsupported voice language: {language}")
-        api_key = os.getenv("GROQ_API_KEY")
+        api_key = get_settings().groq_api_key.get_secret_value() if get_settings().groq_api_key else None
         if not api_key: raise RuntimeError("GROQ_API_KEY is not configured. Set it before processing audio.")
         from groq import Groq
         client = Groq(api_key=api_key); upload_name = _audio_filename(audio, filename, content_type)
@@ -105,8 +104,7 @@ class OpenAISpeechToText:
     def transcribe(self, audio: bytes, language: str, filename: str | None = None, content_type: str | None = None) -> Transcription:
         if not audio: raise ValueError("Audio input cannot be empty.")
         if not is_supported_language(language): raise ValueError(f"Unsupported voice language: {language}")
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key: raise RuntimeError("OPENAI_API_KEY is not configured. Set it before processing audio.")
+        api_key = get_settings().openai_api_key.get_secret_value()
         from openai import OpenAI
         client = OpenAI(api_key=api_key); upload_name = _audio_filename(audio, filename, content_type)
         try: result = client.audio.transcriptions.create(model=self.model, file=(upload_name, audio), language=language)
