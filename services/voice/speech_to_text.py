@@ -2,14 +2,13 @@
 
 from dataclasses import dataclass
 import logging
-import os
 from pathlib import Path
 import tempfile
 import time
 import httpx
 from typing import Protocol
 
-from .languages import is_supported_language
+from .languages import is_supported_language\nfrom services.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ class SpeechToTextProvider(Protocol):
     def transcribe(self, audio: bytes, language: str, filename: str | None = None, content_type: str | None = None) -> Transcription: ...
 
 SUPPORTED_AUDIO_EXTENSIONS = {"aac", "flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "opus", "wav", "webm"}
-SARVAM_STT_URL = "https://api.sarvam.ai/speech-to-text"
+get_settings().sarvam_stt_url = "https://api.sarvam.ai/speech-to-text"
 LANGUAGE_CODES = {"en": "en-IN", "bn": "bn-IN", "hi": "hi-IN", "ta": "ta-IN", "pa": "pa-IN", "te": "te-IN"}
 LANGUAGE_NAMES = {"bn": "Bengali", "hi": "Hindi", "ta": "Tamil", "pa": "Punjabi", "te": "Telugu"}
 
@@ -48,7 +47,7 @@ def _audio_filename(audio: bytes, filename: str | None = None, content_type: str
 class SarvamSpeechToText:
     """Sarvam Saaras speech recognition for OpenKrishi AI."""
     def __init__(self, model: str | None = None) -> None:
-        self.model = model or os.getenv("SARVAM_STT_MODEL", "saaras:v4")
+        self.model = model or get_settings().sarvam_stt_model
 
     def transcribe(self, audio: bytes, language: str, filename: str | None = None, content_type: str | None = None) -> Transcription:
         if not audio:
@@ -66,7 +65,7 @@ class SarvamSpeechToText:
         headers = {"api-subscription-key": api_key}
         data = {"model": self.model, "language_code": language_code, "mode": "transcribe"}
         try:
-            with httpx.Client(timeout=45.0) as client:
+            with httpx.Client(timeout=get_settings().outbound_timeout_seconds) as client:
                 response = client.post(SARVAM_STT_URL, headers=headers, data=data, files={"file": (upload_name, audio, mime_type)})
                 response.raise_for_status()
                 payload = response.json()
@@ -86,7 +85,7 @@ class GeminiSpeechToText:
         return self._provider.transcribe(audio, language, filename, content_type)
 
 class GroqSpeechToText:
-    def __init__(self, model: str | None = None) -> None: self.model = model or os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo")
+    def __init__(self, model: str | None = None) -> None: self.model = model or get_settings().groq_stt_model
     def transcribe(self, audio: bytes, language: str, filename: str | None = None, content_type: str | None = None) -> Transcription:
         if not audio: raise ValueError("Audio input cannot be empty.")
         if not is_supported_language(language): raise ValueError(f"Unsupported voice language: {language}")
@@ -102,7 +101,7 @@ class GroqSpeechToText:
 
 
 class OpenAISpeechToText:
-    def __init__(self, model: str | None = None) -> None: self.model = model or os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe")
+    def __init__(self, model: str | None = None) -> None: self.model = model or get_settings().openai_stt_model
     def transcribe(self, audio: bytes, language: str, filename: str | None = None, content_type: str | None = None) -> Transcription:
         if not audio: raise ValueError("Audio input cannot be empty.")
         if not is_supported_language(language): raise ValueError(f"Unsupported voice language: {language}")

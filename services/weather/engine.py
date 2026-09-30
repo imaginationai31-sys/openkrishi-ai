@@ -4,7 +4,9 @@ from typing import Any
 
 import httpx
 
-OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+from services.core.config import get_settings
+
+
 SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
 
 ALERT_TEXT = {
@@ -143,8 +145,8 @@ async def get_weather(
     }
 
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            response = await client.get(OPEN_METEO_URL, params=params)
+        async with httpx.AsyncClient(timeout=get_settings().weather_timeout_seconds) as client:
+            response = await client.get(get_settings().open_meteo_url, params=params)
             response.raise_for_status()
             data = response.json()
     except (httpx.HTTPError, ValueError) as exc:

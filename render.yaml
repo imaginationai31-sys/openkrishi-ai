@@ -6,6 +6,10 @@ services:
     startCommand: uvicorn services.api.server:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/v1/health
     envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: CORS_ALLOW_ORIGINS
+        sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
@@ -18,3 +22,33 @@ services:
         value: "true"
       - key: GEMINI_ADVISORY_FALLBACK_MODEL
         value: gemini-3.6-flash
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_VISION_MODEL
+        value: gpt-5-mini
+      - key: OPENAI_STT_MODEL
+        value: gpt-4o-mini-transcribe
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: SARVAM_STT_MODEL
+        value: saaras:v4
+      - key: SARVAM_TTS_MODEL
+        value: bulbul:v3
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_STT_MODEL
+        value: whisper-large-v3-turbo
+      - key: MAX_IMAGE_BYTES
+        value: "10485760"
+      - key: MAX_AUDIO_BYTES
+        value: "10485760"
+      - key: OUTBOUND_TIMEOUT_SECONDS
+        value: "45"
+      - key: WEATHER_TIMEOUT_SECONDS
+        value: "15"
+      - key: AI_RATE_LIMIT
+        value: "10/minute"
+      - key: VOICE_RATE_LIMIT
+        value: "6/minute"
+      - key: VISION_RATE_LIMIT
+        value: "6/minute"

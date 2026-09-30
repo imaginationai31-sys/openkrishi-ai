@@ -1,10 +1,8 @@
-import os
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from services.api.middleware import RequestTraceMiddleware
-from services.api.routes import advisory, farm, health, vision, voice, weather
+from services.api.routes import advisory, farm, health, vision, voice, weather\nfrom services.core.config import get_settings
 
 app = FastAPI(
     title="OpenKrishi AI API",
@@ -25,7 +23,7 @@ app.add_middleware(
     allow_origins=allowed_origins,
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"]
+    allow_headers=["Content-Type", "Accept", "X-Trace-ID"]
 )
 
 app.add_middleware(RequestTraceMiddleware)

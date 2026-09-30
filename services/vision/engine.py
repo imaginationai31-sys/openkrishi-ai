@@ -5,8 +5,9 @@ from __future__ import annotations
 import base64
 import json
 import logging
-import os
 from typing import Any
+
+from services.core.config import get_settings
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ def _validate_image(image_bytes: bytes, content_type: str, crop_category: str | 
     normalized_type = (content_type or "").lower().split(";", 1)[0].strip()
     if not image_bytes:
         raise ValueError("Image is empty.")
-    if len(image_bytes) > MAX_IMAGE_BYTES:
+    if len(image_bytes) > get_settings().max_image_bytes:
         raise ValueError("Image exceeds the 10 MB limit.")
     if normalized_type not in SUPPORTED_IMAGE_TYPES:
         raise ValueError("Unsupported image type. Use JPEG, PNG, or WebP.")
@@ -100,7 +101,7 @@ def assess_crop_image(
         raise RuntimeError("OPENAI_API_KEY is not configured. Set it before using vision.")
     from openai import OpenAI
     client = OpenAI(api_key=api_key)
-    model = os.getenv("OPENAI_VISION_MODEL", "gpt-5-mini")
+    model = settings.openai_vision_model
     language_name = LANGUAGE_NAMES[language]
     encoded = base64.b64encode(image_bytes).decode("ascii")
     data_url = f"data:{normalized_type};base64,{encoded}"

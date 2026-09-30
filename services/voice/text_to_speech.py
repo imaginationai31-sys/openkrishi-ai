@@ -2,9 +2,10 @@
 
 from dataclasses import dataclass
 import base64
-import os
 import httpx
 from typing import Protocol
+
+from services.core.config import get_settings
 
 
 @dataclass(frozen=True)
@@ -19,7 +20,7 @@ class TextToSpeechProvider(Protocol):
         """Convert an advisory response into spoken audio."""
 
 
-SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
+get_settings().sarvam_tts_url = "https://api.sarvam.ai/text-to-speech"
 SARVAM_LANGUAGE_CODES = {"en": "en-IN", "bn": "bn-IN", "hi": "hi-IN", "ta": "ta-IN", "pa": "pa-IN", "te": "te-IN"}
 
 
@@ -40,7 +41,7 @@ def _pcm_to_wav(pcm: bytes, sample_rate: int = 24000, channels: int = 1, sample_
 class SarvamTextToSpeech:
     """Sarvam Bulbul v3 TTS for OpenKrishi AI."""
     def __init__(self, model: str | None = None, voice: str | None = None) -> None:
-        self.model = model or os.getenv("SARVAM_TTS_MODEL", "bulbul:v3")
+        self.model = model or get_settings().sarvam_tts_model
         self.voice = voice
 
     def synthesize(self, text: str, language: str) -> SpeechAudio:
@@ -55,7 +56,7 @@ class SarvamTextToSpeech:
         payload = {"text": text[:2500], "target_language_code": language_code, "model": self.model, "speaker": self.voice or "shubh"}
         headers = {"api-subscription-key": api_key, "Content-Type": "application/json"}
         try:
-            with httpx.Client(timeout=45.0) as client:
+            with httpx.Client(timeout=get_settings().outbound_timeout_seconds) as client:
                 response = client.post(SARVAM_TTS_URL, headers=headers, json=payload)
                 response.raise_for_status()
                 data = response.json()

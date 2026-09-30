@@ -1,13 +1,12 @@
 """Conservative multilingual advisory engine with a small crop-knowledge layer."""
 
 import json
-import os
 import logging
 from typing import Any
 
 from .knowledge import get_knowledge
 from .safety import enforce_advisory_safety
-from services.gemini.client import get_gemini_client, get_model, output_text
+from services.gemini.client import get_gemini_client, get_model, output_text\nfrom services.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +138,7 @@ Return concise but useful observations, safe recommendations, and uncertainties.
 
     client = get_gemini_client()
     models = [get_model()]
-    fallback_model = os.getenv("GEMINI_ADVISORY_FALLBACK_MODEL", "gemini-3.6-flash").strip()
+    fallback_model = get_settings().gemini_advisory_fallback_model.strip()
     fallback_models = [fallback_model, "gemini-3.6-flash", "gemini-3.5-flash-lite"]
     for candidate_model in fallback_models:
         if candidate_model and candidate_model not in models:
@@ -251,7 +250,7 @@ def generate_advisory(
     if language not in SUPPORTED_LANGUAGES:
         language = "en"
 
-    if os.getenv("GEMINI_API_KEY"):
+    if get_settings().gemini_api_key.get_secret_value():
         try:
             return _generate_gemini_advisory(
                 query=query,
@@ -265,7 +264,7 @@ def generate_advisory(
             # Keep the API available when Gemini is temporarily capacity-limited (for example 503 UNAVAILABLE).
             # Gemini remains the primary provider; rules are only an availability fallback.
             temporary_unavailable = "temporarily unavailable" in str(exc).lower()
-            rules_enabled = os.getenv("GEMINI_FALLBACK_TO_RULES", "true").lower() == "true"
+            rules_enabled = get_settings().gemini_fallback_to_rules
             if not (rules_enabled or temporary_unavailable):
                 raise
 
