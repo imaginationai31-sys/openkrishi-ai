@@ -8,7 +8,9 @@ from services.api.middleware import RequestTraceMiddleware
 from services.api.rate_limit import limiter
 from services.api.routes import advisory, farm, health, vision, voice, weather
 from services.core.config import get_settings
+from services.core.logging import configure_logging
 
+configure_logging()
 settings = get_settings()
 
 app = FastAPI(
