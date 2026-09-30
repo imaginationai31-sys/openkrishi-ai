@@ -10,6 +10,7 @@ class VoiceLanguage:
 
 
 SUPPORTED_VOICE_LANGUAGES = (
+    VoiceLanguage("en", "English"),
     VoiceLanguage("bn", "Bengali"),
     VoiceLanguage("hi", "Hindi"),
     VoiceLanguage("ta", "Tamil"),
