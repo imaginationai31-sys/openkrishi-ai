@@ -229,8 +229,8 @@ if(page==='farm'&&typeof syncFarmLanguage==='function')syncFarmLanguage();
 if(page==='history'&&typeof loadOpenKrishiHistory==='function')loadOpenKrishiHistory();
 }
 const oldApply=typeof applyLanguage==='function'?applyLanguage:null;
-</script><script>
-const API_BASE=window.OPENKRISHI_API_BASE||'https://openkrishi-ai-api.onrender.com';
+</script><script src="./src/api.js"></script><script src="./src/language.js"></script><script>
+const API_BASE=window.OpenKrishiApi.getApiBase();
 
 const languageEl=document.getElementById('language'),
 cropEl=document.getElementById('crop'),
@@ -775,6 +775,7 @@ return map[s]||map.caution;
 
 function applyLanguage(){
 
+languageEl.value=window.OpenKrishiLanguage.normalizeLanguage(languageEl.value);
 document.documentElement.lang=languageEl.value;
 
 setText('tagline','tagline');
@@ -1169,8 +1170,7 @@ async function askAdvisory(){
  if(!question){setStatus('Please enter your farming question.',true);questionEl.focus();return;}
  askButton.disabled=true;setStatus(t('processing'));
  try{
-  const r=await fetch(`${API_BASE}/api/v1/advisory`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:question,language:languageEl.value,crop_category:cropEl.value,crop_name:cropNameEl?.value||null,growth_stage:growthStageEl?.value.trim()||null})});
-  const d=await r.json(); if(!r.ok)throw new Error(d.detail||t('processingError'));
+  const d=await window.OpenKrishiApi.postJson("/api/v1/advisory",window.OpenKrishiApi.buildAdvisoryRequest({query:question,language:languageEl.value,cropCategory:cropEl.value,cropName:cropNameEl?.value||null,growthStage:growthStageEl?.value.trim()||null}));
   resultCard.hidden=false;document.getElementById('adviceTitle').textContent=t('advice');
   resultEl.textContent=d.answer||d.advisory?.answer||t('noAdvisory');
   dSafetyStatus=d.safety?.status||d.advisory?.safety?.status||'caution';safetyEl.textContent=`${t('safety')}: ${getSafetyText(dSafetyStatus)}`;
