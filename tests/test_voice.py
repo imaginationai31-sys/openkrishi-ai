@@ -19,7 +19,7 @@ class FakeTTS:
 
 
 def test_supported_voice_languages():
-    for language in ("bn", "hi", "ta", "pa", "te"):
+    for language in ("en", "bn", "hi", "ta", "pa", "te"):
         assert is_supported_language(language)
 
 
@@ -39,7 +39,7 @@ def test_voice_pipeline_reaches_advisory_engine():
 
 def test_unsupported_voice_language_is_rejected():
     try:
-        process_voice_query(b"fake-input", "en", FakeSTT(), FakeTTS())
+        process_voice_query(b"fake-input", "xx", FakeSTT(), FakeTTS())
     except ValueError as exc:
         assert "Unsupported voice language" in str(exc)
     else:
