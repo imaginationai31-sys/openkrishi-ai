@@ -1,3 +1,5 @@
+globalThis.window = globalThis;
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("PWA API client", () => {
