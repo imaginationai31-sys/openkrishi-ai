@@ -6,7 +6,7 @@ from typing import Any
 
 from .knowledge import get_knowledge
 from .safety import enforce_advisory_safety
-from services.gemini.client import get_gemini_client, get_model, output_text\nfrom services.core.config import get_settings
+from services.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ def _localize_list(items: list[str], language: str) -> list[str]:
     return [table.get(replacements.get(item, ""), item) for item in items]
 
 
-GEMINI_ADVISORY_SCHEMA = {
+OPENAI_ADVISORY_SCHEMA = {
     "type": "object",
     "properties": {
         "answer": {"type": "string"},
@@ -83,7 +83,7 @@ GEMINI_ADVISORY_SCHEMA = {
 }
 
 
-def _generate_gemini_advisory(
+def _generate_openai_advisory(
     query: str,
     language: str,
     crop_category: str | None = None,
@@ -91,14 +91,12 @@ def _generate_gemini_advisory(
     growth_stage: str | None = None,
     location: str | None = None,
 ) -> dict[str, Any]:
-    """Generate the farmer-facing advisory with Gemini when GEMINI_API_KEY is configured."""
+    """Generate a cautious farmer-facing advisory with OpenAI."""
+    from openai import OpenAI
+
     language_names = {
-        "en": "English",
-        "bn": "Bengali",
-        "hi": "Hindi",
-        "ta": "Tamil",
-        "pa": "Punjabi",
-        "te": "Telugu",
+        "en": "English", "bn": "Bengali", "hi": "Hindi",
+        "ta": "Tamil", "pa": "Punjabi", "te": "Telugu",
     }
     language_name = language_names[language]
     crop_label = CROP_LABELS.get(crop_category or "", {}).get("en") or crop_category or "unspecified crop"
@@ -121,65 +119,46 @@ LOCATION: {location_text}
 STRICT SAFETY RULES:
 - Do not claim a disease, pest, nutrient deficiency, or other diagnosis as certain.
 - Describe possible causes only when supported by the farmer's information.
-- Do not prescribe pesticides, insecticides, fungicides, herbicides, chemical sprays, chemical names, application rates, or large fertilizer doses.
+- Do not prescribe pesticide products, application rates, chemical spray schedules, or large fertilizer doses.
 - Give practical low-risk checks and next steps.
 - If important information is missing, state exactly what should be checked or provided.
 - If growth stage is missing, explicitly mention that the growth stage is needed for more specific guidance.
 - If location is provided, acknowledge it but do not invent local weather, soil, pest alerts, or government guidance.
-- If location is not provided, state that local conditions cannot be considered.
 - Keep confidence conservative; use low unless the information is unusually clear.
-- Return ONLY JSON matching the supplied response schema.
 - Every natural-language field MUST be fully written in {language_name}. Do not mix languages.
-- Keep crop and variety names recognizable to farmers.
+- Return only JSON matching the response schema.
 
 Return concise but useful observations, safe recommendations, and uncertainties."""
 
-    from google.genai import types
-
-    client = get_gemini_client()
-    models = [get_model()]
-    fallback_model = get_settings().gemini_advisory_fallback_model.strip()
-    fallback_models = [fallback_model, "gemini-3.6-flash", "gemini-3.5-flash-lite"]
-    for candidate_model in fallback_models:
-        if candidate_model and candidate_model not in models:
-            models.append(candidate_model)
-
-    last_exc: Exception | None = None
-    payload: dict[str, Any] | None = None
-    for model_name in models:
-        for attempt in range(2):
-            try:
-                response = client.models.generate_content(
-                    model=model_name,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        max_output_tokens=2200,
-                    ),
-                )
-                raw = getattr(response, "text", None) or output_text(response)
-                candidate = json.loads(raw)
-                if not isinstance(candidate, dict):
-                    raise RuntimeError("Gemini returned an invalid advisory format.")
-                payload = candidate
-                break
-            except Exception as exc:
-                last_exc = exc
-                logger.warning(
-                    "Gemini advisory attempt failed: model=%s attempt=%s error_type=%s",
-                    model_name, attempt + 1, type(exc).__name__,
-                )
-                if attempt == 0 and "503" not in str(exc) and "UNAVAILABLE" not in str(exc):
-                    break
-        if payload is not None:
-            break
-
-    if payload is None:
-        logger.error(
-            "Gemini advisory unavailable after model retries: primary=%s fallback_models=%s error_type=%s",
-            get_model(), models[1:], type(last_exc).__name__ if last_exc else "unknown",
+    settings = get_settings()
+    client = OpenAI(api_key=settings.openai_api_key.get_secret_value())
+    try:
+        response = client.responses.create(
+            model=settings.openai_advisory_model,
+            input=[{"role": "user", "content": [{"type": "input_text", "text": prompt}]}],
+            text={
+                "format": {
+                    "type": "json_schema",
+                    "name": "agricultural_advisory",
+                    "strict": True,
+                    "schema": OPENAI_ADVISORY_SCHEMA,
+                }
+            },
         )
-        raise RuntimeError("Gemini advisory provider is temporarily unavailable.") from last_exc
+    except Exception as exc:
+        logger.warning(
+            "OpenAI advisory request failed: model=%s error_type=%s",
+            settings.openai_advisory_model, type(exc).__name__,
+        )
+        raise RuntimeError("Advisory provider is temporarily unavailable.") from exc
+
+    raw = getattr(response, "output_text", "")
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Advisory provider returned an invalid response format.") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError("Advisory provider returned an invalid response format.")
 
     answer = str(payload.get("answer") or "").strip()
     observations = [str(x).strip() for x in payload.get("observations", []) if str(x).strip()][:8]
@@ -188,7 +167,7 @@ Return concise but useful observations, safe recommendations, and uncertainties.
     confidence = payload.get("confidence") if payload.get("confidence") in {"low", "medium", "high"} else "low"
 
     if not answer:
-        raise RuntimeError("Gemini returned an empty advisory.")
+        raise RuntimeError("Advisory provider returned an empty advisory.")
 
     if location:
         location_note = {
@@ -222,7 +201,6 @@ Return concise but useful observations, safe recommendations, and uncertainties.
     recommendations, uncertainties, safety = enforce_advisory_safety(
         recommendations, uncertainties, confidence=confidence
     )
-
     return {
         "answer": answer,
         "language": language,
@@ -246,36 +224,29 @@ def generate_advisory(
     growth_stage: str | None = None,
     location: str | None = None,
 ) -> dict[str, Any]:
-    """Use Gemini for production advisories, with deterministic fallback before a key is configured."""
+    """Generate an OpenAI advisory with a deterministic safety fallback."""
     if language not in SUPPORTED_LANGUAGES:
         language = "en"
 
-    if get_settings().gemini_api_key.get_secret_value():
-        try:
-            return _generate_gemini_advisory(
-                query=query,
-                language=language,
-                crop_category=crop_category,
-                crop_name=crop_name,
-                growth_stage=growth_stage,
-                location=location,
-            )
-        except RuntimeError as exc:
-            # Keep the API available when Gemini is temporarily capacity-limited (for example 503 UNAVAILABLE).
-            # Gemini remains the primary provider; rules are only an availability fallback.
-            temporary_unavailable = "temporarily unavailable" in str(exc).lower()
-            rules_enabled = get_settings().gemini_fallback_to_rules
-            if not (rules_enabled or temporary_unavailable):
-                raise
-
-    return _generate_rule_based_advisory(
-        query=query,
-        language=language,
-        crop_category=crop_category,
-        crop_name=crop_name,
-        growth_stage=growth_stage,
-        location=location,
-    )
+    try:
+        return _generate_openai_advisory(
+            query=query,
+            language=language,
+            crop_category=crop_category,
+            crop_name=crop_name,
+            growth_stage=growth_stage,
+            location=location,
+        )
+    except RuntimeError:
+        logger.warning("OpenAI advisory unavailable; using deterministic fallback.")
+        return _generate_rule_based_advisory(
+            query=query,
+            language=language,
+            crop_category=crop_category,
+            crop_name=crop_name,
+            growth_stage=growth_stage,
+            location=location,
+        )
 
 
 def _generate_rule_based_advisory(
