@@ -122,7 +122,7 @@ The backend keeps third-party credentials server-side. The PWA calls the Render 
 
 ## Quick start: backend
 
-Requirements: Git, Python 3.11/3.12, and uv.
+Requirements: Git, Python 3.11/3.12, and uv. Install uv from the official uv documentation or with your preferred Python package manager before running the commands below.
 
 ~~~bash
 git clone https://github.com/imaginationai31-sys/openkrishi-ai.git
