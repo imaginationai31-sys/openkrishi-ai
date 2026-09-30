@@ -20,14 +20,10 @@ class Settings(BaseSettings):
     openai_advisory_model: str = Field(default="gpt-5-mini", alias="OPENAI_ADVISORY_MODEL")
     openai_api_key: SecretStr = Field(alias="OPENAI_API_KEY")
     openai_vision_model: str = Field(default="gpt-5-mini", alias="OPENAI_VISION_MODEL")
-    openai_stt_model: str = Field(default="gpt-4o-mini-transcribe", alias="OPENAI_STT_MODEL")
 
     sarvam_api_key: SecretStr = Field(alias="SARVAM_API_KEY")
     sarvam_stt_model: str = Field(default="saaras:v4", alias="SARVAM_STT_MODEL")
     sarvam_tts_model: str = Field(default="bulbul:v3", alias="SARVAM_TTS_MODEL")
-
-    groq_api_key: SecretStr | None = Field(default=None, alias="GROQ_API_KEY")
-    groq_stt_model: str = Field(default="whisper-large-v3-turbo", alias="GROQ_STT_MODEL")
 
     open_meteo_url: str = Field(default="https://api.open-meteo.com/v1/forecast", alias="OPEN_METEO_URL")
     sarvam_stt_url: str = Field(default="https://api.sarvam.ai/speech-to-text", alias="SARVAM_STT_URL")
