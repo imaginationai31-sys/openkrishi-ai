@@ -11,22 +11,35 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: uv.lock
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: "0.12.19"
+          enable-cache: true
+
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r services/api/requirements.txt
-          pip install ruff
-      - name: Ruff
-        run: |
-          ruff check services tests --fix
-          ruff check services tests
-      - name: Pytest
+        run: uv sync --frozen --dev
+
+      - name: Run lint
+        run: uv run ruff check services tests
+
+      - name: Run tests
         env:
+          PYTHONPATH: ${{ github.workspace }}
           CORS_ALLOW_ORIGINS: https://openkrishi-ai.hatchable.site
           OPENAI_API_KEY: test-openai-key
           SARVAM_API_KEY: test-sarvam-key
-        run: pytest -q
+        run: uv run pytest --cov=services --cov-report=term-missing --cov-report=xml
+
+      - name: Run typecheck
+        run: uv run mypy services/core services/api
