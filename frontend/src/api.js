@@ -1,10 +1,10 @@
 const DEFAULT_API_BASE = "https://openkrishi-ai-api.onrender.com";
 
-export function getApiBase() {
+function getApiBase() {
   return window.OPENKRISHI_API_BASE || DEFAULT_API_BASE;
 }
 
-export function buildAdvisoryRequest({ query, language, cropCategory, cropName, growthStage }) {
+function buildAdvisoryRequest({ query, language, cropCategory, cropName, growthStage }) {
   return {
     query: query.trim(),
     language,
@@ -14,7 +14,7 @@ export function buildAdvisoryRequest({ query, language, cropCategory, cropName, 
   };
 }
 
-export async function postJson(path, body, fetchImpl = fetch) {
+async function postJson(path, body, fetchImpl = fetch) {
   const response = await fetchImpl(`${getApiBase()}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
