@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, NoReturn
 from fastapi import APIRouter, HTTPException, Query
 
 from services.farm.intelligence import (
@@ -13,7 +13,7 @@ from services.weather.engine import get_weather, SUPPORTED_LANGUAGES
 
 router = APIRouter(prefix="/farm", tags=["farm-intelligence"])
 
-def _err(exc: Exception) -> None:
+def _err(exc: Exception) -> NoReturn:
     raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 @router.get("/plan")
