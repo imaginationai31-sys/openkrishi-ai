@@ -68,7 +68,7 @@ def _synthesize(text: str, language: str):
 async def transcribe_voice(
     request: Request,
     response: Response,
-    file: UploadFile = File(...),  # noqa: B008
+    file: UploadFile = File(...),  # noqa: B008  # noqa: B008
     language: str = Form(...),
 ) -> dict[str, Any]:
     if not is_supported_language(language):
@@ -94,7 +94,7 @@ async def transcribe_voice(
 async def voice_advisory(
     request: Request,
     response: Response,
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # noqa: B008
     language: str = Form(...),
     crop_category: str | None = Form(default=None),
     growth_stage: str | None = Form(default=None),
@@ -137,7 +137,7 @@ async def voice_advisory(
 async def voice_vision_advisory(
     request: Request,
     response: Response,
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # noqa: B008
     image: UploadFile = File(...),
     language: str = Form(...),
     crop_category: str | None = Form(default=None),
