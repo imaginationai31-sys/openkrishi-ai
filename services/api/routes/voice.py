@@ -14,9 +14,6 @@ from services.vision.engine import assess_crop_image
 from services.api.rate_limit import limiter, VOICE_LIMIT
 from services.core.config import get_settings
 from services.core.uploads import read_limited_upload
-from services.api.rate_limit import limiter, VOICE_LIMIT
-from services.core.config import get_settings
-from services.core.uploads import read_limited_upload
 
 router = APIRouter()
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
@@ -68,7 +65,6 @@ def _synthesize(text: str, language: str):
 
 @router.post("/voice/transcribe")
 @limiter.limit(VOICE_LIMIT)
-@limiter.limit(VOICE_LIMIT)
 async def transcribe_voice(request: Request, file: UploadFile = File(...),  # noqa: B008 language: str = Form(...)) -> dict[str, Any]:
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
@@ -90,8 +86,14 @@ async def transcribe_voice(request: Request, file: UploadFile = File(...),  # no
 
 @router.post("/voice/advisory")
 @limiter.limit(VOICE_LIMIT)
-@limiter.limit(VOICE_LIMIT)
-async def voice_advisory(request: Request, file: UploadFile = File(...), language: str = Form(...), crop_category: str | None = Form(default=None), growth_stage: str | None = Form(default=None), location: str | None = Form(default=None)) -> dict[str, Any]:
+async def voice_advisory(
+    request: Request,
+    file: UploadFile = File(...),
+    language: str = Form(...),
+    crop_category: str | None = Form(default=None),
+    growth_stage: str | None = Form(default=None),
+    location: str | None = Form(default=None),
+) -> dict[str, Any]:
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
     if crop_category is not None and crop_category not in SUPPORTED_CROPS:
@@ -125,7 +127,6 @@ async def voice_advisory(request: Request, file: UploadFile = File(...), languag
 
 
 @router.post("/voice/vision-advisory")
-@limiter.limit(VOICE_LIMIT)
 @limiter.limit(VOICE_LIMIT)
 async def voice_vision_advisory(request: Request, file: UploadFile = File(...), image: UploadFile = File(...),  # noqa: B008 language: str = Form(...), crop_category: str | None = Form(default=None), growth_stage: str | None = Form(default=None), location: str | None = Form(default=None)) -> dict[str, Any]:
     if not is_supported_language(language):
