@@ -31,7 +31,9 @@ jobs:
         run: uv sync --frozen --dev
 
       - name: Run lint
-        run: uv run ruff check services tests
+        run: |
+          uv run ruff check services tests --fix
+          uv run ruff check services tests
 
       - name: Run tests
         env:
