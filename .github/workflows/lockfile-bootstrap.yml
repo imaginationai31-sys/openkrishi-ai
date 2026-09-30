@@ -27,7 +27,7 @@ jobs:
 
       - name: Commit lockfile
         run: |
-          if git diff --quiet -- uv.lock; then
+          if git diff --quiet -- uv.lock && git ls-files --error-unmatch uv.lock >/dev/null 2>&1; then
             echo "uv.lock is already current"
             exit 0
           fi
