@@ -166,8 +166,8 @@ Return concise but useful observations, safe recommendations, and uncertainties.
             except Exception as exc:
                 last_exc = exc
                 logger.warning(
-                    "Gemini advisory attempt failed: model=%s attempt=%s error_type=%s error=%s",
-                    model_name, attempt + 1, type(exc).__name__, exc,
+                    "Gemini advisory attempt failed: model=%s attempt=%s error_type=%s",
+                    model_name, attempt + 1, type(exc).__name__,
                 )
                 if attempt == 0 and "503" not in str(exc) and "UNAVAILABLE" not in str(exc):
                     break
@@ -176,8 +176,8 @@ Return concise but useful observations, safe recommendations, and uncertainties.
 
     if payload is None:
         logger.error(
-            "Gemini advisory unavailable after model retries: primary=%s fallback_models=%s error=%s",
-            get_model(), models[1:], last_exc,
+            "Gemini advisory unavailable after model retries: primary=%s fallback_models=%s error_type=%s",
+            get_model(), models[1:], type(last_exc).__name__ if last_exc else "unknown",
         )
         raise RuntimeError("Gemini advisory provider is temporarily unavailable.") from last_exc
 
