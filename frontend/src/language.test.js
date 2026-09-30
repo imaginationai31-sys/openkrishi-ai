@@ -1,3 +1,5 @@
+globalThis.window = globalThis;
+
 import { describe, expect, it } from "vitest";
 
 describe("language selection", () => {
