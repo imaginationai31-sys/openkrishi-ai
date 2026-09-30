@@ -10,18 +10,6 @@ services:
         value: production
       - key: CORS_ALLOW_ORIGINS
         sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: GEMINI_MODEL
-        value: gemini-3.8-flash
-      - key: GEMINI_TRANSCRIBE_MODEL
-        value: gemini-3.5-transcribe
-      - key: GEMINI_TTS_MODEL
-        value: gemini-3.1-flash-tts-preview
-      - key: GEMINI_FALLBACK_TO_RULES
-        value: "true"
-      - key: GEMINI_ADVISORY_FALLBACK_MODEL
-        value: gemini-3.6-flash
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_VISION_MODEL
@@ -34,10 +22,6 @@ services:
         value: saaras:v4
       - key: SARVAM_TTS_MODEL
         value: bulbul:v3
-      - key: GROQ_API_KEY
-        sync: false
-      - key: GROQ_STT_MODEL
-        value: whisper-large-v3-turbo
       - key: MAX_IMAGE_BYTES
         value: "10485760"
       - key: MAX_AUDIO_BYTES
