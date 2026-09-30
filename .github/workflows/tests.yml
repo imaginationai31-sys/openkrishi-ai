@@ -25,4 +25,7 @@ jobs:
       - name: Run tests
         env:
           PYTHONPATH: ${{ github.workspace }}
+          CORS_ALLOW_ORIGINS: https://openkrishi-ai.hatchable.site
+          OPENAI_API_KEY: test-openai-key
+          SARVAM_API_KEY: test-sarvam-key
         run: pytest -q tests
