@@ -138,7 +138,7 @@ Analyze the attached crop image. Return only the JSON object matching the respon
             },
         )
     except Exception as exc:
-        logger.exception("OpenAI vision request failed: model=%s crop=%s language=%s error=%s", model, crop_category, language, exc)
+        logger.exception("OpenAI vision request failed: model=%s crop=%s language=%s", model, crop_category, language)
         raise RuntimeError("Vision provider is temporarily unavailable.") from exc
     raw_text = getattr(response, "output_text", "")
     payload = _parse_assessment(raw_text)
