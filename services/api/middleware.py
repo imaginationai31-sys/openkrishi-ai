@@ -20,7 +20,7 @@ class RequestTraceMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
         except Exception:
             elapsed_ms = (time.perf_counter() - started) * 1000
-            logger.exception(
+            logger.error(
                 "request_failed trace_id=%s method=%s path=%s duration_ms=%.1f",
                 trace_id,
                 request.method,
