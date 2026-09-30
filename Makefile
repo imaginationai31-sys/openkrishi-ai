@@ -1,26 +1,24 @@
 PYTHON ?= python3
-PIP ?= $(PYTHON) -m pip
 
 .PHONY: install dev test lint typecheck format docker-up
 
 install:
-	$(PIP) install -r services/api/requirements.txt
-	$(PIP) install -r requirements-dev.txt
+	uv sync --dev
 
 dev:
-	uvicorn services.api.server:app --reload --host 0.0.0.0 --port 8000
+	uv run uvicorn services.api.server:app --reload --host 0.0.0.0 --port 8000
 
 test:
-	pytest -q
+	uv run pytest -q
 
 lint:
-	ruff check services tests
+	uv run ruff check services tests
 
 typecheck:
-	mypy services
+	uv run mypy services
 
 format:
-	ruff format services tests
+	uv run ruff format services tests
 
 docker-up:
 	docker compose up --build
