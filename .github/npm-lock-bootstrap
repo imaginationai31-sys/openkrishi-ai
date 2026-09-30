@@ -1,1 +1,2 @@
 Generate frontend package-lock.json once.
+Retry with npm 12.
