@@ -3,28 +3,31 @@ import pytest
 from services.vision.engine import assess_crop_image
 
 
-class FakeResponse:
-    text = '{"observations":["yellowing visible"],"possible_causes":["water stress"],"confidence":"low","uncertainties":["image is synthetic"],"recommendations":["check soil moisture"]}'
+VISION_RESPONSE = '{"observations":["yellowing visible"],"possible_causes":["water stress"],"confidence":"low","uncertainties":["image is synthetic"],"recommendations":["check soil moisture"]}'
 
 
-class FakeModels:
-    def generate_content(self, **kwargs):
-        assert kwargs["model"]
-        assert kwargs["contents"][0]
-        assert kwargs["contents"][1]
-        config = kwargs["config"]
-        assert config.response_mime_type == "application/json"
-        assert config.response_schema["type"] == "object"
-        return FakeResponse()
+class FakeResponses:
+    def __init__(self, captured):
+        self.captured = captured
+
+    def create(self, **kwargs):
+        self.captured.update(kwargs)
+        return type("FakeResponse", (), {"output_text": VISION_RESPONSE})()
 
 
-class FakeGeminiClient:
-    models = FakeModels()
+class FakeOpenAI:
+    def __init__(self, captured):
+        self.responses = FakeResponses(captured)
+
+
+def patch_openai(monkeypatch, captured):
+    import openai
+    monkeypatch.setattr(openai, "OpenAI", lambda **kwargs: FakeOpenAI(captured))
 
 
 def test_crop_image_is_accepted_for_supported_crop(monkeypatch):
-    monkeypatch.setattr("services.vision.engine.get_gemini_client", lambda: FakeGeminiClient())
-
+    captured = {}
+    patch_openai(monkeypatch, captured)
     result = assess_crop_image(b"fake-image", "image/jpeg", "rice", "tillering")
     assert result["status"] == "assessed"
     assert result["crop_category"] == "rice"
@@ -74,17 +77,9 @@ def test_vision_route_exposes_advisory_layer():
 ])
 def test_selected_crop_variety_is_carried_into_vision_prompt(monkeypatch, crop_category, crop_name):
     captured = {}
-
-    class CaptureModels:
-        def generate_content(self, **kwargs):
-            captured["contents"] = kwargs["contents"]
-            return FakeResponse()
-
-    class CaptureClient:
-        models = CaptureModels()
-
-    monkeypatch.setattr("services.vision.engine.get_gemini_client", lambda: CaptureClient())
+    patch_openai(monkeypatch, captured)
     result = assess_crop_image(b"fake-image", "image/jpeg", crop_category, "tillering", "en", crop_name)
     assert result["crop_category"] == crop_category
     assert result["status"] == "assessed"
-    assert crop_name in captured["contents"][1]
+    prompt = captured["input"][0]["content"][0]["text"]
+    assert crop_name in prompt
