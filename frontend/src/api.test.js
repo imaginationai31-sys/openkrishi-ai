@@ -1,10 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
-import { buildAdvisoryRequest, postJson } from "./api.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("PWA API client", () => {
+  beforeEach(async () => {
+    window.OPENKRISHI_API_BASE = "https://example.test";
+    await import("./api.js");
+  });
+
   it("builds the advisory payload without changing selected crop fields", () => {
     expect(
-      buildAdvisoryRequest({
+      window.OpenKrishiApi.buildAdvisoryRequest({
         query: "  yellow leaves  ",
         language: "bn",
         cropCategory: "rice",
@@ -26,7 +30,9 @@ describe("PWA API client", () => {
       json: async () => ({ answer: "Check soil moisture." }),
     });
 
-    await expect(postJson("/api/v1/advisory", { query: "test" }, fetchImpl)).resolves.toEqual({
+    await expect(
+      window.OpenKrishiApi.postJson("/api/v1/advisory", { query: "test" }, fetchImpl),
+    ).resolves.toEqual({
       answer: "Check soil moisture.",
     });
   });
@@ -37,6 +43,8 @@ describe("PWA API client", () => {
       json: async () => ({ detail: "Invalid request." }),
     });
 
-    await expect(postJson("/api/v1/advisory", {}, fetchImpl)).rejects.toThrow("Invalid request.");
+    await expect(window.OpenKrishiApi.postJson("/api/v1/advisory", {}, fetchImpl)).rejects.toThrow(
+      "Invalid request.",
+    );
   });
 });
