@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Any
-
 import asyncio
 import time
+from typing import Any, NoReturn
 
 import httpx
 
@@ -69,6 +68,10 @@ WEATHER_DESCRIPTION = {
     "pa": {0:"ਸਾਫ਼ ਆਸਮਾਨ",1:"ਮੁੱਖ ਤੌਰ 'ਤੇ ਸਾਫ਼",2:"ਅੰਸ਼ਿਕ ਬੱਦਲ",3:"ਬੱਦਲ ਛਾਏ ਹੋਏ",45:"ਧੁੰਦ",48:"ਪਾਲੇ ਵਾਲੀ ਧੁੰਦ",51:"ਹਲਕੀ ਫੁਹਾਰ",53:"ਦਰਮਿਆਨੀ ਫੁਹਾਰ",55:"ਘਣੀ ਫੁਹਾਰ",61:"ਹਲਕੀ ਬਾਰਿਸ਼",63:"ਦਰਮਿਆਨੀ ਬਾਰਿਸ਼",65:"ਭਾਰੀ ਬਾਰਿਸ਼",71:"ਹਲਕੀ ਬਰਫ਼ਬਾਰੀ",73:"ਦਰਮਿਆਨੀ ਬਰਫ਼ਬਾਰੀ",75:"ਭਾਰੀ ਬਰਫ਼ਬਾਰੀ",80:"ਹਲਕੀ ਬਾਰਿਸ਼ ਦੀਆਂ ਛਿੱਟਾਂ",81:"ਦਰਮਿਆਨੀ ਬਾਰਿਸ਼ ਦੀਆਂ ਛਿੱਟਾਂ",82:"ਤੇਜ਼ ਬਾਰਿਸ਼ ਦੀਆਂ ਛਿੱਟਾਂ",95:"ਤੂਫ਼ਾਨ",96:"ਗੜਿਆਂ ਨਾਲ ਤੂਫ਼ਾਨ",99:"ਭਾਰੀ ਗੜਿਆਂ ਨਾਲ ਤੂਫ਼ਾਨ"},
     "te": {0:"ఆకాశం నిర్మలంగా ఉంది",1:"ప్రధానంగా నిర్మలంగా ఉంది",2:"పాక్షికంగా మేఘావృతం",3:"మేఘావృతం",45:"పొగమంచు",48:"మంచు పొగమంచు",51:"తేలికపాటి జల్లులు",53:"మోస్తరు జల్లులు",55:"దట్టమైన జల్లులు",61:"తేలికపాటి వర్షం",63:"మోస్తరు వర్షం",65:"భారీ వర్షం",71:"తేలికపాటి మంచు",73:"మోస్తరు మంచు",75:"భారీ మంచు",80:"తేలికపాటి వర్షపు జల్లులు",81:"మోస్తరు వర్షపు జల్లులు",82:"తీవ్ర వర్షపు జల్లులు",95:"ఉరుములతో కూడిన వర్షం",96:"వడగళ్లతో ఉరుములతో కూడిన వర్షం",99:"భారీ వడగళ్లతో ఉరుములతో కూడిన వర్షం"},
 }
+
+
+def _raise_missing_weather_data() -> NoReturn:
+    raise RuntimeError("Weather provider returned no data.")
 
 
 def _as_float(value: Any, default: float = 0.0) -> float:
@@ -180,7 +183,7 @@ async def get_weather(
                             raise
                         await asyncio.sleep(WEATHER_RETRY_DELAY_SECONDS * (2**attempt))
                 if data is None:
-                    raise RuntimeError("Weather provider returned no data.")
+                    _raise_missing_weather_data()
                 _WEATHER_CACHE[cache_key] = (time.monotonic(), data)
         except (httpx.HTTPError, ValueError, RuntimeError) as exc:
             raise RuntimeError("Weather provider is temporarily unavailable.") from exc
