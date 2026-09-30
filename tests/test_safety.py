@@ -24,7 +24,7 @@ def test_uncertain_diagnosis_forces_low_confidence():
 
 
 def test_safe_recommendation_is_preserved():
-    recommendations, uncertainties, safety = enforce_advisory_safety(
+    recommendations, _uncertainties, safety = enforce_advisory_safety(
         ["Check soil moisture and compare healthy plants."],
         [],
         confidence="low",
