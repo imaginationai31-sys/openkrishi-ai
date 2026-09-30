@@ -10,7 +10,13 @@ from services.advisory.voice_understanding import build_voice_understanding
 from services.voice.languages import is_supported_language
 from services.voice.speech_to_text import SarvamSpeechToText
 from services.voice.text_to_speech import SarvamTextToSpeech
-from services.vision.engine import assess_crop_image\nfrom services.api.rate_limit import limiter, VOICE_LIMIT\nfrom services.core.config import get_settings\nfrom services.core.uploads import read_limited_upload
+from services.vision.engine import assess_crop_image
+from services.api.rate_limit import limiter, VOICE_LIMIT
+from services.core.config import get_settings
+from services.core.uploads import read_limited_upload
+from services.api.rate_limit import limiter, VOICE_LIMIT
+from services.core.config import get_settings
+from services.core.uploads import read_limited_upload
 
 router = APIRouter()
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
@@ -60,7 +66,9 @@ def _synthesize(text: str, language: str):
     return SarvamTextToSpeech().synthesize(text, language)
 
 
-@router.post("/voice/transcribe")\n@limiter.limit(VOICE_LIMIT)
+@router.post("/voice/transcribe")
+@limiter.limit(VOICE_LIMIT)
+@limiter.limit(VOICE_LIMIT)
 async def transcribe_voice(request: Request, file: UploadFile = File(...), language: str = Form(...)) -> dict[str, Any]:
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
@@ -71,6 +79,8 @@ async def transcribe_voice(request: Request, file: UploadFile = File(...), langu
         raise HTTPException(status_code=413, detail="Audio file is too large. Maximum size is 10 MB.")
     try:
         transcription = _transcribe(audio, language, file.filename, file.content_type)
+    except OverflowError as exc:
+        raise HTTPException(status_code=413, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
@@ -78,7 +88,9 @@ async def transcribe_voice(request: Request, file: UploadFile = File(...), langu
     return {"text": transcription.text, "language": transcription.language, "confidence": transcription.confidence, "filename": file.filename, "content_type": file.content_type}
 
 
-@router.post("/voice/advisory")\n@limiter.limit(VOICE_LIMIT)
+@router.post("/voice/advisory")
+@limiter.limit(VOICE_LIMIT)
+@limiter.limit(VOICE_LIMIT)
 async def voice_advisory(request: Request, file: UploadFile = File(...), language: str = Form(...), crop_category: str | None = Form(default=None), growth_stage: str | None = Form(default=None), location: str | None = Form(default=None)) -> dict[str, Any]:
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
@@ -112,7 +124,9 @@ async def voice_advisory(request: Request, file: UploadFile = File(...), languag
     }
 
 
-@router.post("/voice/vision-advisory")\n@limiter.limit(VOICE_LIMIT)
+@router.post("/voice/vision-advisory")
+@limiter.limit(VOICE_LIMIT)
+@limiter.limit(VOICE_LIMIT)
 async def voice_vision_advisory(request: Request, file: UploadFile = File(...), image: UploadFile = File(...), language: str = Form(...), crop_category: str | None = Form(default=None), growth_stage: str | None = Form(default=None), location: str | None = Form(default=None)) -> dict[str, Any]:
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")

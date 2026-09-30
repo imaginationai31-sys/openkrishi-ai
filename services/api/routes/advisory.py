@@ -4,7 +4,8 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 from services.advisory.engine import generate_advisory
-from services.advisory.localization import localize_advisory\nfrom services.api.rate_limit import limiter, AI_LIMIT
+from services.advisory.localization import localize_advisory
+from services.api.rate_limit import limiter, AI_LIMIT
 
 router = APIRouter()
 
@@ -20,13 +21,14 @@ class AdvisoryRequest(BaseModel):
 
 
 @router.post("/advisory")
-def advisory(request: AdvisoryRequest) -> dict[str, Any]:
+@limiter.limit(AI_LIMIT)
+def advisory(request: Request, body: AdvisoryRequest) -> dict[str, Any]:
     result = generate_advisory(
-        query=request.query,
-        language=request.language,
-        crop_category=request.crop_category,
-        crop_name=request.crop_name,
-        growth_stage=request.growth_stage,
-        location=request.location,
+        query=body.query,
+        language=body.language,
+        crop_category=body.crop_category,
+        crop_name=body.crop_name,
+        growth_stage=body.growth_stage,
+        location=body.location,
     )
     return localize_advisory(result, body.language)

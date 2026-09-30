@@ -4,15 +4,24 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 
 from services.advisory.engine import generate_advisory
 from services.advisory.localization import localize_advisory, localize_visual
-from services.vision.engine import assess_crop_image\nfrom services.api.rate_limit import limiter, VISION_LIMIT\nfrom services.core.config import get_settings\nfrom services.core.uploads import read_limited_upload
+from services.vision.engine import assess_crop_image
+from services.api.rate_limit import limiter, VISION_LIMIT
+from services.core.config import get_settings
+from services.core.uploads import read_limited_upload
+from services.api.rate_limit import limiter, VISION_LIMIT
+from services.core.config import get_settings
+from services.core.uploads import read_limited_upload
 
 router = APIRouter()
 
 SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
 
 
-@router.post("/vision/assess")\n@limiter.limit(VISION_LIMIT)
+@router.post("/vision/assess")
+@limiter.limit(VISION_LIMIT)
+@limiter.limit(VISION_LIMIT)
 async def vision_assess(
+    request: Request,
     file: UploadFile = File(...),
     crop_category: str | None = Form(default=None),
     growth_stage: str | None = Form(default=None),
@@ -68,6 +77,8 @@ async def vision_assess(
             },
             "advisory": advisory,
         }
+    except OverflowError as exc:
+        raise HTTPException(status_code=413, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
