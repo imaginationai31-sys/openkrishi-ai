@@ -2,12 +2,19 @@ from __future__ import annotations
 
 from typing import Any
 
+import asyncio
+import time
+
 import httpx
 
 from services.core.config import get_settings
 
 
 SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
+WEATHER_CACHE_TTL_SECONDS = 600
+WEATHER_MAX_RETRIES = 2
+WEATHER_RETRY_DELAY_SECONDS = 1.0
+_WEATHER_CACHE: dict[tuple[float, float, int], tuple[float, dict[str, Any]]] = {}
 
 ALERT_TEXT = {
     "en": {
@@ -144,13 +151,39 @@ async def get_weather(
         "daily": "temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,et0_fao_evapotranspiration",
     }
 
-    try:
-        async with httpx.AsyncClient(timeout=get_settings().weather_timeout_seconds) as client:
-            response = await client.get(get_settings().open_meteo_url, params=params)
-            response.raise_for_status()
-            data = response.json()
-    except (httpx.HTTPError, ValueError) as exc:
-        raise RuntimeError("Weather provider is temporarily unavailable.") from exc
+    cache_key = (round(latitude, 3), round(longitude, 3), forecast_days)
+    cached = _WEATHER_CACHE.get(cache_key)
+    if cached and time.monotonic() - cached[0] < WEATHER_CACHE_TTL_SECONDS:
+        data = cached[1]
+    else:
+        try:
+            async with httpx.AsyncClient(timeout=get_settings().weather_timeout_seconds) as client:
+                data = None
+                for attempt in range(WEATHER_MAX_RETRIES + 1):
+                    try:
+                        response = await client.get(get_settings().open_meteo_url, params=params)
+                        if response.status_code == 429:
+                            if attempt == WEATHER_MAX_RETRIES:
+                                response.raise_for_status()
+                            retry_after = response.headers.get("retry-after")
+                            try:
+                                delay = min(float(retry_after), 10.0) if retry_after else WEATHER_RETRY_DELAY_SECONDS * (2**attempt)
+                            except ValueError:
+                                delay = WEATHER_RETRY_DELAY_SECONDS * (2**attempt)
+                            await asyncio.sleep(max(delay, 0.1))
+                            continue
+                        response.raise_for_status()
+                        data = response.json()
+                        break
+                    except httpx.RequestError:
+                        if attempt == WEATHER_MAX_RETRIES:
+                            raise
+                        await asyncio.sleep(WEATHER_RETRY_DELAY_SECONDS * (2**attempt))
+                if data is None:
+                    raise RuntimeError("Weather provider returned no data.")
+                _WEATHER_CACHE[cache_key] = (time.monotonic(), data)
+        except (httpx.HTTPError, ValueError, RuntimeError) as exc:
+            raise RuntimeError("Weather provider is temporarily unavailable.") from exc
 
     hourly = data.get("hourly", {})
     alert, alerts = _build_alert(hourly, language)
