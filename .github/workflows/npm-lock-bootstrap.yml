@@ -21,7 +21,9 @@ jobs:
           node-version: "22"
       - name: Generate npm lockfile
         working-directory: frontend
-        run: npm install --package-lock-only --ignore-scripts
+        run: |
+          npm install --global npm@12.1.0
+          npm install --package-lock-only --ignore-scripts --legacy-peer-deps
       - name: Commit lockfile
         run: |
           if git diff --quiet -- frontend/package-lock.json && git ls-files --error-unmatch frontend/package-lock.json >/dev/null 2>&1; then
