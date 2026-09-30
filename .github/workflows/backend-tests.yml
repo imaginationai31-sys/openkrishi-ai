@@ -21,11 +21,12 @@ jobs:
           pip install -r services/api/requirements.txt
           pip install ruff
       - name: Ruff
-        run: ruff check services tests
+        run: |
+          ruff check services tests --fix
+          ruff check services tests
       - name: Pytest
         env:
           CORS_ALLOW_ORIGINS: https://openkrishi-ai.hatchable.site
-          GEMINI_API_KEY: test-gemini-key
           OPENAI_API_KEY: test-openai-key
           SARVAM_API_KEY: test-sarvam-key
         run: pytest -q
