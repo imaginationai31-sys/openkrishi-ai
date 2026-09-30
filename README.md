@@ -147,7 +147,7 @@ Open:
 
 ## Quick start: PWA
 
-Requirements: Node.js 22 LTS and npm.
+Requirements: Node.js 24+ and npm.
 
 ~~~bash
 cd frontend

@@ -1,0 +1,14 @@
+{
+  "name": "OpenKrishi AI",
+  "short_name": "OpenKrishi",
+  "description": "Free multilingual agricultural intelligence for Indian farmers.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7fbf8",
+  "theme_color": "#166534",
+  "lang": "en",
+  "categories": ["agriculture", "education", "utilities"],
+  "icons": [{"src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]
+}
