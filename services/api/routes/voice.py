@@ -68,7 +68,7 @@ def _synthesize(text: str, language: str):
 async def transcribe_voice(
     request: Request,
     response: Response,
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # noqa: B008
     language: str = Form(...),
 ) -> dict[str, Any]:
     if not is_supported_language(language):
