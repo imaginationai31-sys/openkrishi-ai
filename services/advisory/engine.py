@@ -156,7 +156,7 @@ Return concise but useful observations, safe recommendations, and uncertainties.
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise RuntimeError("Advisory provider returned an invalid response format.") from exc
+        raise TypeError("Advisory provider returned an invalid response format.") from exc
     if not isinstance(payload, dict):
         raise RuntimeError("Advisory provider returned an invalid response format.")
 
