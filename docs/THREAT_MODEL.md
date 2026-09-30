@@ -26,7 +26,7 @@ flowchart LR
 - Location coordinates or location text.
 - Selected language, crop and growth-stage information.
 - Diagnosis/advisory history stored by the client/Firebase where enabled.
-- API credentials for Gemini, OpenAI and Sarvam.
+- API credentials for OpenAI and Sarvam.
 - Firebase authentication/data/storage.
 - API availability and third-party provider availability.
 - Advisory integrity and farmer safety.
