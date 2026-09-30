@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 
 from services.advisory.engine import generate_advisory
@@ -22,7 +22,7 @@ class AdvisoryRequest(BaseModel):
 
 @router.post("/advisory")
 @limiter.limit(AI_LIMIT)
-def advisory(request: Request, body: AdvisoryRequest) -> dict[str, Any]:
+def advisory(request: Request, response: Response, body: AdvisoryRequest) -> dict[str, Any]:
     result = generate_advisory(
         query=body.query,
         language=body.language,
