@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Extract changelog
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path("CHANGELOG.md").read_text()
+          start = text.find("## [Unreleased]")
+          end = text.find("## [0.1.0]")
+          if start < 0:
+              raise SystemExit("CHANGELOG.md is missing an Unreleased section")
+          notes = text[start:end if end > start else len(text)].strip()
+          Path("/tmp/release-notes.md").write_text(notes + "\n")
+          PY
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}"             --title "OpenKrishi AI ${{ github.ref_name }}"             --notes-file /tmp/release-notes.md
