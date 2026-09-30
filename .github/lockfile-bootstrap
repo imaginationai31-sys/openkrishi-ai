@@ -1,1 +1,2 @@
 Generate uv.lock from pyproject.toml once; remove this marker and workflow after the lockfile commit lands.
+Retry lock generation.
