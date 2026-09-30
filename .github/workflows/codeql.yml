@@ -1,1 +1,42 @@
-name: CodeQL\n\non:\n  push:\n    branches: ["main"]\n  pull_request:\n    branches: ["main"]\n  schedule:\n    - cron: "30 2 * * 1"\n\npermissions:\n  contents: read\n  security-events: write\n  actions: read\n\njobs:\n  analyze:\n    name: Analyze (${{ matrix.language }})\n    runs-on: ubuntu-latest\n    strategy:\n      fail-fast: false\n      matrix:\n        include:\n          - language: python\n            build-mode: none\n          - language: javascript-typescript\n            build-mode: none\n\n    steps:\n      - name: Checkout repository\n        uses: actions/checkout@v4\n\n      - name: Initialize CodeQL\n        uses: github/codeql-action/init@v4\n        with:\n          languages: ${{ matrix.language }}\n          build-mode: ${{ matrix.build-mode }}\n\n      - name: Perform CodeQL Analysis\n        uses: github/codeql-action/analyze@v4\n        with:\n          category: "/language:${{ matrix.language }}"\n
+name: CodeQL
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: "30 2 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: python
+            build-mode: none
+          - language: javascript-typescript
+            build-mode: none
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
