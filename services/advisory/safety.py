@@ -67,7 +67,7 @@ def enforce_advisory_safety(
             "Potential disease, pest, or deficiency wording requires confirmation before action."
         )
 
-    status = "caution" if normalized_confidence == "low" or blocked else "caution"
+    status = "caution"
     reason = (
         "Recommendations are limited to low-risk checks. Confirm diagnosis and treatment with a qualified local agronomist."
     )
