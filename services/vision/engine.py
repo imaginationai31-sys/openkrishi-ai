@@ -35,6 +35,7 @@ VISION_RESPONSE_SCHEMA = {
         "recommendations": {"type": "array", "items": {"type": "string"}, "description": "Safe next-step checks only."},
     },
     "required": ["observations", "possible_causes", "confidence", "uncertainties", "recommendations"],
+    "additionalProperties": False,
 }
 
 
