@@ -1,24 +1,72 @@
 # Contributing to OpenKrishi AI
 
-Thank you for your interest in contributing to OpenKrishi AI.
+Thank you for contributing.
 
-## Ways to contribute
+## Development setup
 
-- Improve documentation
-- Add agricultural knowledge and evaluation cases
-- Improve multilingual support
-- Improve voice, vision, weather, or advisory components
-- Add tests and benchmarks
-- Report bugs and safety issues
+1. Clone the repository.
+2. Install Python 3.11 or 3.12 and uv.
+3. Run uv sync --dev.
+4. Copy .env.example to .env.
+5. Set only provider keys required for the feature being tested.
+6. Install frontend dependencies with cd frontend && npm ci.
 
-## Development principles
+## Before changing code
 
-1. Keep farmer safety and factual accuracy as priorities.
-2. Do not add unsupported agricultural claims.
-3. Clearly document uncertainty and model limitations.
-4. Do not commit private farmer data or credentials.
-5. Respect the licenses of datasets, models, and dependencies.
+Read:
 
-## Pull requests
+- README.md
+- docs/architecture.md
+- docs/THREAT_MODEL.md
+- SECURITY.md
 
-Please describe what changed, why it is needed, and how it was tested. For agricultural or model changes, include relevant evaluation evidence where possible.
+## Tests and quality
+
+Backend:
+
+~~~bash
+make test
+make lint
+make typecheck
+~~~
+
+Frontend:
+
+~~~bash
+cd frontend
+npm test
+npm run lint
+npm run typecheck
+npm run format:check
+npm run build
+~~~
+
+## Commit conventions
+
+Use Conventional Commits:
+
+- feat: new functionality
+- fix: bug fix
+- refactor: behavior-preserving restructuring
+- test: tests
+- docs: documentation
+- build: dependencies/build tooling
+- ci: CI/CD
+- security: security controls
+- chore: maintenance
+
+Keep commits small and focused.
+
+## Pull request checklist
+
+- [ ] Tests added or updated.
+- [ ] Backend tests pass.
+- [ ] Frontend checks pass when applicable.
+- [ ] No real secrets or private farmer data were added.
+- [ ] API behavior changes are documented.
+- [ ] Security implications were reviewed.
+- [ ] Commit messages follow the project convention.
+
+## Agricultural safety
+
+Do not add unsupported diagnoses, treatment claims, pesticide rates, or fertilizer instructions without reliable evidence and safety review.
