@@ -27,7 +27,7 @@ app.add_middleware(
     allow_origins=settings.allowed_origins,
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Accept", "X-Trace-ID"],
+    allow_headers=["Content-Type", "Accept", "X-Trace-ID", "X-Firebase-AppCheck"],
 )
 
 app.add_middleware(RequestTraceMiddleware)
@@ -45,8 +45,7 @@ async def unhandled_exception(request: Request, exc: Exception):
     import logging
     logging.getLogger("openkrishi.api").error(
         "unhandled_request_error trace_id=%s error_type=%s",
-        getattr(request.state, "trace_id", "unknown"),
-        type(exc).__name__,
+        getattr(request.state, "trace_id", "unknown"), type(exc).__name__,
     )
     return JSONResponse(
         status_code=500,
