@@ -1,0 +1,21 @@
+{
+  "name": "openkrishi-ai-pwa",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run --coverage",
+    "test:unit": "vitest run",
+    "build": "node scripts/build.mjs",
+    "lint": "eslint src",
+    "format": "prettier --write src package.json tsconfig.json eslint.config.js prettier.config.mjs scripts",
+    "format:check": "prettier --check src package.json tsconfig.json eslint.config.js prettier.config.mjs scripts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "eslint": "10.10.0",
+    "prettier": "3.9.9",
+    "typescript": "7.0.2",
+    "vitest": "5.0.2"
+  }
+}
