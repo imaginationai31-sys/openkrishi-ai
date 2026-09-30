@@ -1,0 +1,58 @@
+[project]
+name = "openkrishi-ai"
+version = "0.1.0"
+description = "Open-source multilingual AI agricultural advisory API."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { file = "LICENSE" }
+dependencies = [
+  "fastapi==0.142.2",
+  "uvicorn[standard]==0.54.0",
+  "pydantic==2.13.5",
+  "pydantic-settings==2.15.0",
+  "httpx==0.28.1",
+  "openai==3.22.1",
+  "python-multipart==0.0.32",
+  "slowapi==0.1.10",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==9.1.1",
+  "pytest-cov==7.0.0",
+  "ruff==0.16.9",
+  "mypy==1.18.2",
+  "pre-commit==4.3.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["apps/mobile"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "TRY", "SIM"]
+ignore = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.11"
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+ignore_missing_imports = true
+disallow_untyped_defs = false
+
+[build-system]
+requires = ["setuptools>=75,<81"]
+build-backend = "setuptools.build_meta"
