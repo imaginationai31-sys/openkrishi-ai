@@ -4,6 +4,8 @@ from types import SimpleNamespace
 import pytest
 from fastapi import HTTPException
 from starlette.datastructures import Headers, UploadFile
+from starlette.requests import Request
+from starlette.responses import Response
 
 import services.api.routes.voice as voice_route
 
@@ -21,6 +23,20 @@ class FakeSpeechToText:
 class FakeTTS:
     def synthesize(self, text, language):
         return SimpleNamespace(audio=b"wav-audio", mime_type="audio/wav", language=language)
+
+
+def make_request_response():
+    request = Request({
+        "type": "http",
+        "method": "POST",
+        "path": "/api/v1/voice/vision-advisory",
+        "headers": [],
+        "query_string": b"",
+        "server": ("testserver", 80),
+        "client": ("testclient", 80),
+        "scheme": "http",
+    })
+    return request, Response()
 
 
 def make_upload(filename, content_type, content):
@@ -74,8 +90,11 @@ async def test_voice_vision_advisory_combines_voice_and_photo(monkeypatch):
 
     audio = make_upload("farmer.ogg", "audio/ogg", b"audio")
     image = make_upload("rice.jpg", "image/jpeg", b"image")
+    request, response = make_request_response()
 
     result = await voice_route.voice_vision_advisory(
+        request=request,
+        response=response,
         file=audio,
         image=image,
         language="bn",
@@ -95,9 +114,12 @@ async def test_voice_vision_advisory_combines_voice_and_photo(monkeypatch):
 async def test_voice_vision_advisory_rejects_unsupported_crop(monkeypatch):
     audio = make_upload("farmer.ogg", "audio/ogg", b"audio")
     image = make_upload("rice.jpg", "image/jpeg", b"image")
+    request, response = make_request_response()
 
     with pytest.raises(HTTPException) as exc:
         await voice_route.voice_vision_advisory(
+            request=request,
+            response=response,
             file=audio,
             image=image,
             language="bn",
