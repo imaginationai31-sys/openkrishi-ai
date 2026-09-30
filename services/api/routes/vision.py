@@ -22,7 +22,7 @@ SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
 @limiter.limit(VISION_LIMIT)
 async def vision_assess(
     request: Request,
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # noqa: B008
     crop_category: str | None = Form(default=None),
     growth_stage: str | None = Form(default=None),
     language: str = Form(default="en"),
