@@ -1,0 +1,108 @@
+name: Fresh Clone Verification
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Fresh clone build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout into clean directory
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: repo
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: "0.12.19"
+          enable-cache: true
+
+      - name: Install backend
+        working-directory: repo
+        run: uv sync --frozen --dev
+
+      - name: Run tests
+        working-directory: repo
+        env:
+          PYTHONPATH: ${{ github.workspace }}/repo
+          CORS_ALLOW_ORIGINS: http://localhost:8080
+          OPENAI_API_KEY: test-openai-key
+          SARVAM_API_KEY: test-sarvam-key
+        run: uv run pytest -q
+
+      - name: Run lint
+        working-directory: repo
+        run: |
+          uv run ruff check services tests --fix
+          uv run ruff check services tests
+
+      - name: Run typecheck
+        working-directory: repo
+        run: uv run mypy services/core services/api
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: repo/frontend/package-lock.json
+
+      - name: Install frontend
+        working-directory: repo/frontend
+        run: npm ci
+
+      - name: Run frontend lint
+        working-directory: repo/frontend
+        run: npm run lint
+
+      - name: Run frontend typecheck
+        working-directory: repo/frontend
+        run: npm run typecheck
+
+      - name: Run frontend tests
+        working-directory: repo/frontend
+        run: npm test
+
+      - name: Build frontend
+        working-directory: repo/frontend
+        run: npm run build
+
+      - name: Validate Docker Compose
+        working-directory: repo
+        run: docker compose config
+
+      - name: Build Docker images
+        working-directory: repo
+        run: docker compose build
+
+      - name: Start Docker stack
+        working-directory: repo
+        run: docker compose up -d
+
+      - name: Verify container health
+        working-directory: repo
+        run: |
+          sleep 10
+          docker compose ps
+          curl --fail http://127.0.0.1:8000/api/v1/health
+          curl --fail http://127.0.0.1:8080/health
+
+      - name: Stop Docker stack
+        if: always()
+        working-directory: repo
+        run: docker compose down -v
