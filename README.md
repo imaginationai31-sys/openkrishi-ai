@@ -1,197 +1,347 @@
 # OpenKrishi AI
 
-**Vernacular AI Agronomy & Voice Advisory for Indian Farmers**
+**Free agricultural intelligence for every farmer.**
 
-OpenKrishi AI is an open-source, multilingual agricultural assistance platform designed to help Indian farmers understand crop problems, receive practical agronomy guidance, check weather conditions, and interact with AI using regional Indian languages.
+OpenKrishi AI is an open-source, multilingual agriculture platform for Indian farmers. It combines a mobile-first Progressive Web App (PWA) with a FastAPI backend for agricultural advisory, crop-image assessment, voice interaction, weather information, and farm-intelligence utilities.
 
-The project is being developed as a **PWA-first application**, so farmers can use OpenKrishi AI directly from a mobile browser and install it on supported Android devices without requiring Android Studio.
+The current product direction is **PWA-first**. Android Studio is not required to develop or run the primary client.
 
-## 🌾 Core Features
+## Demo and production services
 
-- **Multilingual agricultural advisory** for Indian farmers
-- **Crop problem diagnosis** from farmer-described symptoms
-- **Crop image analysis** using camera or gallery photos
-- **Possible-cause analysis** with cautious, non-definitive recommendations
-- **Weather information and agricultural weather guidance**
-- **Voice advisory** and voice-oriented interaction
-- **Regional-language responses** without unnecessary mixed-language output
-- **Crop categories and crop selection**
-- Mobile-first, installable **Progressive Web App (PWA)**
-- Backend API architecture that can be used by future mobile clients
+- PWA: https://openkrishi-ai.hatchable.site
+- API: https://openkrishi-ai-api.onrender.com/
+- Interactive API docs: https://openkrishi-ai-api.onrender.com/docs
+- OpenAPI schema: https://openkrishi-ai-api.onrender.com/openapi.json
+- Repository: https://github.com/imaginationai31-sys/openkrishi-ai
 
-## 🌱 Crop Categories
+## Features
 
-OpenKrishi AI is organized around four main agricultural categories:
+- Multilingual agricultural advisory.
+- Crop problem assessment from farmer-described symptoms.
+- Crop image assessment from camera or gallery.
+- Conservative observations, possible causes, confidence, uncertainty, and safe next steps.
+- Voice transcription using Sarvam Saaras.
+- Voice advisory and speech output using Sarvam Bulbul.
+- Weather lookup with location permission.
+- Farm intelligence utilities for planning, irrigation, fertilizer guidance, pest alerts, crop recommendations, crop knowledge, and market information.
+- Firebase-compatible authentication, Firestore history, Storage rules, and App Check integration.
+- Mobile-first interface with large touch targets and simple workflows.
 
-1. **Cereal**
-   - Rice
-   - Wheat
-   - Maize
-   - Other supported cereal crops
+## Supported languages
 
-2. **Pulse & Oilseed**
-   - Peanut
-   - Other supported pulse and oilseed crops
+- English ("en")
+- Bengali ("bn")
+- Hindi ("hi")
+- Tamil ("ta")
+- Punjabi ("pa")
+- Telugu ("te")
 
-3. **Vegetable**
+The UI and backend are designed to preserve the selected/requested language instead of unnecessarily mixing languages.
+
+## Crop categories
+
+The product currently uses four main categories:
+
+1. **Rice**
+2. **Peanut**
+3. **Vegetables**
    - Tomato
    - Chilli
-   - Other supported vegetable crops
+   - Other supported vegetables
+4. **Flowers**
 
-4. **Flower**
-   - Common flower crops
-   - Other supported flower crops
+Tomato and chilli belong to the **Vegetables** category; they are not separate top-level categories.
 
-The crop catalog will continue to expand as the advisory engine and regional agriculture coverage improve.
+## Safety principles
 
-## 🗣️ Language Support
-
-The application is designed for multilingual use, with support being developed for:
-
-- English
-- Bengali
-- Hindi
-- Tamil
-- Punjabi
-- Telugu
-
-The goal is to return the user-facing advisory in the selected/requested language rather than mixing languages unnecessarily.
-
-## 🏗️ Current Architecture
-
-OpenKrishi AI currently follows a PWA + API architecture:
-
-```text
-Farmer
-  │
-  ▼
-OpenKrishi AI PWA
-  │
-  ├── Camera / Gallery
-  ├── Crop & Language Selection
-  ├── Advisory
-  ├── Vision
-  ├── Voice
-  └── Weather
-  │
-  ▼
-OpenKrishi AI API
-  │
-  ├── Advisory
-  ├── Vision Assessment
-  ├── Voice Transcription
-  ├── Voice Advisory
-  └── Weather
-```
-
-### Frontend
-
-The current primary client is a mobile-first PWA hosted through Hatchable.
-
-### Backend
-
-The existing production API is deployed on Render:
-
-- API: `https://openkrishi-ai-api.onrender.com/`
-- Interactive API documentation: `https://openkrishi-ai-api.onrender.com/docs`
-- OpenAPI specification: `https://openkrishi-ai-api.onrender.com/openapi.json`
-
-### API Endpoints
-
-The backend currently exposes:
-
-- `GET /api/v1/health`
-- `POST /api/v1/advisory`
-- `POST /api/v1/voice/transcribe`
-- `POST /api/v1/voice/advisory`
-- `POST /api/v1/voice/vision-advisory`
-- `POST /api/v1/vision/assess`
-- `GET /api/v1/weather`
-
-## 📱 PWA-First Development
-
-Android Studio is **not required for the current OpenKrishi AI development path**.
-
-The PWA approach allows the project to be developed and tested through:
-
-- Desktop browsers
-- Android mobile browsers
-- Camera and gallery access
-- Installable PWA experience
-- Existing Render API infrastructure
-
-A native Android client may be developed later when the web/PWA product and API are stable.
-
-## 🔐 Security
-
-- [Threat Model](docs/THREAT_MODEL.md)
-- [Security Policy](SECURITY.md)
-- Secrets are loaded server-side from environment configuration; production Render secrets use `sync: false`.
-
-## 🔐 Safety Principles
-
-OpenKrishi AI is intended to provide **informational agricultural guidance**, not replace qualified agricultural experts or local agricultural authorities.
+OpenKrishi AI is an informational agricultural assistant. It does not replace agricultural officers, agronomists, plant clinics, or local authorities.
 
 The advisory system should:
 
-- Avoid claiming a disease is confirmed from symptoms alone.
-- Clearly distinguish observations from possible causes.
-- Request a clearer image when image evidence is insufficient.
-- Avoid unsafe or unsupported pesticide/fertilizer dosage instructions.
-- Encourage local expert/agriculture-department confirmation for serious or uncertain cases.
-- Protect farmer data and avoid unnecessary collection of personal information.
+- distinguish image observations from possible causes;
+- avoid claiming a disease is confirmed from a photo or symptom description alone;
+- expose uncertainty and confidence;
+- avoid unsafe or unsupported pesticide/fertilizer dosage instructions;
+- recommend appropriate local expert confirmation for serious or uncertain cases;
+- avoid unnecessary collection of farmer personal data;
+- treat farmer uploads and location as sensitive inputs;
+- fail safely when an external AI, speech, or weather provider is unavailable.
 
-## 💰 Access & Product Direction
+See SECURITY.md and docs/THREAT_MODEL.md.
 
-The product direction is to keep the core OpenKrishi AI service **free for farmers**.
+## Architecture
 
-Future sustainability options may include non-intrusive advertising and B2B/enterprise partnerships, while keeping essential farmer advisory functionality accessible.
+~~~mermaid
+flowchart LR
+    Farmer["Farmer"] --> PWA["frontend/ mobile PWA"]
+    PWA --> Firebase["Firebase Auth / Firestore / Storage"]
+    PWA --> API["services/api FastAPI"]
+    API --> Advisory["services/advisory"]
+    API --> Vision["services/vision"]
+    API --> Voice["services/voice"]
+    API --> Weather["services/weather"]
+    Advisory --> OpenAI["OpenAI"]
+    Vision --> OpenAI
+    Voice --> Sarvam["Sarvam AI"]
+    Weather --> Meteo["Open-Meteo"]
+~~~
 
-## 🚀 Development Status
+The backend keeps third-party credentials server-side. The PWA calls the Render API rather than embedding provider API keys in browser code.
 
-OpenKrishi AI is under active development.
+## Repository structure
 
-### Current priority
+~~~text
+.
+├── apps/                  # Existing/native client material
+├── data/                  # Agricultural/static data
+├── docs/                  # Architecture, API, deployment and security docs
+├── evaluation/            # Evaluation and benchmark material
+├── frontend/              # Mobile-first PWA
+│   ├── index.html
+│   ├── src/               # Shared browser API/language logic and unit tests
+│   ├── scripts/           # Deterministic static build helpers
+│   └── Dockerfile
+├── models/                # Model-related assets/configuration
+├── services/
+│   ├── api/               # FastAPI application and routers
+│   ├── advisory/          # Advisory generation/localization/safety
+│   ├── core/              # Configuration, uploads, security primitives
+│   ├── farm/              # Farm intelligence helpers
+│   ├── vision/            # Crop-image assessment
+│   ├── voice/             # STT/TTS and voice orchestration
+│   └── weather/           # Weather provider integration
+├── tests/                 # Backend tests
+├── Dockerfile             # Production backend image
+├── docker-compose.yml     # Backend + PWA local stack
+├── Makefile               # Common development commands
+├── pyproject.toml         # Python project/tool configuration
+└── uv.lock                # Exact Python dependency resolution
+~~~
 
-1. Stabilize the PWA frontend.
-2. Connect all PWA features to the existing Render API.
-3. Fix and test the advisory API.
-4. Validate crop vision.
-5. Validate voice input/output.
-6. Validate weather integration.
-7. Complete multilingual consistency.
-8. Improve mobile UX and PWA installation.
-9. Prepare the public release.
+## Quick start: backend
 
-## 🧪 Testing
+Requirements: Git, Python 3.11/3.12, and uv.
 
-The API can be tested through the interactive FastAPI documentation:
+~~~bash
+git clone https://github.com/imaginationai31-sys/openkrishi-ai.git
+cd openkrishi-ai
+uv sync --dev
+cp .env.example .env
+~~~
 
-`https://openkrishi-ai-api.onrender.com/docs`
+Set real provider credentials in .env. Never commit .env.
 
-The PWA should be tested on both desktop and Android mobile browsers, especially for:
+Start the backend:
 
-- Camera permissions
-- Gallery image selection
-- Microphone permissions
-- Language selection
-- Slow/mobile network conditions
-- Advisory response handling
-- Image-analysis failures
-- Voice failures
-- Weather/location permissions
+~~~bash
+uv run uvicorn services.api.server:app --reload --host 0.0.0.0 --port 8000
+~~~
 
-## 🤝 Open Source
+Open:
 
-OpenKrishi AI is intended to remain an open-source project focused on practical, multilingual AI assistance for agriculture.
+- http://localhost:8000/
+- http://localhost:8000/api/v1/health
+- http://localhost:8000/docs
 
-Contributions, testing feedback, agricultural knowledge, language improvements, and technical improvements are welcome.
+## Quick start: PWA
 
-## 📄 License
+Requirements: Node.js 22 LTS and npm.
 
-See the repository license file for the current licensing terms.
+~~~bash
+cd frontend
+npm ci
+npm run lint
+npm run typecheck
+npm test
+npm run build
+~~~
+
+The static build is written to frontend/dist/.
+
+## Quick start: Makefile
+
+From the repository root:
+
+~~~bash
+make install
+make dev
+make test
+make lint
+make typecheck
+make format
+make docker-up
+~~~
+
+## Docker
+
+Build and run the complete local stack:
+
+~~~bash
+docker compose up --build
+~~~
+
+Services:
+
+- Backend: http://localhost:8000
+- PWA: http://localhost:8080
+
+The backend image is multi-stage and runs as a non-root user. Both images have health checks.
+
+## Environment variables
+
+| Variable | Required | Purpose |
+|---|---|---|
+| CORS_ALLOW_ORIGINS | Yes | Browser origins allowed by the API |
+| OPENAI_API_KEY | Yes | Server-side OpenAI credential |
+| OPENAI_VISION_MODEL | Yes | Vision model name |
+| OPENAI_ADVISORY_MODEL | Yes | Advisory model name |
+| SARVAM_API_KEY | Yes | Server-side Sarvam credential |
+| SARVAM_STT_MODEL | Yes | Sarvam STT model |
+| SARVAM_TTS_MODEL | Yes | Sarvam TTS model |
+| OPEN_METEO_URL | No | Weather provider endpoint |
+| SARVAM_STT_URL | No | Sarvam STT endpoint |
+| SARVAM_TTS_URL | No | Sarvam TTS endpoint |
+| MAX_IMAGE_BYTES | No | Maximum image upload size |
+| MAX_AUDIO_BYTES | No | Maximum audio upload size |
+| OUTBOUND_TIMEOUT_SECONDS | No | Third-party timeout |
+| WEATHER_TIMEOUT_SECONDS | No | Weather timeout |
+| AI_RATE_LIMIT | No | Advisory rate limit |
+| VOICE_RATE_LIMIT | No | Voice rate limit |
+| VISION_RATE_LIMIT | No | Vision rate limit |
+
+See .env.example for the commented template.
+
+## API reference
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | /api/v1/health | Service health |
+| POST | /api/v1/advisory | Text advisory |
+| POST | /api/v1/vision/assess | Crop image assessment |
+| POST | /api/v1/voice/transcribe | Audio transcription |
+| POST | /api/v1/voice/advisory | Voice-to-advisory-to-voice |
+| POST | /api/v1/voice/vision-advisory | Combined voice + image advisory |
+| GET | /api/v1/weather | Weather data |
+| GET | /api/v1/farm/plan | Farm plan |
+| GET | /api/v1/farm/irrigation | Irrigation guidance |
+| GET | /api/v1/farm/fertilizer | Fertilizer guidance |
+| GET | /api/v1/farm/pest-alerts | Pest alerts |
+| GET | /api/v1/farm/recommendation | Crop recommendation |
+| GET | /api/v1/farm/knowledge | Crop knowledge |
+| GET | /api/v1/farm/market | Market information |
+
+### Advisory example
+
+~~~bash
+curl -X POST http://localhost:8000/api/v1/advisory \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "query": "My rice plants have yellow leaves",
+    "language": "en",
+    "crop_category": "rice",
+    "crop_name": "rice",
+    "growth_stage": "vegetative",
+    "location": "India",
+    "input_mode": "text"
+  }'
+~~~
+
+### Vision example
+
+~~~bash
+curl -X POST http://localhost:8000/api/v1/vision/assess \
+  -F 'file=@rice.jpg' \
+  -F 'language=en' \
+  -F 'crop_category=rice' \
+  -F 'growth_stage=vegetative'
+~~~
+
+## Testing
+
+Backend tests are designed to run offline. External AI, speech, weather, and Firebase interactions should be mocked.
+
+~~~bash
+make test
+make lint
+make typecheck
+~~~
+
+Frontend:
+
+~~~bash
+cd frontend
+npm test
+npm run lint
+npm run typecheck
+npm run format:check
+npm run build
+~~~
+
+See tests/README.md for the detailed test matrix.
+
+## Deployment
+
+### Render API
+
+render.yaml defines the API service and its health-check path:
+
+~~~text
+/api/v1/health
+~~~
+
+Production secrets are set in Render environment variables. Secret entries in render.yaml use sync: false.
+
+### PWA hosting
+
+The PWA is static and can be hosted by Hatchable, Render Static Site, Firebase Hosting, GitHub Pages, or another CDN/static host.
+
+## Security
+
+Security controls include centralized Pydantic settings, explicit CORS, rate limiting, upload limits, bounded reads, outbound timeouts, sanitized errors, request trace IDs, Firebase deny-by-default rules, Gitleaks, CodeQL, and dependency audits.
+
+Read SECURITY.md and docs/THREAT_MODEL.md.
+
+## Development workflow
+
+1. Create a short-lived branch.
+2. Make one focused change.
+3. Add or update tests.
+4. Run backend and frontend quality checks affected by the change.
+5. Use a Conventional Commit message.
+6. Open a pull request with verification details.
+7. Do not merge until required CI checks pass.
+
+## Documentation map
+
+- docs/architecture.md
+- docs/api.md
+- docs/deployment.md
+- docs/THREAT_MODEL.md
+- SECURITY.md
+- CONTRIBUTING.md
+- CHANGELOG.md
+- ROADMAP.md
+- tests/README.md
+
+## Release process
+
+Releases use semantic version tags such as v0.1.0.
+
+Before a release:
+
+1. Update CHANGELOG.md.
+2. Verify the full CI suite.
+3. Create and push the version tag.
+4. The release workflow publishes GitHub Release notes from the changelog.
+
+## License
+
+OpenKrishi AI is released under the **Apache License 2.0 (Apache-2.0)**. See LICENSE.
+
+## Contributing
+
+Read CONTRIBUTING.md before opening a pull request.
 
 ---
 
-**OpenKrishi AI**  
-*Vernacular AI Agronomy & Voice Advisory for Indian Farmers*
+OpenKrishi AI is intended to make practical agricultural intelligence easier to access in Indian languages while preserving uncertainty, safety, and farmer agency.
