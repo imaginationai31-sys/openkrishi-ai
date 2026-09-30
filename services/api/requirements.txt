@@ -1,9 +1,11 @@
 fastapi
 uvicorn[standard]
 pydantic
+pydantic-settings
 pytest
 httpx
 openai
 python-multipart
+slowapi
 groq
 google-genai
