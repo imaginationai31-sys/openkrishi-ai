@@ -299,7 +299,7 @@ def _generate_rule_based_advisory(
         }[language])
 
     recommendations, uncertainties, safety = enforce_advisory_safety(
-        recommendations, uncertainties, confidence="low"
+        recommendations, uncertainties, confidence="low", language=language
     )
 
     if crop_label:
