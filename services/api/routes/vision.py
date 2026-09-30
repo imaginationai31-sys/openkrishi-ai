@@ -1,13 +1,10 @@
 from typing import Any
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, Response, UploadFile
 
 from services.advisory.engine import generate_advisory
 from services.advisory.localization import localize_advisory, localize_visual
 from services.vision.engine import assess_crop_image
-from services.api.rate_limit import limiter, VISION_LIMIT
-from services.core.config import get_settings
-from services.core.uploads import read_limited_upload
 from services.api.rate_limit import limiter, VISION_LIMIT
 from services.core.config import get_settings
 from services.core.uploads import read_limited_upload
@@ -19,9 +16,9 @@ SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
 
 @router.post("/vision/assess")
 @limiter.limit(VISION_LIMIT)
-@limiter.limit(VISION_LIMIT)
 async def vision_assess(
     request: Request,
+    response: Response,
     file: UploadFile = File(...),  # noqa: B008
     crop_category: str | None = Form(default=None),
     growth_stage: str | None = Form(default=None),
