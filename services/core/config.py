@@ -17,13 +17,7 @@ class Settings(BaseSettings):
     environment: str = Field(default="production", alias="ENVIRONMENT")
     cors_allow_origins: str = Field(alias="CORS_ALLOW_ORIGINS")
 
-    gemini_api_key: SecretStr = Field(alias="GEMINI_API_KEY")
-    gemini_model: str = Field(default="gemini-3.8-flash", alias="GEMINI_MODEL")
-    gemini_transcribe_model: str = Field(default="gemini-3.5-transcribe", alias="GEMINI_TRANSCRIBE_MODEL")
-    gemini_tts_model: str = Field(default="gemini-3.1-flash-tts-preview", alias="GEMINI_TTS_MODEL")
-    gemini_fallback_to_rules: bool = Field(default=True, alias="GEMINI_FALLBACK_TO_RULES")
-    gemini_advisory_fallback_model: str = Field(default="gemini-3.6-flash", alias="GEMINI_ADVISORY_FALLBACK_MODEL")
-
+    openai_advisory_model: str = Field(default="gpt-5-mini", alias="OPENAI_ADVISORY_MODEL")
     openai_api_key: SecretStr = Field(alias="OPENAI_API_KEY")
     openai_vision_model: str = Field(default="gpt-5-mini", alias="OPENAI_VISION_MODEL")
     openai_stt_model: str = Field(default="gpt-4o-mini-transcribe", alias="OPENAI_STT_MODEL")
