@@ -14,8 +14,8 @@ services:
         sync: false
       - key: OPENAI_VISION_MODEL
         value: gpt-5-mini
-      - key: OPENAI_STT_MODEL
-        value: gpt-4o-mini-transcribe
+      - key: OPENAI_ADVISORY_MODEL
+        value: gpt-5-mini
       - key: SARVAM_API_KEY
         sync: false
       - key: SARVAM_STT_MODEL
