@@ -78,7 +78,7 @@ def _parse_assessment(raw: str) -> dict[str, Any]:
     try:
         payload = json.loads(text)
     except json.JSONDecodeError as exc:
-        raise RuntimeError("Vision provider returned an invalid assessment format.") from exc
+        raise TypeError("Vision provider returned an invalid assessment format.") from exc
     if not isinstance(payload, dict):
         raise RuntimeError("Vision provider returned an invalid assessment format.")
     return payload
