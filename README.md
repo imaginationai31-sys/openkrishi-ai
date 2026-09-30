@@ -122,6 +122,12 @@ The PWA approach allows the project to be developed and tested through:
 
 A native Android client may be developed later when the web/PWA product and API are stable.
 
+## 🔐 Security
+
+- [Threat Model](docs/THREAT_MODEL.md)
+- [Security Policy](SECURITY.md)
+- Secrets are loaded server-side from environment configuration; production Render secrets use `sync: false`.
+
 ## 🔐 Safety Principles
 
 OpenKrishi AI is intended to provide **informational agricultural guidance**, not replace qualified agricultural experts or local agricultural authorities.
