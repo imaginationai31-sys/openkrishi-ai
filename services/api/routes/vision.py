@@ -1,17 +1,17 @@
 from typing import Any
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 
 from services.advisory.engine import generate_advisory
 from services.advisory.localization import localize_advisory, localize_visual
-from services.vision.engine import assess_crop_image
+from services.vision.engine import assess_crop_image\nfrom services.api.rate_limit import limiter, VISION_LIMIT\nfrom services.core.config import get_settings\nfrom services.core.uploads import read_limited_upload
 
 router = APIRouter()
 
 SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
 
 
-@router.post("/vision/assess")
+@router.post("/vision/assess")\n@limiter.limit(VISION_LIMIT)
 async def vision_assess(
     file: UploadFile = File(...),
     crop_category: str | None = Form(default=None),
@@ -25,7 +25,7 @@ async def vision_assess(
         raise HTTPException(status_code=400, detail="Unsupported language.")
 
     try:
-        image_bytes = await file.read()
+        image_bytes = await read_limited_upload(file, kind="image", max_bytes=get_settings().max_image_bytes)
         visual = assess_crop_image(
             image_bytes=image_bytes,
             content_type=file.content_type or "",

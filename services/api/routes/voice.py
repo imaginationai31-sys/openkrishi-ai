@@ -1,7 +1,7 @@
 import base64
 from typing import Any
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 
 from services.advisory.engine import generate_advisory
 from services.advisory.localization import localize_advisory, localize_visual
@@ -10,7 +10,7 @@ from services.advisory.voice_understanding import build_voice_understanding
 from services.voice.languages import is_supported_language
 from services.voice.speech_to_text import SarvamSpeechToText
 from services.voice.text_to_speech import SarvamTextToSpeech
-from services.vision.engine import assess_crop_image
+from services.vision.engine import assess_crop_image\nfrom services.api.rate_limit import limiter, VOICE_LIMIT\nfrom services.core.config import get_settings\nfrom services.core.uploads import read_limited_upload
 
 router = APIRouter()
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
@@ -60,11 +60,11 @@ def _synthesize(text: str, language: str):
     return SarvamTextToSpeech().synthesize(text, language)
 
 
-@router.post("/voice/transcribe")
-async def transcribe_voice(file: UploadFile = File(...), language: str = Form(...)) -> dict[str, Any]:
+@router.post("/voice/transcribe")\n@limiter.limit(VOICE_LIMIT)
+async def transcribe_voice(request: Request, file: UploadFile = File(...), language: str = Form(...)) -> dict[str, Any]:
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
-    audio = await file.read()
+    audio = await read_limited_upload(file, kind="audio", max_bytes=get_settings().max_audio_bytes)
     if not audio:
         raise HTTPException(status_code=400, detail="Audio input cannot be empty.")
     if len(audio) > MAX_AUDIO_BYTES:
@@ -78,13 +78,13 @@ async def transcribe_voice(file: UploadFile = File(...), language: str = Form(..
     return {"text": transcription.text, "language": transcription.language, "confidence": transcription.confidence, "filename": file.filename, "content_type": file.content_type}
 
 
-@router.post("/voice/advisory")
-async def voice_advisory(file: UploadFile = File(...), language: str = Form(...), crop_category: str | None = Form(default=None), growth_stage: str | None = Form(default=None), location: str | None = Form(default=None)) -> dict[str, Any]:
+@router.post("/voice/advisory")\n@limiter.limit(VOICE_LIMIT)
+async def voice_advisory(request: Request, file: UploadFile = File(...), language: str = Form(...), crop_category: str | None = Form(default=None), growth_stage: str | None = Form(default=None), location: str | None = Form(default=None)) -> dict[str, Any]:
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
     if crop_category is not None and crop_category not in SUPPORTED_CROPS:
         raise HTTPException(status_code=422, detail=f"Unsupported crop category: {crop_category}")
-    audio = await file.read()
+    audio = await read_limited_upload(file, kind="audio", max_bytes=get_settings().max_audio_bytes)
     if not audio:
         raise HTTPException(status_code=400, detail="Audio input cannot be empty.")
     if len(audio) > MAX_AUDIO_BYTES:
@@ -112,18 +112,18 @@ async def voice_advisory(file: UploadFile = File(...), language: str = Form(...)
     }
 
 
-@router.post("/voice/vision-advisory")
-async def voice_vision_advisory(file: UploadFile = File(...), image: UploadFile = File(...), language: str = Form(...), crop_category: str | None = Form(default=None), growth_stage: str | None = Form(default=None), location: str | None = Form(default=None)) -> dict[str, Any]:
+@router.post("/voice/vision-advisory")\n@limiter.limit(VOICE_LIMIT)
+async def voice_vision_advisory(request: Request, file: UploadFile = File(...), image: UploadFile = File(...), language: str = Form(...), crop_category: str | None = Form(default=None), growth_stage: str | None = Form(default=None), location: str | None = Form(default=None)) -> dict[str, Any]:
     if not is_supported_language(language):
         raise HTTPException(status_code=422, detail=f"Unsupported voice language: {language}")
     if crop_category is not None and crop_category not in SUPPORTED_CROPS:
         raise HTTPException(status_code=422, detail=f"Unsupported crop category: {crop_category}")
-    audio = await file.read()
+    audio = await read_limited_upload(file, kind="audio", max_bytes=get_settings().max_audio_bytes)
     if not audio:
         raise HTTPException(status_code=400, detail="Audio input cannot be empty.")
     if len(audio) > MAX_AUDIO_BYTES:
         raise HTTPException(status_code=413, detail="Audio file is too large. Maximum size is 10 MB.")
-    image_bytes = await image.read()
+    image_bytes = await read_limited_upload(image, kind="image", max_bytes=get_settings().max_image_bytes)
     if not image_bytes:
         raise HTTPException(status_code=400, detail="Image input cannot be empty.")
     try:

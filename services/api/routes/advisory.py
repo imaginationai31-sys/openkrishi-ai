@@ -1,10 +1,10 @@
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 from services.advisory.engine import generate_advisory
-from services.advisory.localization import localize_advisory
+from services.advisory.localization import localize_advisory\nfrom services.api.rate_limit import limiter, AI_LIMIT
 
 router = APIRouter()
 
@@ -29,4 +29,4 @@ def advisory(request: AdvisoryRequest) -> dict[str, Any]:
         growth_stage=request.growth_stage,
         location=request.location,
     )
-    return localize_advisory(result, request.language)
+    return localize_advisory(result, body.language)
