@@ -158,7 +158,7 @@ Return concise but useful observations, safe recommendations, and uncertainties.
     except json.JSONDecodeError as exc:
         raise TypeError("Advisory provider returned an invalid response format.") from exc
     if not isinstance(payload, dict):
-        raise RuntimeError("Advisory provider returned an invalid response format.")
+        raise TypeError("Advisory provider returned an invalid response format.")
 
     answer = str(payload.get("answer") or "").strip()
     observations = [str(x).strip() for x in payload.get("observations", []) if str(x).strip()][:8]
