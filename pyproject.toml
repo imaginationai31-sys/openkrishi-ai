@@ -58,5 +58,5 @@ ignore_missing_imports = true
 disallow_untyped_defs = false
 
 [build-system]
-requires = ["setuptools>=75,<81"]
+requires = ["setuptools>=75,<85"]
 build-backend = "setuptools.build_meta"
