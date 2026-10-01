@@ -69,8 +69,8 @@ def test_vision_route_exposes_advisory_layer():
 
 
 @pytest.mark.parametrize(
-    "crop_category,crop_name",
-    (
+    ("crop_category", "crop_name"),
+    [
         ("rice", "Swarna"),
         ("rice", "Basmati"),
         ("peanut", "JL 24"),
