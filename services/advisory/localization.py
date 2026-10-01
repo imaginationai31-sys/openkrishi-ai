@@ -6,6 +6,7 @@ intentionally avoid a second translation provider and preserve the provider outp
 
 from typing import Any
 
+
 LANGUAGE_NAMES = {
     "en": "English",
     "bn": "Bengali",
