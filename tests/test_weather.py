@@ -1,11 +1,13 @@
 import asyncio
+from unittest.mock import AsyncMock, patch
 
 import httpx
-from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
 from services.api.server import app
+import services.weather.engine as engine
+from services.weather.engine import get_weather
 
 
 client = TestClient(app)
@@ -80,8 +82,6 @@ def test_weather_cache_avoids_repeat_provider_call():
             request=httpx.Request("GET", "https://example.test"),
         )
         client.get = AsyncMock(return_value=response)
-        from services.weather.engine import get_weather
-        import services.weather.engine as engine
         engine._WEATHER_CACHE.clear()
         asyncio.run(get_weather(22.571, 88.361, "en", 1))
         asyncio.run(get_weather(22.571, 88.361, "en", 1))
