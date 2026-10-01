@@ -1,4 +1,5 @@
 from typing import Any, NoReturn
+
 from fastapi import APIRouter, HTTPException, Query
 
 from services.farm.intelligence import (
@@ -9,7 +10,7 @@ from services.farm.intelligence import (
     build_irrigation,
     build_pest_alerts,
 )
-from services.weather.engine import get_weather, SUPPORTED_LANGUAGES
+from services.weather.engine import SUPPORTED_LANGUAGES, get_weather
 
 router = APIRouter(prefix="/farm", tags=["farm-intelligence"])
 
