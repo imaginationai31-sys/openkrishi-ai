@@ -4,9 +4,10 @@ import json
 import logging
 from typing import Any
 
+from services.core.config import get_settings
+
 from .knowledge import get_knowledge
 from .safety import enforce_advisory_safety
-from services.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
