@@ -48,6 +48,7 @@ extend-exclude = ["apps/mobile"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["services"]
+lines-after-imports = 2
 
 [tool.ruff.lint]
 select = ["F", "I", "B", "UP", "TRY", "SIM", "S", "PT", "ASYNC", "RUF"]
