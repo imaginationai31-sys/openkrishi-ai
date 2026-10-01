@@ -29,7 +29,14 @@ dev = [
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-ra"
-asyncio_mode = "auto"
+
+[tool.coverage.run]
+branch = true
+source = ["services"]
+
+[tool.coverage.report]
+fail_under = 73
+show_missing = true
 
 [tool.uv]
 package = false
