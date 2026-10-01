@@ -11,7 +11,7 @@ from services.voice.languages import is_supported_language
 from services.voice.speech_to_text import SarvamSpeechToText
 from services.voice.text_to_speech import SarvamTextToSpeech
 from services.vision.engine import assess_crop_image
-from services.api.rate_limit import limiter, VOICE_LIMIT
+from services.api.rate_limit import VOICE_LIMIT, limiter
 from services.core.config import get_settings
 from services.core.uploads import read_limited_upload
 
@@ -68,7 +68,7 @@ def _synthesize(text: str, language: str):
 async def transcribe_voice(
     request: Request,
     response: Response,
-    file: UploadFile = File(...),  # noqa: B008  # noqa: B008
+    file: UploadFile = File(...),  # noqa: B008
     language: str = Form(...),
 ) -> dict[str, Any]:
     if not is_supported_language(language):
