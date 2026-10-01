@@ -9,6 +9,7 @@ from services.core.config import get_settings
 from .knowledge import get_knowledge
 from .safety import enforce_advisory_safety
 
+
 logger = logging.getLogger(__name__)
 
 SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
