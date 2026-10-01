@@ -1,3 +1,5 @@
+import pytest
+
 from services.voice.languages import is_supported_language
 from services.voice.pipeline import process_voice_query
 from services.voice.speech_to_text import Transcription, _audio_filename
@@ -38,12 +40,8 @@ def test_voice_pipeline_reaches_advisory_engine():
 
 
 def test_unsupported_voice_language_is_rejected():
-    try:
+    with pytest.raises(ValueError, match="Unsupported voice language"):
         process_voice_query(b"fake-input", "xx", FakeSTT(), FakeTTS())
-    except ValueError as exc:
-        assert "Unsupported voice language" in str(exc)
-    else:
-        raise AssertionError("Expected unsupported language to be rejected")
 
 
 def test_whatsapp_ogg_audio_is_named_as_ogg():
