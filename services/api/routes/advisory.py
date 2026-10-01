@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from services.advisory.engine import generate_advisory
 from services.advisory.localization import localize_advisory
-from services.api.rate_limit import limiter, AI_LIMIT
+from services.api.rate_limit import AI_LIMIT, limiter
 
 router = APIRouter()
 
