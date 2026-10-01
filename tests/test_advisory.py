@@ -96,8 +96,8 @@ def test_blank_location_is_treated_as_missing():
 
 
 @pytest.mark.parametrize(
-    "crop_category,crop_name",
-    (
+    ("crop_category", "crop_name"),
+    [
         ("rice", "Swarna"),
         ("rice", "Basmati"),
         ("peanut", "JL 24"),
