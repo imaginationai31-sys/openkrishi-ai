@@ -47,7 +47,7 @@ target-version = "py311"
 extend-exclude = ["apps/mobile"]
 
 [tool.ruff.lint]
-select = ["F", "I", "B", "UP", "TRY", "SIM"]
+select = ["F", "I", "B", "UP", "TRY", "SIM", "S", "PT", "ASYNC", "RUF"]
 ignore = ["B008", "TRY003"]
 
 [tool.ruff.format]
