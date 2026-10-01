@@ -50,6 +50,9 @@ extend-exclude = ["apps/mobile"]
 select = ["F", "I", "B", "UP", "TRY", "SIM", "S", "PT", "ASYNC", "RUF"]
 ignore = ["B008", "TRY003"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
