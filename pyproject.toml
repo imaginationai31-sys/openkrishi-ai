@@ -46,6 +46,9 @@ line-length = 100
 target-version = "py311"
 extend-exclude = ["apps/mobile"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["services"]
+
 [tool.ruff.lint]
 select = ["F", "I", "B", "UP", "TRY", "SIM", "S", "PT", "ASYNC", "RUF"]
 ignore = ["B008", "TRY003"]
