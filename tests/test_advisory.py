@@ -104,7 +104,7 @@ def test_blank_location_is_treated_as_missing():
         ("vegetables", "Potato"),
         ("flowers", "Rose"),
         ("flowers", "Marigold"),
-    ),
+    ],
 )
 def test_selected_crop_variety_is_carried_into_advisory(crop_category, crop_name):
     result = generate_advisory(
