@@ -22,6 +22,7 @@ class FakeOpenAI:
 
 def patch_openai(monkeypatch, captured):
     import openai
+
     monkeypatch.setattr(openai, "OpenAI", lambda **kwargs: FakeOpenAI(captured))
 
 
@@ -38,9 +39,9 @@ def test_crop_image_is_accepted_for_supported_crop(monkeypatch):
 
 
 def test_supported_crop_scope_excludes_tomato_and_chilli():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Unsupported crop category"):
         assess_crop_image(b"fake-image", "image/jpeg", "tomato")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Unsupported crop category"):
         assess_crop_image(b"fake-image", "image/jpeg", "chilli")
 
 
@@ -67,18 +68,28 @@ def test_vision_route_exposes_advisory_layer():
     assert "location" in vision_assess.__annotations__
 
 
-@pytest.mark.parametrize("crop_category,crop_name", [
-    ("rice", "Swarna"),
-    ("rice", "Basmati"),
-    ("peanut", "JL 24"),
-    ("vegetables", "Potato"),
-    ("flowers", "Rose"),
-    ("flowers", "Marigold"),
-])
+@pytest.mark.parametrize(
+    "crop_category,crop_name",
+    (
+        ("rice", "Swarna"),
+        ("rice", "Basmati"),
+        ("peanut", "JL 24"),
+        ("vegetables", "Potato"),
+        ("flowers", "Rose"),
+        ("flowers", "Marigold"),
+    ),
+)
 def test_selected_crop_variety_is_carried_into_vision_prompt(monkeypatch, crop_category, crop_name):
     captured = {}
     patch_openai(monkeypatch, captured)
-    result = assess_crop_image(b"fake-image", "image/jpeg", crop_category, "tillering", "en", crop_name)
+    result = assess_crop_image(
+        b"fake-image",
+        "image/jpeg",
+        crop_category,
+        "tillering",
+        "en",
+        crop_name,
+    )
     assert result["crop_category"] == crop_category
     assert result["status"] == "assessed"
     prompt = captured["input"][0]["content"][0]["text"]
