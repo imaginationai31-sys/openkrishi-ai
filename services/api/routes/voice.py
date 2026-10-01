@@ -7,13 +7,13 @@ from services.advisory.engine import generate_advisory
 from services.advisory.localization import localize_advisory, localize_visual
 from services.advisory.normalizer import normalize_agricultural_terms
 from services.advisory.voice_understanding import build_voice_understanding
-from services.voice.languages import is_supported_language
-from services.voice.speech_to_text import SarvamSpeechToText
-from services.voice.text_to_speech import SarvamTextToSpeech
-from services.vision.engine import assess_crop_image
 from services.api.rate_limit import VOICE_LIMIT, limiter
 from services.core.config import get_settings
 from services.core.uploads import read_limited_upload
+from services.vision.engine import assess_crop_image
+from services.voice.languages import is_supported_language
+from services.voice.speech_to_text import SarvamSpeechToText
+from services.voice.text_to_speech import SarvamTextToSpeech
 
 router = APIRouter()
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
@@ -68,7 +68,7 @@ def _synthesize(text: str, language: str):
 async def transcribe_voice(
     request: Request,
     response: Response,
-    file: UploadFile = File(...),  # noqa: B008
+    file: UploadFile = File(...),
     language: str = Form(...),
 ) -> dict[str, Any]:
     if not is_supported_language(language):
@@ -94,7 +94,7 @@ async def transcribe_voice(
 async def voice_advisory(
     request: Request,
     response: Response,
-    file: UploadFile = File(...),  # noqa: B008
+    file: UploadFile = File(...),
     language: str = Form(...),
     crop_category: str | None = Form(default=None),
     growth_stage: str | None = Form(default=None),
@@ -137,7 +137,7 @@ async def voice_advisory(
 async def voice_vision_advisory(
     request: Request,
     response: Response,
-    file: UploadFile = File(...),  # noqa: B008
+    file: UploadFile = File(...),
     image: UploadFile = File(...),
     language: str = Form(...),
     crop_category: str | None = Form(default=None),
