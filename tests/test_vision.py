@@ -77,7 +77,7 @@ def test_vision_route_exposes_advisory_layer():
         ("vegetables", "Potato"),
         ("flowers", "Rose"),
         ("flowers", "Marigold"),
-    ),
+    ],
 )
 def test_selected_crop_variety_is_carried_into_vision_prompt(monkeypatch, crop_category, crop_name):
     captured = {}
