@@ -1,13 +1,6 @@
-import os
-
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
-
-os.environ.setdefault("CORS_ALLOW_ORIGINS", "https://openkrishi-ai.hatchable.site")
-os.environ.setdefault("GEMINI_API_KEY", "test-gemini-key")
-os.environ.setdefault("OPENAI_API_KEY", "test-openai-key")
-os.environ.setdefault("SARVAM_API_KEY", "test-sarvam-key")
 
 from services.api.server import app
 from services.core.config import Settings
