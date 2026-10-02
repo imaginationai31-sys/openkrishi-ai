@@ -60,7 +60,7 @@ def test_weather_retries_after_rate_limit():
         },
         request=httpx.Request("GET", "https://example.test"),
     )
-    with patch("services.weather.engine.httpx.AsyncClient") as client_class, patch("services.weather.engine.asyncio.sleep", new=AsyncMock()):
+    with patch(\n        "services.weather.engine.httpx.AsyncClient"\n    ) as client_class, patch("services.weather.engine.asyncio.sleep", new=AsyncMock()):
         client = client_class.return_value.__aenter__.return_value
         client.get = AsyncMock(side_effect=[rate_limited, success])
         from services.weather.engine import get_weather
