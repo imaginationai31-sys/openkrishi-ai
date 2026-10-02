@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-SUPPORTED_CROPS = {"rice", "peanut", "vegetables", "flowers"}
+\nSUPPORTED_CROPS = {"rice", "peanut", "vegetables", "flowers"}
 
 CROP_GUIDANCE = {
     "rice": {
