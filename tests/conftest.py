@@ -1,15 +1,15 @@
 import os
-
-os.environ.setdefault("CORS_ALLOW_ORIGINS", "https://openkrishi-ai.hatchable.site")
-os.environ.setdefault("GEMINI_API_KEY", "test-gemini-key")
-os.environ.setdefault("OPENAI_API_KEY", "test-openai-key")
-os.environ.setdefault("SARVAM_API_KEY", "test-sarvam-key")
-
 from unittest.mock import Mock
 
 import httpx
 import openai
 import pytest
+
+
+os.environ.setdefault("CORS_ALLOW_ORIGINS", "https://openkrishi-ai.hatchable.site")
+os.environ.setdefault("GEMINI_API_KEY", "test-gemini-key")
+os.environ.setdefault("OPENAI_API_KEY", "test-openai-key")
+os.environ.setdefault("SARVAM_API_KEY", "test-sarvam-key")
 
 
 def _fail_network(*args, **kwargs):
