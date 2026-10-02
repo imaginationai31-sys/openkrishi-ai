@@ -52,4 +52,4 @@ jobs:
         run: uv run pytest --cov=services --cov-report=term-missing --cov-report=xml
 
       - name: Run typecheck
-        run: uv run mypy services/core services/api
+        run: uv run mypy services
