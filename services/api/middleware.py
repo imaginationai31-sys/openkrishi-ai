@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+
 logger = logging.getLogger("openkrishi.api")
 TRACE_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
 
