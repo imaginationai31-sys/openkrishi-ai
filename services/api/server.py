@@ -43,9 +43,16 @@ app.include_router(farm.router, prefix="/api/v1")
 @app.exception_handler(Exception)
 async def unhandled_exception(request: Request, exc: Exception):
     import logging
+
     logging.getLogger("openkrishi.api").error(
-        "unhandled_request_error trace_id=%s error_type=%s",
-        getattr(request.state, "trace_id", "unknown"), type(exc).__name__,
+        "unhandled_request_error",
+        extra={
+            "trace_id": getattr(request.state, "trace_id", "unknown"),
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": 500,
+            "error_type": type(exc).__name__,
+        },
     )
     return JSONResponse(
         status_code=500,
