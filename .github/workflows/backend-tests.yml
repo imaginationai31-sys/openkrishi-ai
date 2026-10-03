@@ -43,6 +43,9 @@ jobs:
           uv run ruff check services tests
           uv run ruff format --check services tests
 
+      - name: Run Bandit security scan
+        run: uvx --from bandit==1.8.6 bandit -r services -ll
+
       - name: Run tests
         env:
           PYTHONPATH: ${{ github.workspace }}
