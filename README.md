@@ -1,6 +1,6 @@
 # OpenKrishi AI
 
-[![Backend Tests](https://github.com/imaginationai31-sys/openkrishi-ai/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/imaginationai31-sys/openkrishi-ai/actions/workflows/backend-tests.yml) [![Coverage target](https://img.shields.io/badge/coverage-80%25%2B%20target-blue)](tests/README.md) [![License](https://img.shields.io/github/license/imaginationai31-sys/openkrishi-ai)](LICENSE)
+[![Backend Tests](https://github.com/imaginationai31-sys/openkrishi-ai/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/imaginationai31-sys/openkrishi-ai/actions/workflows/backend-tests.yml) [![Coverage gate](https://img.shields.io/badge/coverage-73%25%2B%20gate-blue)](tests/README.md) [![License](https://img.shields.io/github/license/imaginationai31-sys/openkrishi-ai)](LICENSE)
 
 **Free agricultural intelligence for every farmer.**
 
