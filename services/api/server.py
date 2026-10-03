@@ -9,6 +9,7 @@ from services.api.rate_limit import limiter
 from services.api.routes import advisory, farm, health, vision, voice, weather
 from services.core.config import get_settings
 from services.core.logging import configure_logging
+from services.core.metrics import metrics
 
 configure_logging()
 settings = get_settings()
@@ -58,6 +59,11 @@ async def unhandled_exception(request: Request, exc: Exception):
         status_code=500,
         content={"detail": "An internal error occurred. Please try again."},
     )
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics_endpoint() -> Response:
+    return Response(content=metrics.prometheus(), media_type="text/plain; version=0.0.4")
 
 
 @app.get("/")
