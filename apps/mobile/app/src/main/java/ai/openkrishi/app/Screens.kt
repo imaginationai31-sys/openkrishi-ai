@@ -1,7 +1,5 @@
 package ai.openkrishi.app
 
-package ai.openkrishi.app
-
 import android.Manifest
 import android.content.Context
 import android.content.Intent
