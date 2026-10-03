@@ -7,6 +7,8 @@ from collections.abc import Awaitable, Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from services.core.metrics import metrics
+
 
 logger = logging.getLogger("openkrishi.api")
 TRACE_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
@@ -38,10 +40,12 @@ class RequestTraceMiddleware(BaseHTTPMiddleware):
                     "duration_ms": round(elapsed_ms, 1),
                 },
             )
+            metrics.record(elapsed_ms / 1000, 500)
             raise
 
         elapsed_ms = (time.perf_counter() - started) * 1000
         response.headers["X-Trace-ID"] = trace_id
+        metrics.record(elapsed_ms / 1000, response.status_code)
         logger.info(
             "request_complete",
             extra={
