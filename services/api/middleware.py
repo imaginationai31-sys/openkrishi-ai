@@ -30,22 +30,26 @@ class RequestTraceMiddleware(BaseHTTPMiddleware):
         except Exception:
             elapsed_ms = (time.perf_counter() - started) * 1000
             logger.exception(
-                "request_failed trace_id=%s method=%s path=%s duration_ms=%.1f",
-                trace_id,
-                request.method,
-                request.url.path,
-                elapsed_ms,
+                "request_failed",
+                extra={
+                    "trace_id": trace_id,
+                    "method": request.method,
+                    "path": request.url.path,
+                    "duration_ms": round(elapsed_ms, 1),
+                },
             )
             raise
 
         elapsed_ms = (time.perf_counter() - started) * 1000
         response.headers["X-Trace-ID"] = trace_id
         logger.info(
-            "request_complete trace_id=%s method=%s path=%s status=%s duration_ms=%.1f",
-            trace_id,
-            request.method,
-            request.url.path,
-            response.status_code,
-            elapsed_ms,
+            "request_complete",
+            extra={
+                "trace_id": trace_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": response.status_code,
+                "duration_ms": round(elapsed_ms, 1),
+            },
         )
         return response
