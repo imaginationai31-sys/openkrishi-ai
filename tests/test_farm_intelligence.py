@@ -118,4 +118,4 @@ def test_farm_plan_handles_missing_current_weather():
         "humidity_pct": None,
         "rain_mm": None,
     }
-    assert result["tasks"][0] == "আজকের কৃষি পরিকল্পনা" or result["tasks"][0]
+    assert result["tasks"][0] == "আজকের কৃষি পরিকল্পনা"
