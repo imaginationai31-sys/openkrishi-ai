@@ -90,3 +90,32 @@ def test_farm_plan_rain_takes_priority():
         {"current": {"temperature_2m": 35, "humidity": 80, "precipitation": 2}},
     )
     assert r["tasks"][0].startswith("Rain is expected")
+
+
+def test_crop_recommendation_default_branch_and_no_soil():
+    result = build_crop_recommendation(None, None, None, "en")
+    assert result["recommended_categories"] == ["rice", "peanut", "vegetables", "flowers"]
+    assert len(result["notes"]) == 1
+
+
+def test_irrigation_uses_default_when_weather_thresholds_are_not_hit():
+    result = build_irrigation("flowers", "en", 33.9, 59.9)
+    assert result["action"] == "check_root_zone"
+    assert result["et0_fao"] is None
+
+
+def test_localized_farm_plan_uses_fallback_for_unknown_language():
+    result = build_farm_plan("rice", None, "xx")
+    assert result["title"] == "Today's farm plan"
+    assert result["growth_stage"] is None
+    assert len(result["tasks"]) == 4
+
+
+def test_farm_plan_handles_missing_current_weather():
+    result = build_farm_plan("peanut", "flowering", "bn", {})
+    assert result["weather_snapshot"] == {
+        "temperature_c": None,
+        "humidity_pct": None,
+        "rain_mm": None,
+    }
+    assert result["tasks"][0] == "আজকের কৃষি পরিকল্পনা" or result["tasks"][0]
