@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     )
 
     environment: str = Field(default="production", alias="ENVIRONMENT")
+    sentry_dsn: SecretStr | None = Field(default=None, alias="SENTRY_DSN")
     cors_allow_origins: str = Field(alias="CORS_ALLOW_ORIGINS")
 
     openai_advisory_model: str = Field(default="gpt-5-mini", alias="OPENAI_ADVISORY_MODEL")
