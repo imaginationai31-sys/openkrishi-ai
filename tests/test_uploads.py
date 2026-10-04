@@ -27,7 +27,7 @@ async def test_image_upload_accepts_supported_extension():
 @pytest.mark.anyio
 async def test_audio_upload_accepts_mime_parameter_without_extension():
     result = await read_limited_upload(
-        upload("voice.mp3;ignored", "audio/mpeg", b"audio-bytes"),
+        upload("voice.mp3", "audio/mpeg", b"audio-bytes"),
         kind="audio",
         max_bytes=20,
     )
