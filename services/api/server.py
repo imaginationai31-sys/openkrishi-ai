@@ -8,11 +8,16 @@ from services.api.middleware import RequestTraceMiddleware
 from services.api.rate_limit import limiter
 from services.api.routes import advisory, farm, health, vision, voice, weather
 from services.core.config import get_settings
+from services.core.error_tracking import capture_exception, configure_error_tracking
 from services.core.logging import configure_logging
 from services.core.metrics import metrics
 
 configure_logging()
 settings = get_settings()
+configure_error_tracking(
+    settings.sentry_dsn.get_secret_value() if settings.sentry_dsn else None,
+    settings.environment,
+)
 
 app = FastAPI(
     title="OpenKrishi AI API",
@@ -45,6 +50,7 @@ app.include_router(farm.router, prefix="/api/v1")
 async def unhandled_exception(request: Request, exc: Exception):
     import logging
 
+    capture_exception(exc)
     logging.getLogger("openkrishi.api").error(
         "unhandled_request_error",
         extra={
