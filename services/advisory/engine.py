@@ -231,8 +231,9 @@ Return concise but useful observations, safe recommendations, and uncertainties.
             }[language]
         )
 
+    confidence_value = str(confidence)
     recommendations, uncertainties, safety = enforce_advisory_safety(
-        recommendations, uncertainties, confidence=confidence
+        recommendations, uncertainties, confidence=confidence_value
     )
     return {
         "answer": answer,
