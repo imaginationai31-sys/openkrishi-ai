@@ -337,9 +337,12 @@ async def get_weather(
         code_int = int(code)
     except (TypeError, ValueError):
         code_int = None
-    current["weather_description"] = WEATHER_DESCRIPTION.get(
-        language, WEATHER_DESCRIPTION["en"]
-    ).get(code_int, "Weather condition unavailable")
+    weather_descriptions = WEATHER_DESCRIPTION.get(language, WEATHER_DESCRIPTION["en"])
+    current["weather_description"] = (
+        weather_descriptions.get(code_int, "Weather condition unavailable")
+        if code_int is not None
+        else "Weather condition unavailable"
+    )
 
     safety_reason = {
         "en": "Weather information supports planning and monitoring. It does not by itself justify pesticide, fertilizer, or other chemical treatment decisions.",
