@@ -326,6 +326,9 @@ async def get_weather(
         except (httpx.HTTPError, ValueError, RuntimeError) as exc:
             raise RuntimeError("Weather provider is temporarily unavailable.") from exc
 
+    if data is None:
+        _raise_missing_weather_data()
+
     hourly = data.get("hourly", {})
     alert, alerts = _build_alert(hourly, language)
     current = dict(data.get("current", {}))
