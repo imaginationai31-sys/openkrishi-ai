@@ -2,7 +2,6 @@ import asyncio
 from unittest.mock import AsyncMock, patch
 
 import httpx
-
 from fastapi.testclient import TestClient
 
 import services.weather.engine as engine
