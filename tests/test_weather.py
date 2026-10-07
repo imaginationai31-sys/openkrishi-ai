@@ -5,8 +5,8 @@ import httpx
 from fastapi.testclient import TestClient
 
 from services.api.server import app
+import services.weather.engine as engine
 from services.weather.engine import get_weather
-
 
 
 client = TestClient(app)
