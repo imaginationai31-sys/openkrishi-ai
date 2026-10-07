@@ -1,10 +1,18 @@
+"""Structured application logging for OpenKrishi AI."""
+
+from __future__ import annotations
+
 import json
 import logging
 import sys
 from datetime import UTC, datetime
 
+import structlog
+
 
 class JsonFormatter(logging.Formatter):
+    """Render stdlib log records as JSON for platforms such as Render."""
+
     def format(self, record: logging.LogRecord) -> str:
         payload = {
             "timestamp": datetime.now(UTC).isoformat(),
@@ -12,7 +20,14 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
         }
-        for field in ("trace_id", "method", "path", "status_code", "duration_ms"):
+        for field in (
+            "trace_id",
+            "method",
+            "path",
+            "status_code",
+            "duration_ms",
+            "error_type",
+        ):
             value = getattr(record, field, None)
             if value is not None:
                 payload[field] = value
@@ -22,6 +37,7 @@ class JsonFormatter(logging.Formatter):
 
 
 def configure_logging() -> None:
+    """Configure JSON stdlib logging and structlog for production services."""
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(JsonFormatter())
 
@@ -29,3 +45,15 @@ def configure_logging() -> None:
     root.handlers.clear()
     root.addHandler(handler)
     root.setLevel(logging.INFO)
+
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.processors.add_log_level,
+            structlog.processors.TimeStamper(fmt="iso", utc=True),
+            structlog.processors.JSONRenderer(),
+        ],
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
