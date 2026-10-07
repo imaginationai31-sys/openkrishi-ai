@@ -118,4 +118,4 @@ def test_farm_plan_handles_missing_current_weather():
         "humidity_pct": None,
         "rain_mm": None,
     }
-    assert result["tasks"][0] == "আজকের কৃষি পরিকল্পনা"
+    assert result["tasks"][0] == "সেচ বা সার পরিবর্তনের আগে ফসল ও মাটির অবস্থা পরীক্ষা করুন।"
