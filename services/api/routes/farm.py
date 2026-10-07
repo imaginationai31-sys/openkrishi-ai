@@ -23,7 +23,10 @@ def _err(exc: Exception) -> NoReturn:
 
 
 @router.get("/plan")
+@limiter.limit(FARM_LIMIT)
 async def farm_plan(
+    request: Request,
+    response: Response,
     latitude: float = Query(..., ge=-90, le=90),
     longitude: float = Query(..., ge=-180, le=180),
     crop_category: str = Query(...),
@@ -42,7 +45,10 @@ async def farm_plan(
 
 
 @router.get("/irrigation")
+@limiter.limit(FARM_LIMIT)
 async def irrigation(
+    request: Request,
+    response: Response,
     latitude: float = Query(..., ge=-90, le=90),
     longitude: float = Query(..., ge=-180, le=180),
     crop_category: str = Query(...),
@@ -68,6 +74,8 @@ async def irrigation(
 @router.get("/fertilizer")
 @limiter.limit(FARM_LIMIT)
 def fertilizer(
+    request: Request,
+    response: Response,
     crop_category: str = Query(...),
     growth_stage: str | None = Query(None),
     language: str = Query("en"),
@@ -79,7 +87,10 @@ def fertilizer(
 
 
 @router.get("/pest-alerts")
+@limiter.limit(FARM_LIMIT)
 async def pest_alerts(
+    request: Request,
+    response: Response,
     latitude: float = Query(..., ge=-90, le=90),
     longitude: float = Query(..., ge=-180, le=180),
     crop_category: str = Query(...),
@@ -104,6 +115,8 @@ async def pest_alerts(
 @router.get("/recommendation")
 @limiter.limit(FARM_LIMIT)
 def recommendation(
+    request: Request,
+    response: Response,
     soil_type: str | None = Query(None),
     water_availability: str | None = Query(None),
     season: str | None = Query(None),
