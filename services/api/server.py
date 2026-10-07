@@ -72,9 +72,7 @@ async def unhandled_exception(request: Request, exc: Exception):
 def metrics_endpoint(
     x_metrics_token: str | None = Header(default=None, alias="X-Metrics-Token"),
 ) -> Response:
-    configured_token = (
-        settings.metrics_token.get_secret_value() if settings.metrics_token else None
-    )
+    configured_token = settings.metrics_token.get_secret_value() if settings.metrics_token else None
     if not configured_token or x_metrics_token != configured_token:
         return Response(status_code=404)
     return Response(content=metrics.prometheus(), media_type="text/plain; version=0.0.4")
