@@ -133,8 +133,8 @@ STRICT SAFETY RULES:
 Return concise but useful observations, safe recommendations, and uncertainties."""
 
     settings = get_settings()
-    client = OpenAI(api_key=settings.openai_api_key.get_secret_value())
     try:
+        client = OpenAI(api_key=settings.openai_api_key.get_secret_value())
         response = client.responses.create(
             model=settings.openai_advisory_model,
             input=[{"role": "user", "content": [{"type": "input_text", "text": prompt}]}],
