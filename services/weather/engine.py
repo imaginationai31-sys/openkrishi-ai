@@ -333,10 +333,12 @@ async def get_weather(
     alert, alerts = _build_alert(hourly, language)
     current = dict(data.get("current", {}))
     code = current.get("weather_code")
-    try:
-        code_int = int(code)
-    except (TypeError, ValueError):
-        code_int = None
+    code_int: int | None = None
+    if isinstance(code, (int, str)):
+        try:
+            code_int = int(code)
+        except ValueError:
+            code_int = None
     weather_descriptions = WEATHER_DESCRIPTION.get(language, WEATHER_DESCRIPTION["en"])
     current["weather_description"] = (
         weather_descriptions.get(code_int, "Weather condition unavailable")
