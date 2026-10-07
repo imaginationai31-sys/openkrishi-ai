@@ -31,9 +31,13 @@ def test_json_formatter_includes_structured_request_fields():
     assert payload["duration_ms"] == 12.3
 
 
+def _raise_value_error() -> None:
+    raise ValueError("bad input")
+
+
 def test_json_formatter_includes_exception_and_error_type():
     try:
-        raise ValueError("bad input")
+        _raise_value_error()
     except ValueError:
         record = logging.LogRecord(
             name="openkrishi.api",
