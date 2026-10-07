@@ -19,11 +19,19 @@ def _fail_network(*args, **kwargs):
     )
 
 
+def _block_async_network(self, *args, **kwargs):
+    if isinstance(self._transport, httpx.ASGITransport):
+        return _original_async_request(self, *args, **kwargs)
+    _fail_network()
+
+
 @pytest.fixture(autouse=True)
 def block_external_providers(monkeypatch):
-    """Prevent real HTTP and OpenAI calls during every test."""
+    """Prevent real provider calls while allowing in-process ASGI tests."""
+    global _original_async_request
+    _original_async_request = httpx.AsyncClient.request
     monkeypatch.setattr(httpx.Client, "request", _fail_network)
-    monkeypatch.setattr(httpx.AsyncClient, "request", _fail_network)
+    monkeypatch.setattr(httpx.AsyncClient, "request", _block_async_network)
     monkeypatch.setattr(
         openai,
         "OpenAI",
