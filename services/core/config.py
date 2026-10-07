@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     environment: str = Field(default="production", alias="ENVIRONMENT")
     sentry_dsn: SecretStr | None = Field(default=None, alias="SENTRY_DSN")
+    metrics_token: SecretStr | None = Field(default=None, alias="METRICS_TOKEN")
     cors_allow_origins: str = Field(alias="CORS_ALLOW_ORIGINS")
 
     openai_advisory_model: str = Field(default="gpt-5-mini", alias="OPENAI_ADVISORY_MODEL")
@@ -45,6 +46,8 @@ class Settings(BaseSettings):
     ai_rate_limit: str = Field(default="10/minute", alias="AI_RATE_LIMIT")
     voice_rate_limit: str = Field(default="6/minute", alias="VOICE_RATE_LIMIT")
     vision_rate_limit: str = Field(default="6/minute", alias="VISION_RATE_LIMIT")
+    weather_rate_limit: str = Field(default="30/minute", alias="WEATHER_RATE_LIMIT")
+    farm_rate_limit: str = Field(default="30/minute", alias="FARM_RATE_LIMIT")
 
     @field_validator("cors_allow_origins")
     @classmethod
