@@ -14,6 +14,7 @@ from services.weather.engine import SUPPORTED_LANGUAGES, get_weather
 
 router = APIRouter(prefix="/farm", tags=["farm-intelligence"])
 
+
 def _err(exc: Exception) -> NoReturn:
     raise HTTPException(status_code=422, detail=str(exc)) from exc
 
