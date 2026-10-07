@@ -15,6 +15,7 @@ from services.voice.languages import is_supported_language
 from services.voice.speech_to_text import SarvamSpeechToText
 from services.voice.text_to_speech import SarvamTextToSpeech
 
+
 router = APIRouter()
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
 SUPPORTED_CROPS = {"rice", "peanut", "vegetables", "flowers"}
