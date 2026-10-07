@@ -11,7 +11,15 @@ from typing import Any
 CROP_INTELLIGENCE: dict[str, dict[str, Any]] = {
     "rice": {
         "label": "Rice",
-        "stages": ("seedling", "vegetative", "tillering", "panicle initiation", "flowering", "grain filling", "maturity"),
+        "stages": (
+            "seedling",
+            "vegetative",
+            "tillering",
+            "panicle initiation",
+            "flowering",
+            "grain filling",
+            "maturity",
+        ),
         "stage_checks": {
             "seedling": "Check establishment, plant stand, soil moisture, and early leaf color.",
             "vegetative": "Check leaf color, plant vigor, weeds, water conditions, and visible pest damage.",
@@ -24,7 +32,14 @@ CROP_INTELLIGENCE: dict[str, dict[str, Any]] = {
     },
     "peanut": {
         "label": "Peanut",
-        "stages": ("emergence", "vegetative", "flowering", "pegging", "pod development", "maturity"),
+        "stages": (
+            "emergence",
+            "vegetative",
+            "flowering",
+            "pegging",
+            "pod development",
+            "maturity",
+        ),
         "stage_checks": {
             "emergence": "Check plant stand, soil crusting, moisture, and early seedling damage.",
             "vegetative": "Check canopy growth, leaf color, weeds, soil moisture, and visible leaf or insect damage.",
@@ -47,7 +62,13 @@ CROP_INTELLIGENCE: dict[str, dict[str, Any]] = {
     },
     "flowers": {
         "label": "Flowers",
-        "stages": ("nursery/seedling", "vegetative", "bud development", "flowering", "post-flowering"),
+        "stages": (
+            "nursery/seedling",
+            "vegetative",
+            "bud development",
+            "flowering",
+            "post-flowering",
+        ),
         "stage_checks": {
             "nursery/seedling": "Check establishment, moisture, light, and early leaf or stem damage.",
             "vegetative": "Check new growth, leaf color, irrigation, drainage, and visible pests.",

@@ -22,10 +22,19 @@ class TextToSpeechProvider(Protocol):
 
 
 SARVAM_TTS_URL = get_settings().sarvam_tts_url
-SARVAM_LANGUAGE_CODES = {"en": "en-IN", "bn": "bn-IN", "hi": "hi-IN", "ta": "ta-IN", "pa": "pa-IN", "te": "te-IN"}
+SARVAM_LANGUAGE_CODES = {
+    "en": "en-IN",
+    "bn": "bn-IN",
+    "hi": "hi-IN",
+    "ta": "ta-IN",
+    "pa": "pa-IN",
+    "te": "te-IN",
+}
 
 
-def _pcm_to_wav(pcm: bytes, sample_rate: int = 24000, channels: int = 1, sample_width: int = 2) -> bytes:
+def _pcm_to_wav(
+    pcm: bytes, sample_rate: int = 24000, channels: int = 1, sample_width: int = 2
+) -> bytes:
     """Wrap Gemini PCM output in a WAV container."""
     import io
     import wave
@@ -41,6 +50,7 @@ def _pcm_to_wav(pcm: bytes, sample_rate: int = 24000, channels: int = 1, sample_
 
 class SarvamTextToSpeech:
     """Sarvam Bulbul v3 TTS for OpenKrishi AI."""
+
     def __init__(self, model: str | None = None, voice: str | None = None) -> None:
         self.model = model or get_settings().sarvam_tts_model
         self.voice = voice
@@ -52,7 +62,12 @@ class SarvamTextToSpeech:
         language_code = SARVAM_LANGUAGE_CODES.get(language)
         if not language_code:
             raise ValueError(f"Unsupported TTS language: {language}")
-        payload = {"text": text[:2500], "target_language_code": language_code, "model": self.model, "speaker": self.voice or "shubh"}
+        payload = {
+            "text": text[:2500],
+            "target_language_code": language_code,
+            "model": self.model,
+            "speaker": self.voice or "shubh",
+        }
         headers = {"api-subscription-key": api_key, "Content-Type": "application/json"}
         try:
             with httpx.Client(timeout=get_settings().outbound_timeout_seconds) as client:
@@ -72,22 +87,30 @@ class SarvamTextToSpeech:
             raise RuntimeError("Sarvam TTS returned empty audio.")
         return SpeechAudio(audio=audio, language=language, mime_type="audio/wav")
 
+
 class GeminiTextToSpeech:
     """Compatibility wrapper; Sarvam is now the active TTS provider."""
+
     def __init__(self, model: str | None = None, voice: str | None = None) -> None:
         self._provider = SarvamTextToSpeech()
+
     def synthesize(self, text: str, language: str) -> SpeechAudio:
         return self._provider.synthesize(text, language)
+
 
 class TTSFreeTextToSpeech:
     """Backward-compatible TTSFree provider."""
 
     def synthesize(self, text: str, language: str) -> SpeechAudio:
-        raise RuntimeError("TTSFree provider is no longer the primary provider. Use GeminiTextToSpeech.")
+        raise RuntimeError(
+            "TTSFree provider is no longer the primary provider. Use GeminiTextToSpeech."
+        )
 
 
 class NotConfiguredTextToSpeech:
     """Safe placeholder until a concrete TTS provider is configured."""
 
     def synthesize(self, text: str, language: str) -> SpeechAudio:
-        raise RuntimeError("Text-to-speech provider is not configured. Configure a TTS provider before generating audio.")
+        raise RuntimeError(
+            "Text-to-speech provider is not configured. Configure a TTS provider before generating audio."
+        )

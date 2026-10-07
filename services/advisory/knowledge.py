@@ -69,8 +69,10 @@ def get_knowledge(
                 if stage_guidance:
                     recommendations.insert(1, stage_guidance)
 
-                if crop == "rice" and "tillering" in stage and any(
-                    keyword in text for keyword in rule["keywords"]
+                if (
+                    crop == "rice"
+                    and "tillering" in stage
+                    and any(keyword in text for keyword in rule["keywords"])
                 ):
                     recommendations.insert(
                         2,

@@ -28,13 +28,31 @@ LANGUAGE_NAMES = {
 VISION_RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
-        "observations": {"type": "array", "items": {"type": "string"}, "description": "Short observations directly supported by the image."},
-        "possible_causes": {"type": "array", "items": {"type": "string"}, "description": "Cautious possible causes; never definitive diagnoses."},
+        "observations": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Short observations directly supported by the image.",
+        },
+        "possible_causes": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Cautious possible causes; never definitive diagnoses.",
+        },
         "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
         "uncertainties": {"type": "array", "items": {"type": "string"}},
-        "recommendations": {"type": "array", "items": {"type": "string"}, "description": "Safe next-step checks only."},
+        "recommendations": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Safe next-step checks only.",
+        },
     },
-    "required": ["observations", "possible_causes", "confidence", "uncertainties", "recommendations"],
+    "required": [
+        "observations",
+        "possible_causes",
+        "confidence",
+        "uncertainties",
+        "recommendations",
+    ],
     "additionalProperties": False,
 }
 
@@ -100,12 +118,13 @@ def assess_crop_image(
     settings = get_settings()
     api_key = settings.openai_api_key.get_secret_value()
     from openai import OpenAI
+
     client = OpenAI(api_key=api_key)
     model = settings.openai_vision_model
     language_name = LANGUAGE_NAMES[language]
     encoded = base64.b64encode(image_bytes).decode("ascii")
     data_url = f"data:{normalized_type};base64,{encoded}"
-    context = f"Crop category: {crop_category or 'unknown'}; specific crop/variety: {crop_name or 'not specified'}; growth stage: {growth_stage or 'unknown' }."
+    context = f"Crop category: {crop_category or 'unknown'}; specific crop/variety: {crop_name or 'not specified'}; growth stage: {growth_stage or 'unknown'}."
     prompt = f"""You are a conservative agricultural image-assessment assistant.
 Assess only what is visibly supported by the crop photo.
 Do not claim a definitive disease, pest, nutrient deficiency, or treatment.
@@ -122,13 +141,15 @@ Analyze the attached crop image. Return only the JSON object matching the respon
     try:
         response = client.responses.create(
             model=model,
-            input=[{
-                "role": "user",
-                "content": [
-                    {"type": "input_text", "text": prompt},
-                    {"type": "input_image", "image_url": data_url, "detail": "high"},
-                ],
-            }],
+            input=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": prompt},
+                        {"type": "input_image", "image_url": data_url, "detail": "high"},
+                    ],
+                }
+            ],
             text={
                 "format": {
                     "type": "json_schema",
@@ -139,7 +160,12 @@ Analyze the attached crop image. Return only the JSON object matching the respon
             },
         )
     except Exception as exc:
-        logger.exception("OpenAI vision request failed: model=%s crop=%s language=%s", model, crop_category, language)
+        logger.exception(
+            "OpenAI vision request failed: model=%s crop=%s language=%s",
+            model,
+            crop_category,
+            language,
+        )
         raise RuntimeError("Vision provider is temporarily unavailable.") from exc
     raw_text = getattr(response, "output_text", "")
     payload = _parse_assessment(raw_text)

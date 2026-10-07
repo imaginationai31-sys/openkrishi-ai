@@ -19,6 +19,7 @@ router = APIRouter(prefix="/farm", tags=["farm-intelligence"])
 def _err(exc: Exception) -> NoReturn:
     raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+
 @router.get("/plan")
 async def farm_plan(
     latitude: float = Query(..., ge=-90, le=90),
@@ -37,6 +38,7 @@ async def farm_plan(
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
+
 @router.get("/irrigation")
 async def irrigation(
     latitude: float = Query(..., ge=-90, le=90),
@@ -48,18 +50,30 @@ async def irrigation(
         weather = await get_weather(latitude, longitude, language, 1)
         current = weather.get("current", {})
         forecast = (weather.get("forecast") or [{}])[0]
-        return build_irrigation(crop_category, language, current.get("temperature_2m"), forecast.get("precipitation_probability_max_pct"), forecast.get("et0_fao_evapotranspiration"))
+        return build_irrigation(
+            crop_category,
+            language,
+            current.get("temperature_2m"),
+            forecast.get("precipitation_probability_max_pct"),
+            forecast.get("et0_fao_evapotranspiration"),
+        )
     except ValueError as exc:
         _err(exc)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
+
 @router.get("/fertilizer")
-def fertilizer(crop_category: str = Query(...), growth_stage: str | None = Query(None), language: str = Query("en")) -> dict[str, Any]:
+def fertilizer(
+    crop_category: str = Query(...),
+    growth_stage: str | None = Query(None),
+    language: str = Query("en"),
+) -> dict[str, Any]:
     try:
         return build_fertilizer(crop_category, growth_stage, language)
     except ValueError as exc:
         _err(exc)
+
 
 @router.get("/pest-alerts")
 async def pest_alerts(
@@ -72,11 +86,17 @@ async def pest_alerts(
         weather = await get_weather(latitude, longitude, language, 1)
         current = weather.get("current", {})
         forecast = (weather.get("forecast") or [{}])[0]
-        return build_pest_alerts(crop_category, language, forecast.get("precipitation_probability_max_pct"), current.get("relative_humidity_2m"))
+        return build_pest_alerts(
+            crop_category,
+            language,
+            forecast.get("precipitation_probability_max_pct"),
+            current.get("relative_humidity_2m"),
+        )
     except ValueError as exc:
         _err(exc)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+
 
 @router.get("/recommendation")
 def recommendation(
@@ -87,6 +107,7 @@ def recommendation(
 ) -> dict[str, Any]:
     return build_crop_recommendation(soil_type, water_availability, season, language)
 
+
 @router.get("/knowledge")
 def knowledge(crop_category: str = Query(...), language: str = Query("en")) -> dict[str, Any]:
     try:
@@ -94,9 +115,15 @@ def knowledge(crop_category: str = Query(...), language: str = Query("en")) -> d
     except ValueError as exc:
         _err(exc)
 
+
 @router.get("/market")
 def market(crop_category: str = Query(...), language: str = Query("en")) -> dict[str, Any]:
-    names = {"rice": "Paddy / Rice", "peanut": "Peanut / Groundnut", "vegetables": "Vegetables", "flowers": "Flowers"}
+    names = {
+        "rice": "Paddy / Rice",
+        "peanut": "Peanut / Groundnut",
+        "vegetables": "Vegetables",
+        "flowers": "Flowers",
+    }
     if crop_category not in names:
         raise HTTPException(status_code=422, detail="Unsupported crop category")
     return {
@@ -106,7 +133,10 @@ def market(crop_category: str = Query(...), language: str = Query("en")) -> dict
         "message": "OpenKrishi links farmers to official market-price sources. Live mandi data integration requires an approved data API credential.",
         "sources": [
             {"name": "e-NAM", "url": "https://enam.gov.in/"},
-            {"name": "data.gov.in AGMARKNET daily mandi prices", "url": "https://www.data.gov.in/resource/current-daily-price-various-commodities-various-markets-mandi"},
+            {
+                "name": "data.gov.in AGMARKNET daily mandi prices",
+                "url": "https://www.data.gov.in/resource/current-daily-price-various-commodities-various-markets-mandi",
+            },
         ],
         "safety": "Prices change by market, commodity, variety and date. Do not treat a single price as a guaranteed selling price.",
     }

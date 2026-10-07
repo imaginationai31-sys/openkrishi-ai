@@ -39,7 +39,9 @@ def test_wilting_rice():
     )
 
     assert result["observations"]
-    assert any("wilting" in item.lower() or "drooping" in item.lower() for item in result["observations"])
+    assert any(
+        "wilting" in item.lower() or "drooping" in item.lower() for item in result["observations"]
+    )
     assert result["recommendations"]
     assert result["uncertainties"]
 

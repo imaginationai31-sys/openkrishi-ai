@@ -14,8 +14,7 @@ os.environ.setdefault("SARVAM_API_KEY", "test-sarvam-key")
 
 def _fail_network(*args, **kwargs):
     raise AssertionError(
-        "Unexpected external network call in tests. "
-        "Mock the provider boundary explicitly."
+        "Unexpected external network call in tests. Mock the provider boundary explicitly."
     )
 
 

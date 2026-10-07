@@ -32,7 +32,9 @@ async def vision_assess(
         raise HTTPException(status_code=400, detail="Unsupported language.")
 
     try:
-        image_bytes = await read_limited_upload(file, kind="image", max_bytes=get_settings().max_image_bytes)
+        image_bytes = await read_limited_upload(
+            file, kind="image", max_bytes=get_settings().max_image_bytes
+        )
         visual = assess_crop_image(
             image_bytes=image_bytes,
             content_type=file.content_type or "",
@@ -46,7 +48,11 @@ async def vision_assess(
         observations = visual.get("observations", [])
         possible_causes = visual.get("possible_causes", [])
         visual_query = "; ".join([*observations, *possible_causes]).strip()
-        advisory_query = visual_query if visual.get("status") == "assessed" and visual_query else "crop photo assessment is unclear; no reliable visual symptom identified"
+        advisory_query = (
+            visual_query
+            if visual.get("status") == "assessed" and visual_query
+            else "crop photo assessment is unclear; no reliable visual symptom identified"
+        )
 
         advisory = generate_advisory(
             query=advisory_query,

@@ -64,8 +64,6 @@ def build_voice_understanding(
     }
 
     if not confident:
-        result["follow_up_questions"] = list(
-            QUESTIONS.get(language, QUESTIONS["bn"])
-        )
+        result["follow_up_questions"] = list(QUESTIONS.get(language, QUESTIONS["bn"]))
 
     return result

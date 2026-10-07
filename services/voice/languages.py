@@ -18,9 +18,7 @@ SUPPORTED_VOICE_LANGUAGES = (
     VoiceLanguage("te", "Telugu"),
 )
 
-SUPPORTED_LANGUAGE_CODES = frozenset(
-    language.code for language in SUPPORTED_VOICE_LANGUAGES
-)
+SUPPORTED_LANGUAGE_CODES = frozenset(language.code for language in SUPPORTED_VOICE_LANGUAGES)
 
 
 def is_supported_language(language: str) -> bool:

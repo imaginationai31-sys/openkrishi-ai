@@ -16,8 +16,22 @@ SUPPORTED_LANGUAGES = {"en", "bn", "hi", "ta", "pa", "te"}
 
 CROP_LABELS = {
     "rice": {"en": "rice", "bn": "ধান", "hi": "धान", "ta": "நெல்", "pa": "ਝੋਨਾ", "te": "వరి"},
-    "peanut": {"en": "peanut", "bn": "বাদাম", "hi": "मूंगफली", "ta": "நிலக்கடலை", "pa": "ਮੂੰਗਫਲੀ", "te": "వేరుశెనగ"},
-    "vegetables": {"en": "vegetables", "bn": "সবজি", "hi": "सब्जियाँ", "ta": "காய்கறிகள்", "pa": "ਸਬਜ਼ੀਆਂ", "te": "కూరగాయలు"},
+    "peanut": {
+        "en": "peanut",
+        "bn": "বাদাম",
+        "hi": "मूंगफली",
+        "ta": "நிலக்கடலை",
+        "pa": "ਮੂੰਗਫਲੀ",
+        "te": "వేరుశెనగ",
+    },
+    "vegetables": {
+        "en": "vegetables",
+        "bn": "সবজি",
+        "hi": "सब्जियाँ",
+        "ta": "காய்கறிகள்",
+        "pa": "ਸਬਜ਼ੀਆਂ",
+        "te": "కూరగాయలు",
+    },
     "flowers": {"en": "flowers", "bn": "ফুল", "hi": "फूल", "ta": "மலர்கள்", "pa": "ਫੁੱਲ", "te": "పూలు"},
 }
 
@@ -97,11 +111,17 @@ def _generate_openai_advisory(
     from openai import OpenAI
 
     language_names = {
-        "en": "English", "bn": "Bengali", "hi": "Hindi",
-        "ta": "Tamil", "pa": "Punjabi", "te": "Telugu",
+        "en": "English",
+        "bn": "Bengali",
+        "hi": "Hindi",
+        "ta": "Tamil",
+        "pa": "Punjabi",
+        "te": "Telugu",
     }
     language_name = language_names[language]
-    crop_label = CROP_LABELS.get(crop_category or "", {}).get("en") or crop_category or "unspecified crop"
+    crop_label = (
+        CROP_LABELS.get(crop_category or "", {}).get("en") or crop_category or "unspecified crop"
+    )
     location_text = location.strip() if location else "not provided"
     growth_text = growth_stage.strip() if growth_stage else "not provided"
     crop_text = crop_name.strip() if crop_name else "not specified"
@@ -150,7 +170,8 @@ Return concise but useful observations, safe recommendations, and uncertainties.
     except Exception as exc:
         logger.warning(
             "OpenAI advisory request failed: model=%s error_type=%s",
-            settings.openai_advisory_model, type(exc).__name__,
+            settings.openai_advisory_model,
+            type(exc).__name__,
         )
         raise RuntimeError("Advisory provider is temporarily unavailable.") from exc
 
@@ -164,9 +185,15 @@ Return concise but useful observations, safe recommendations, and uncertainties.
 
     answer = str(payload.get("answer") or "").strip()
     observations = [str(x).strip() for x in payload.get("observations", []) if str(x).strip()][:8]
-    recommendations = [str(x).strip() for x in payload.get("recommendations", []) if str(x).strip()][:8]
+    recommendations = [
+        str(x).strip() for x in payload.get("recommendations", []) if str(x).strip()
+    ][:8]
     uncertainties = [str(x).strip() for x in payload.get("uncertainties", []) if str(x).strip()][:8]
-    confidence = payload.get("confidence") if payload.get("confidence") in {"low", "medium", "high"} else "low"
+    confidence = (
+        payload.get("confidence")
+        if payload.get("confidence") in {"low", "medium", "high"}
+        else "low"
+    )
 
     if not answer:
         raise RuntimeError("Advisory provider returned an empty advisory.")
@@ -182,23 +209,27 @@ Return concise but useful observations, safe recommendations, and uncertainties.
         }[language]
         if not any(location.strip().lower() in item.lower() for item in recommendations):
             recommendations.insert(0, location_note)
-        uncertainties.append({
-            "en": "This advisory does not retrieve live local weather, soil, pest alerts, or region-specific agronomy data.",
-            "bn": "এই পরামর্শে স্থানীয় আবহাওয়া, মাটি, পোকামাকড়ের সতর্কতা বা অঞ্চলভিত্তিক কৃষি তথ্যের লাইভ তথ্য ব্যবহার করা হয়নি।",
-            "hi": "इस सलाह में स्थानीय मौसम, मिट्टी, कीट चेतावनी या क्षेत्र-विशिष्ट कृषि जानकारी का लाइव डेटा उपयोग नहीं किया गया है।",
-            "ta": "இந்த ஆலோசனையில் உள்ளூர் வானிலை, மண், பூச்சி எச்சரிக்கைகள் அல்லது பகுதி சார்ந்த வேளாண்மைத் தகவலின் நேரடி தரவு பயன்படுத்தப்படவில்லை.",
-            "pa": "ਇਸ ਸਲਾਹ ਵਿੱਚ ਸਥਾਨਕ ਮੌਸਮ, ਮਿੱਟੀ, ਕੀੜਿਆਂ ਦੀ ਚੇਤਾਵਨੀ ਜਾਂ ਖੇਤਰ-ਵਿਸ਼ੇਸ਼ ਖੇਤੀਬਾੜੀ ਜਾਣਕਾਰੀ ਦਾ ਲਾਈਵ ਡਾਟਾ ਨਹੀਂ ਵਰਤਿਆ ਗਿਆ।",
-            "te": "ఈ సలహాలో స్థానిక వాతావరణం, నేల, పురుగు హెచ్చరికలు లేదా ప్రాంతానికి సంబంధించిన వ్యవసాయ సమాచారపు ప్రత్యక్ష డేటాను ఉపయోగించలేదు.",
-        }[language])
+        uncertainties.append(
+            {
+                "en": "This advisory does not retrieve live local weather, soil, pest alerts, or region-specific agronomy data.",
+                "bn": "এই পরামর্শে স্থানীয় আবহাওয়া, মাটি, পোকামাকড়ের সতর্কতা বা অঞ্চলভিত্তিক কৃষি তথ্যের লাইভ তথ্য ব্যবহার করা হয়নি।",
+                "hi": "इस सलाह में स्थानीय मौसम, मिट्टी, कीट चेतावनी या क्षेत्र-विशिष्ट कृषि जानकारी का लाइव डेटा उपयोग नहीं किया गया है।",
+                "ta": "இந்த ஆலோசனையில் உள்ளூர் வானிலை, மண், பூச்சி எச்சரிக்கைகள் அல்லது பகுதி சார்ந்த வேளாண்மைத் தகவலின் நேரடி தரவு பயன்படுத்தப்படவில்லை.",
+                "pa": "ਇਸ ਸਲਾਹ ਵਿੱਚ ਸਥਾਨਕ ਮੌਸਮ, ਮਿੱਟੀ, ਕੀੜਿਆਂ ਦੀ ਚੇਤਾਵਨੀ ਜਾਂ ਖੇਤਰ-ਵਿਸ਼ੇਸ਼ ਖੇਤੀਬਾੜੀ ਜਾਣਕਾਰੀ ਦਾ ਲਾਈਵ ਡਾਟਾ ਨਹੀਂ ਵਰਤਿਆ ਗਿਆ।",
+                "te": "ఈ సలహాలో స్థానిక వాతావరణం, నేల, పురుగు హెచ్చరికలు లేదా ప్రాంతానికి సంబంధించిన వ్యవసాయ సమాచారపు ప్రత్యక్ష డేటాను ఉపయోగించలేదు.",
+            }[language]
+        )
     else:
-        uncertainties.append({
-            "en": "Location was not provided; local weather, soil, pest pressure, and regional agronomy guidance cannot be considered.",
-            "bn": "অবস্থান দেওয়া হয়নি; স্থানীয় আবহাওয়া, মাটি, পোকার চাপ এবং অঞ্চলভিত্তিক কৃষি পরামর্শ বিবেচনা করা যাচ্ছে না।",
-            "hi": "स्थान नहीं दिया गया है; इसलिए स्थानीय मौसम, मिट्टी, कीट दबाव और क्षेत्रीय कृषि सलाह पर विचार नहीं किया जा सकता।",
-            "ta": "இடம் வழங்கப்படவில்லை; எனவே உள்ளூர் வானிலை, மண், பூச்சி தாக்கம் மற்றும் பகுதி சார்ந்த வேளாண்மை ஆலோசனையை கருத்தில் கொள்ள முடியாது.",
-            "pa": "ਥਾਂ ਨਹੀਂ ਦਿੱਤੀ ਗਈ; ਇਸ ਲਈ ਸਥਾਨਕ ਮੌਸਮ, ਮਿੱਟੀ, ਕੀੜਿਆਂ ਦੇ ਦਬਾਅ ਅਤੇ ਖੇਤਰੀ ਖੇਤੀਬਾੜੀ ਸਲਾਹ ਨੂੰ ਧਿਆਨ ਵਿੱਚ ਨਹੀਂ ਰੱਖਿਆ ਜਾ ਸਕਦਾ।",
-            "te": "ప్రదేశం ఇవ్వలేదు; కాబట్టి స్థానిక వాతావరణం, నేల, పురుగు ప్రభావం మరియు ప్రాంతీయ వ్యవసాయ సలహాను పరిగణనలోకి తీసుకోలేము.",
-        }[language])
+        uncertainties.append(
+            {
+                "en": "Location was not provided; local weather, soil, pest pressure, and regional agronomy guidance cannot be considered.",
+                "bn": "অবস্থান দেওয়া হয়নি; স্থানীয় আবহাওয়া, মাটি, পোকার চাপ এবং অঞ্চলভিত্তিক কৃষি পরামর্শ বিবেচনা করা যাচ্ছে না।",
+                "hi": "स्थान नहीं दिया गया है; इसलिए स्थानीय मौसम, मिट्टी, कीट दबाव और क्षेत्रीय कृषि सलाह पर विचार नहीं किया जा सकता।",
+                "ta": "இடம் வழங்கப்படவில்லை; எனவே உள்ளூர் வானிலை, மண், பூச்சி தாக்கம் மற்றும் பகுதி சார்ந்த வேளாண்மை ஆலோசனையை கருத்தில் கொள்ள முடியாது.",
+                "pa": "ਥਾਂ ਨਹੀਂ ਦਿੱਤੀ ਗਈ; ਇਸ ਲਈ ਸਥਾਨਕ ਮੌਸਮ, ਮਿੱਟੀ, ਕੀੜਿਆਂ ਦੇ ਦਬਾਅ ਅਤੇ ਖੇਤਰੀ ਖੇਤੀਬਾੜੀ ਸਲਾਹ ਨੂੰ ਧਿਆਨ ਵਿੱਚ ਨਹੀਂ ਰੱਖਿਆ ਜਾ ਸਕਦਾ।",
+                "te": "ప్రదేశం ఇవ్వలేదు; కాబట్టి స్థానిక వాతావరణం, నేల, పురుగు ప్రభావం మరియు ప్రాంతీయ వ్యవసాయ సలహాను పరిగణనలోకి తీసుకోలేము.",
+            }[language]
+        )
 
     recommendations, uncertainties, safety = enforce_advisory_safety(
         recommendations, uncertainties, confidence=confidence
@@ -274,31 +305,38 @@ def _generate_rule_based_advisory(
     observations = _localize_list(list(knowledge["observations"]), language)
 
     if location_value:
-        recommendations.insert(0, {
-            "en": f"Use the supplied location ({location_value}) when checking local agricultural extension or agronomy guidance; no local conditions are assumed by this MVP.",
-            "bn": f"স্থানীয় কৃষি দপ্তর বা কৃষিবিদদের পরামর্শ দেখার সময় দেওয়া অবস্থান ({location_value}) ব্যবহার করুন; এই MVP নিজে থেকে স্থানীয় পরিস্থিতি ধরে নিচ্ছে না।",
-            "hi": f"स्थानीय कृषि विभाग या कृषि विशेषज्ञ की सलाह देखते समय दिए गए स्थान ({location_value}) का उपयोग करें; यह MVP अपने आप स्थानीय परिस्थितियाँ नहीं मानता है।",
-            "ta": f"உள்ளூர் வேளாண்மை துறை அல்லது வேளாண் நிபுணர் ஆலோசனையைப் பார்க்கும்போது வழங்கப்பட்ட இடத்தை ({location_value}) பயன்படுத்தவும்; இந்த MVP உள்ளூர் நிலைமைகளை தானாகக் கருதாது.",
-            "pa": f"ਸਥਾਨਕ ਖੇਤੀਬਾੜੀ ਵਿਭਾਗ ਜਾਂ ਖੇਤੀ ਮਾਹਿਰ ਦੀ ਸਲਾਹ ਵੇਖਦੇ ਸਮੇਂ ਦਿੱਤੀ ਗਈ ਥਾਂ ({location_value}) ਦੀ ਵਰਤੋਂ ਕਰੋ; ਇਹ MVP ਆਪਣੇ ਆਪ ਸਥਾਨਕ ਹਾਲਾਤ ਨਹੀਂ ਮੰਨਦਾ।",
-            "te": f"స్థానిక వ్యవసాయ శాఖ లేదా వ్యవసాయ నిపుణుల సలహాను పరిశీలించేటప్పుడు ఇచ్చిన ప్రదేశాన్ని ({location_value}) ఉపయోగించండి; ఈ MVP స్థానిక పరిస్థితులను స్వయంగా పరిగణించదు.",
-        }[language])
-        uncertainties.append({
-            "en": "Location was provided, but this MVP does not yet retrieve live local weather, soil, pest alerts, or region-specific agronomy data.",
-            "bn": "অবস্থান দেওয়া হয়েছে, তবে এই MVP এখনও স্থানীয় আবহাওয়া, মাটি, পোকামাকড়ের সতর্কতা বা অঞ্চলভিত্তিক কৃষি তথ্য সংগ্রহ করে না।",
-            "hi": "स्थान दिया गया है, लेकिन यह MVP अभी स्थानीय मौसम, मिट्टी, कीट चेतावनी या क्षेत्र-विशिष्ट कृषि जानकारी प्राप्त नहीं करता है।",
-            "ta": "இடம் வழங்கப்பட்டுள்ளது, ஆனால் இந்த MVP இன்னும் உள்ளூர் வானிலை, மண், பூச்சி எச்சரிக்கைகள் அல்லது பகுதி சார்ந்த வேளாண்மைத் தகவலைப் பெறவில்லை.",
-            "pa": "ਥਾਂ ਦਿੱਤੀ ਗਈ ਹੈ, ਪਰ ਇਹ MVP ਹਾਲੇ ਸਥਾਨਕ ਮੌਸਮ, ਮਿੱਟੀ, ਕੀੜਿਆਂ ਦੀ ਚੇਤਾਵਨੀ ਜਾਂ ਖੇਤਰ-ਵਿਸ਼ੇਸ਼ ਖੇਤੀਬਾੜੀ ਜਾਣਕਾਰੀ ਪ੍ਰਾਪਤ ਨਹੀਂ ਕਰਦਾ।",
-            "te": "ప్రదేశం ఇచ్చారు, కానీ ఈ MVP ఇంకా స్థానిక వాతావరణం, నేల, పురుగు హెచ్చరికలు లేదా ప్రాంతానికి సంబంధించిన వ్యవసాయ సమాచారాన్ని పొందదు.",
-        }[language])
+        recommendations.insert(
+            0,
+            {
+                "en": f"Use the supplied location ({location_value}) when checking local agricultural extension or agronomy guidance; no local conditions are assumed by this MVP.",
+                "bn": f"স্থানীয় কৃষি দপ্তর বা কৃষিবিদদের পরামর্শ দেখার সময় দেওয়া অবস্থান ({location_value}) ব্যবহার করুন; এই MVP নিজে থেকে স্থানীয় পরিস্থিতি ধরে নিচ্ছে না।",
+                "hi": f"स्थानीय कृषि विभाग या कृषि विशेषज्ञ की सलाह देखते समय दिए गए स्थान ({location_value}) का उपयोग करें; यह MVP अपने आप स्थानीय परिस्थितियाँ नहीं मानता है।",
+                "ta": f"உள்ளூர் வேளாண்மை துறை அல்லது வேளாண் நிபுணர் ஆலோசனையைப் பார்க்கும்போது வழங்கப்பட்ட இடத்தை ({location_value}) பயன்படுத்தவும்; இந்த MVP உள்ளூர் நிலைமைகளை தானாகக் கருதாது.",
+                "pa": f"ਸਥਾਨਕ ਖੇਤੀਬਾੜੀ ਵਿਭਾਗ ਜਾਂ ਖੇਤੀ ਮਾਹਿਰ ਦੀ ਸਲਾਹ ਵੇਖਦੇ ਸਮੇਂ ਦਿੱਤੀ ਗਈ ਥਾਂ ({location_value}) ਦੀ ਵਰਤੋਂ ਕਰੋ; ਇਹ MVP ਆਪਣੇ ਆਪ ਸਥਾਨਕ ਹਾਲਾਤ ਨਹੀਂ ਮੰਨਦਾ।",
+                "te": f"స్థానిక వ్యవసాయ శాఖ లేదా వ్యవసాయ నిపుణుల సలహాను పరిశీలించేటప్పుడు ఇచ్చిన ప్రదేశాన్ని ({location_value}) ఉపయోగించండి; ఈ MVP స్థానిక పరిస్థితులను స్వయంగా పరిగణించదు.",
+            }[language],
+        )
+        uncertainties.append(
+            {
+                "en": "Location was provided, but this MVP does not yet retrieve live local weather, soil, pest alerts, or region-specific agronomy data.",
+                "bn": "অবস্থান দেওয়া হয়েছে, তবে এই MVP এখনও স্থানীয় আবহাওয়া, মাটি, পোকামাকড়ের সতর্কতা বা অঞ্চলভিত্তিক কৃষি তথ্য সংগ্রহ করে না।",
+                "hi": "स्थान दिया गया है, लेकिन यह MVP अभी स्थानीय मौसम, मिट्टी, कीट चेतावनी या क्षेत्र-विशिष्ट कृषि जानकारी प्राप्त नहीं करता है।",
+                "ta": "இடம் வழங்கப்பட்டுள்ளது, ஆனால் இந்த MVP இன்னும் உள்ளூர் வானிலை, மண், பூச்சி எச்சரிக்கைகள் அல்லது பகுதி சார்ந்த வேளாண்மைத் தகவலைப் பெறவில்லை.",
+                "pa": "ਥਾਂ ਦਿੱਤੀ ਗਈ ਹੈ, ਪਰ ਇਹ MVP ਹਾਲੇ ਸਥਾਨਕ ਮੌਸਮ, ਮਿੱਟੀ, ਕੀੜਿਆਂ ਦੀ ਚੇਤਾਵਨੀ ਜਾਂ ਖੇਤਰ-ਵਿਸ਼ੇਸ਼ ਖੇਤੀਬਾੜੀ ਜਾਣਕਾਰੀ ਪ੍ਰਾਪਤ ਨਹੀਂ ਕਰਦਾ।",
+                "te": "ప్రదేశం ఇచ్చారు, కానీ ఈ MVP ఇంకా స్థానిక వాతావరణం, నేల, పురుగు హెచ్చరికలు లేదా ప్రాంతానికి సంబంధించిన వ్యవసాయ సమాచారాన్ని పొందదు.",
+            }[language]
+        )
     else:
-        uncertainties.append({
-            "en": "Location was not provided; local weather, soil, pest pressure, and regional agronomy guidance cannot be considered.",
-            "bn": "অবস্থান দেওয়া হয়নি; স্থানীয় আবহাওয়া, মাটি, পোকার চাপ এবং অঞ্চলভিত্তিক কৃষি পরামর্শ বিবেচনা করা যাচ্ছে না।",
-            "hi": "स्थान नहीं दिया गया है; इसलिए स्थानीय मौसम, मिट्टी, कीट दबाव और क्षेत्रीय कृषि सलाह पर विचार नहीं किया जा सकता।",
-            "ta": "இடம் வழங்கப்படவில்லை; எனவே உள்ளூர் வானிலை, மண், பூச்சி தாக்கம் மற்றும் பகுதி சார்ந்த வேளாண்மை ஆலோசனையை கருத்தில் கொள்ள முடியாது.",
-            "pa": "ਥਾਂ ਨਹੀਂ ਦਿੱਤੀ ਗਈ; ਇਸ ਲਈ ਸਥਾਨਕ ਮੌਸਮ, ਮਿੱਟੀ, ਕੀੜਿਆਂ ਦੇ ਦਬਾਅ ਅਤੇ ਖੇਤਰੀ ਖੇਤੀਬਾੜੀ ਸਲਾਹ ਨੂੰ ਧਿਆਨ ਵਿੱਚ ਨਹੀਂ ਰੱਖਿਆ ਜਾ ਸਕਦਾ।",
-            "te": "ప్రదేశం ఇవ్వలేదు; కాబట్టి స్థానిక వాతావరణం, నేల, పురుగు ప్రభావం మరియు ప్రాంతీయ వ్యవసాయ సలహాను పరిగణనలోకి తీసుకోలేము.",
-        }[language])
+        uncertainties.append(
+            {
+                "en": "Location was not provided; local weather, soil, pest pressure, and regional agronomy guidance cannot be considered.",
+                "bn": "অবস্থান দেওয়া হয়নি; স্থানীয় আবহাওয়া, মাটি, পোকার চাপ এবং অঞ্চলভিত্তিক কৃষি পরামর্শ বিবেচনা করা যাচ্ছে না।",
+                "hi": "स्थान नहीं दिया गया है; इसलिए स्थानीय मौसम, मिट्टी, कीट दबाव और क्षेत्रीय कृषि सलाह पर विचार नहीं किया जा सकता।",
+                "ta": "இடம் வழங்கப்படவில்லை; எனவே உள்ளூர் வானிலை, மண், பூச்சி தாக்கம் மற்றும் பகுதி சார்ந்த வேளாண்மை ஆலோசனையை கருத்தில் கொள்ள முடியாது.",
+                "pa": "ਥਾਂ ਨਹੀਂ ਦਿੱਤੀ ਗਈ; ਇਸ ਲਈ ਸਥਾਨਕ ਮੌਸਮ, ਮਿੱਟੀ, ਕੀੜਿਆਂ ਦੇ ਦਬਾਅ ਅਤੇ ਖੇਤਰੀ ਖੇਤੀਬਾੜੀ ਸਲਾਹ ਨੂੰ ਧਿਆਨ ਵਿੱਚ ਨਹੀਂ ਰੱਖਿਆ ਜਾ ਸਕਦਾ।",
+                "te": "ప్రదేశం ఇవ్వలేదు; కాబట్టి స్థానిక వాతావరణం, నేల, పురుగు ప్రభావం మరియు ప్రాంతీయ వ్యవసాయ సలహాను పరిగణనలోకి తీసుకోలేము.",
+            }[language]
+        )
 
     recommendations, uncertainties, safety = enforce_advisory_safety(
         recommendations, uncertainties, confidence="low", language=language

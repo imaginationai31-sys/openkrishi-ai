@@ -1,4 +1,5 @@
 """Centralized application configuration and secret loading."""
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -27,9 +28,15 @@ class Settings(BaseSettings):
     sarvam_stt_model: str = Field(default="saaras:v4", alias="SARVAM_STT_MODEL")
     sarvam_tts_model: str = Field(default="bulbul:v3", alias="SARVAM_TTS_MODEL")
 
-    open_meteo_url: str = Field(default="https://api.open-meteo.com/v1/forecast", alias="OPEN_METEO_URL")
-    sarvam_stt_url: str = Field(default="https://api.sarvam.ai/speech-to-text", alias="SARVAM_STT_URL")
-    sarvam_tts_url: str = Field(default="https://api.sarvam.ai/text-to-speech", alias="SARVAM_TTS_URL")
+    open_meteo_url: str = Field(
+        default="https://api.open-meteo.com/v1/forecast", alias="OPEN_METEO_URL"
+    )
+    sarvam_stt_url: str = Field(
+        default="https://api.sarvam.ai/speech-to-text", alias="SARVAM_STT_URL"
+    )
+    sarvam_tts_url: str = Field(
+        default="https://api.sarvam.ai/text-to-speech", alias="SARVAM_TTS_URL"
+    )
 
     max_image_bytes: int = Field(default=10 * 1024 * 1024, alias="MAX_IMAGE_BYTES", ge=1)
     max_audio_bytes: int = Field(default=10 * 1024 * 1024, alias="MAX_AUDIO_BYTES", ge=1)
@@ -44,7 +51,9 @@ class Settings(BaseSettings):
     def validate_cors_origins(cls, value: str) -> str:
         origins = [item.strip() for item in value.split(",") if item.strip()]
         if not origins or "*" in origins:
-            raise ValueError("CORS_ALLOW_ORIGINS must contain explicit origins; wildcard '*' is not allowed.")
+            raise ValueError(
+                "CORS_ALLOW_ORIGINS must contain explicit origins; wildcard '*' is not allowed."
+            )
         return ",".join(origins)
 
     @property

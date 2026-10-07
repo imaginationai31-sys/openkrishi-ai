@@ -26,16 +26,18 @@ class FakeTTS:
 
 
 def make_request_response():
-    request = Request({
-        "type": "http",
-        "method": "POST",
-        "path": "/api/v1/voice/vision-advisory",
-        "headers": [],
-        "query_string": b"",
-        "server": ("testserver", 80),
-        "client": ("testclient", 80),
-        "scheme": "http",
-    })
+    request = Request(
+        {
+            "type": "http",
+            "method": "POST",
+            "path": "/api/v1/voice/vision-advisory",
+            "headers": [],
+            "query_string": b"",
+            "server": ("testserver", 80),
+            "client": ("testclient", 80),
+            "scheme": "http",
+        }
+    )
     return request, Response()
 
 
