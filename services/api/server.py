@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Header, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
@@ -69,7 +69,14 @@ async def unhandled_exception(request: Request, exc: Exception):
 
 
 @app.get("/metrics", include_in_schema=False)
-def metrics_endpoint() -> Response:
+def metrics_endpoint(
+    x_metrics_token: str | None = Header(default=None, alias="X-Metrics-Token"),
+) -> Response:
+    configured_token = (
+        settings.metrics_token.get_secret_value() if settings.metrics_token else None
+    )
+    if not configured_token or x_metrics_token != configured_token:
+        return Response(status_code=404)
     return Response(content=metrics.prometheus(), media_type="text/plain; version=0.0.4")
 
 
