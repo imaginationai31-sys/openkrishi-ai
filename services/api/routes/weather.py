@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 
 from services.api.rate_limit import WEATHER_LIMIT, limiter
-
 from services.weather.engine import SUPPORTED_LANGUAGES, get_weather
 
 
@@ -13,7 +12,6 @@ router = APIRouter(prefix="/weather", tags=["weather"])
 async def weather(
     request: Request,
     response: Response,
-
     latitude: float = Query(..., ge=-90, le=90),
     longitude: float = Query(..., ge=-180, le=180),
     language: str = Query("en"),
