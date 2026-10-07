@@ -7,6 +7,7 @@ from fastapi import UploadFile
 
 from services.core.config import get_settings
 
+
 IMAGE_MIME_TO_EXT = {
     "image/jpeg": {".jpg", ".jpeg"},
     "image/png": {".png"},
