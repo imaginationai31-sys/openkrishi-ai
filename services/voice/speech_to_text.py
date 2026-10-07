@@ -81,9 +81,9 @@ def _audio_filename(
             "audio/webm": "webm",
             "audio/flac": "flac",
         }
-        extension: str | None = mime_to_extension.get(content_type.split(";", 1)[0].strip().lower())
-        if extension:
-            return f"farmer_audio.{extension}"
+        detected_extension = mime_to_extension.get(content_type.split(";", 1)[0].strip().lower())
+        if detected_extension:
+            return f"farmer_audio.{detected_extension}"
 
     if audio.startswith(b"OggS"):
         return "farmer_audio.ogg"
