@@ -3,7 +3,6 @@ from typing import Any, NoReturn
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 
 from services.api.rate_limit import FARM_LIMIT, limiter
-
 from services.farm.intelligence import (
     build_crop_knowledge,
     build_crop_recommendation,
@@ -127,7 +126,12 @@ def recommendation(
 
 @router.get("/knowledge")
 @limiter.limit(FARM_LIMIT)
-def knowledge(crop_category: str = Query(...), language: str = Query("en")) -> dict[str, Any]:
+def knowledge(
+    request: Request,
+    response: Response,
+    crop_category: str = Query(...),
+    language: str = Query("en"),
+) -> dict[str, Any]:
     try:
         return build_crop_knowledge(crop_category, language)
     except ValueError as exc:
@@ -136,7 +140,12 @@ def knowledge(crop_category: str = Query(...), language: str = Query("en")) -> d
 
 @router.get("/market")
 @limiter.limit(FARM_LIMIT)
-def market(crop_category: str = Query(...), language: str = Query("en")) -> dict[str, Any]:
+def market(
+    request: Request,
+    response: Response,
+    crop_category: str = Query(...),
+    language: str = Query("en"),
+) -> dict[str, Any]:
     names = {
         "rice": "Paddy / Rice",
         "peanut": "Peanut / Groundnut",
@@ -159,3 +168,4 @@ def market(crop_category: str = Query(...), language: str = Query("en")) -> dict
         ],
         "safety": "Prices change by market, commodity, variety and date. Do not treat a single price as a guaranteed selling price.",
     }
+}
