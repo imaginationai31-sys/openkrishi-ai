@@ -12,6 +12,7 @@ from services.core.error_tracking import capture_exception, configure_error_trac
 from services.core.logging import configure_logging
 from services.core.metrics import metrics
 
+
 configure_logging()
 settings = get_settings()
 configure_error_tracking(
