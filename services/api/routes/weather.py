@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from services.weather.engine import SUPPORTED_LANGUAGES, get_weather
 
+
 router = APIRouter(prefix="/weather", tags=["weather"])
 
 
