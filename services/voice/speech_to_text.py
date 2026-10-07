@@ -11,6 +11,7 @@ from services.core.config import get_settings
 
 from .languages import is_supported_language
 
+
 logger = logging.getLogger(__name__)
 
 
