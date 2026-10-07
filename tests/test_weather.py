@@ -4,10 +4,9 @@ from unittest.mock import AsyncMock, patch
 import httpx
 from fastapi.testclient import TestClient
 
-import services.weather.engine as engine
-
 from services.api.server import app
 from services.weather.engine import get_weather
+
 
 
 client = TestClient(app)
