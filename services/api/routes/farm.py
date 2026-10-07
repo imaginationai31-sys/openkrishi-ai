@@ -168,4 +168,3 @@ def market(
         ],
         "safety": "Prices change by market, commodity, variety and date. Do not treat a single price as a guaranteed selling price.",
     }
-}
