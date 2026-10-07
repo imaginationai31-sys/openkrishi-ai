@@ -1,6 +1,8 @@
 from typing import Any, NoReturn
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request, Response
+
+from services.api.rate_limit import FARM_LIMIT, limiter
 
 from services.farm.intelligence import (
     build_crop_knowledge,
@@ -64,6 +66,7 @@ async def irrigation(
 
 
 @router.get("/fertilizer")
+@limiter.limit(FARM_LIMIT)
 def fertilizer(
     crop_category: str = Query(...),
     growth_stage: str | None = Query(None),
@@ -99,6 +102,7 @@ async def pest_alerts(
 
 
 @router.get("/recommendation")
+@limiter.limit(FARM_LIMIT)
 def recommendation(
     soil_type: str | None = Query(None),
     water_availability: str | None = Query(None),
@@ -109,6 +113,7 @@ def recommendation(
 
 
 @router.get("/knowledge")
+@limiter.limit(FARM_LIMIT)
 def knowledge(crop_category: str = Query(...), language: str = Query("en")) -> dict[str, Any]:
     try:
         return build_crop_knowledge(crop_category, language)
@@ -117,6 +122,7 @@ def knowledge(crop_category: str = Query(...), language: str = Query("en")) -> d
 
 
 @router.get("/market")
+@limiter.limit(FARM_LIMIT)
 def market(crop_category: str = Query(...), language: str = Query("en")) -> dict[str, Any]:
     names = {
         "rice": "Paddy / Rice",
