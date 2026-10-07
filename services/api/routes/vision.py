@@ -5,9 +5,9 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, Response, Upl
 from services.advisory.engine import generate_advisory
 from services.advisory.localization import localize_advisory, localize_visual
 from services.api.rate_limit import VISION_LIMIT, limiter
-from services.vision.engine import assess_crop_image
 from services.core.config import get_settings
 from services.core.uploads import read_limited_upload
+from services.vision.engine import assess_crop_image
 
 
 router = APIRouter()
