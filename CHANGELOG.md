@@ -25,7 +25,7 @@ The format follows Keep a Changelog and releases use Semantic Versioning.
 - Secret scanning and CodeQL workflows remain enabled.
 - Upload limits and rate limiting protect the public API boundary.
 
-## [0.1.0]
+## [0.1.0] - 2026-10-07
 
 Initial public development milestone.
 
