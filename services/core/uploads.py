@@ -34,8 +34,17 @@ async def read_limited_upload(
     kind: str,
     max_bytes: int | None = None,
 ) -> bytes:
+    if kind not in {"image", "audio"}:
+        raise ValueError("Unsupported upload kind.")
+
     settings = get_settings()
-    limit = max_bytes or (settings.max_image_bytes if kind == "image" else settings.max_audio_bytes)
+    limit = (
+        max_bytes
+        if max_bytes is not None
+        else settings.max_image_bytes
+        if kind == "image"
+        else settings.max_audio_bytes
+    )
     mime = (upload.content_type or "").split(";", 1)[0].strip().lower()
     mapping = IMAGE_MIME_TO_EXT if kind == "image" else AUDIO_MIME_TO_EXT
     if mime not in mapping:
