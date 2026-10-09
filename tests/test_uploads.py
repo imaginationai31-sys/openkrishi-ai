@@ -27,7 +27,7 @@ async def test_image_upload_accepts_supported_extension():
 @pytest.mark.anyio
 async def test_audio_upload_accepts_mime_parameter_without_extension():
     result = await read_limited_upload(
-        upload("voice.mp3", "audio/mpeg", b"audio-bytes"),
+        upload("voice.mp3", "audio/mpeg; charset=binary", b"audio-bytes"),
         kind="audio",
         max_bytes=20,
     )
@@ -71,4 +71,34 @@ async def test_upload_rejects_content_over_limit():
             upload("large.jpg", "image/jpeg", b"12345"),
             kind="image",
             max_bytes=4,
+        )
+
+
+@pytest.mark.anyio
+async def test_upload_accepts_content_exactly_at_limit():
+    result = await read_limited_upload(
+        upload("leaf.jpg", "image/jpeg", b"1234"),
+        kind="image",
+        max_bytes=4,
+    )
+    assert result == b"1234"
+
+
+@pytest.mark.anyio
+async def test_upload_enforces_zero_byte_limit():
+    with pytest.raises(OverflowError, match="Image file exceeds"):
+        await read_limited_upload(
+            upload("leaf.jpg", "image/jpeg", b"x"),
+            kind="image",
+            max_bytes=0,
+        )
+
+
+@pytest.mark.anyio
+async def test_upload_rejects_unknown_kind():
+    with pytest.raises(ValueError, match="Unsupported upload kind"):
+        await read_limited_upload(
+            upload("leaf.jpg", "image/jpeg"),
+            kind="document",
+            max_bytes=20,
         )
